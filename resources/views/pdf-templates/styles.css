@@ -1,0 +1,332 @@
+/* PDF Template Styles - Based on Official Government Letter Format */
+
+body {
+    font-family: "DejaVu Sans", Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0;
+    color: #000;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header Styles */
+.header {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.logo-container {
+    margin-right: 20px;
+}
+
+.logo-circle {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 10px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.logo-text {
+    font-weight: bold;
+}
+
+.organization-info {
+    flex: 1;
+    text-align: center;
+}
+
+.organization-name {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+}
+
+.organization-subtitle {
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.organization-subtitle2 {
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.organization-details {
+    font-size: 10px;
+    line-height: 1.3;
+}
+
+.postal-code {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 10px;
+}
+
+/* Letter Metadata */
+.letter-metadata {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 11px;
+}
+
+.letter-info {
+    width: 60%;
+}
+
+.letter-destination {
+    width: 35%;
+    text-align: right;
+}
+
+/* Content Styles */
+.content {
+    margin-bottom: 30px;
+    text-align: justify;
+    line-height: 1.4;
+}
+
+.content p {
+    margin: 8px 0;
+}
+
+/* Participant Data Table */
+.participant-data {
+    margin: 15px 0;
+}
+
+.participant-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+.participant-table td {
+    padding: 2px 5px;
+    vertical-align: top;
+}
+
+.participant-table .label {
+    font-weight: bold;
+    width: 25%;
+}
+
+.participant-table .colon {
+    width: 5%;
+    text-align: center;
+}
+
+.participant-table .value {
+    width: 70%;
+}
+
+/* Examination Schedule Table */
+.examination-schedule {
+    margin: 15px 0;
+}
+
+.examination-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+.examination-table td {
+    padding: 2px 5px;
+    vertical-align: top;
+}
+
+.examination-table .label {
+    font-weight: bold;
+    width: 25%;
+}
+
+.examination-table .colon {
+    width: 5%;
+    text-align: center;
+}
+
+.examination-table .value {
+    width: 70%;
+}
+
+/* Contact Information */
+.contact-information {
+    margin: 20px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #007bff;
+}
+
+/* Footer Styles */
+.footer-section {
+    margin-top: 50px;
+    position: relative;
+    clear: both;
+}
+
+.signature-area {
+    float: left;
+    width: 50%;
+}
+
+.signature-container {
+    text-align: center;
+}
+
+.signature-line {
+    border-bottom: 1px solid #000;
+    width: 200px;
+    margin: 0 auto 10px;
+}
+
+.signature-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.signature-title {
+    font-size: 11px;
+    margin-bottom: 3px;
+}
+
+.signature-nip {
+    font-size: 10px;
+}
+
+/* Official Stamp */
+.official-stamp {
+    float: right;
+    width: 50%;
+    text-align: center;
+}
+
+.stamp-circle {
+    width: 80px;
+    height: 80px;
+    border: 2px solid #000;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    text-align: center;
+    line-height: 1.1;
+    background-color: #fff;
+}
+
+.stamp-text {
+    font-weight: bold;
+}
+
+/* Image Support */
+.template-image {
+    max-width: 100%;
+    height: auto;
+}
+
+.logo-image {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+.logo-container img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    display: block !important;
+    margin: 0 auto;
+}
+
+.logo-image {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    display: block !important;
+    margin: 0 auto;
+}
+
+.signature-image {
+    max-width: 120px;
+    max-height: 80px;
+    object-fit: contain;
+    display: block !important;
+    margin: 0 auto 10px;
+}
+
+.signature-container img {
+    max-width: 120px;
+    max-height: 80px;
+    object-fit: contain;
+    display: block !important;
+    margin: 0 auto 10px;
+}
+
+.stamp-image {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    display: block !important;
+    margin: 0 auto;
+}
+
+.official-stamp img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    display: block !important;
+    margin: 0 auto;
+}
+
+/* Show fallback when no image */
+.logo-container:empty + .logo-circle,
+.signature-container:empty .signature-line,
+.official-stamp:empty .stamp-circle {
+    display: flex !important;
+}
+
+/* Hide fallback when image is present */
+.logo-container img + .logo-circle,
+.signature-container img + .signature-line,
+.official-stamp img + .stamp-circle {
+    display: none !important;
+}
+
+/* Responsive adjustments */
+@media print {
+    .container {
+        padding: 15px;
+    }
+    
+    .header {
+        margin-bottom: 20px;
+    }
+    
+    .footer-section {
+        margin-top: 40px;
+    }
+}

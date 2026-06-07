@@ -1,0 +1,109 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: monitoring-mcu:latest
+    container_name: monitoring-mcu-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    env_file:
+      - .env
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      RUN_MIGRATIONS: "true"
+    volumes:
+      - app_storage:/var/www/html/storage
+      - app_bootstrap_cache:/var/www/html/bootstrap/cache
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - monitoring-mcu
+
+  queue:
+    image: monitoring-mcu:latest
+    container_name: monitoring-mcu-queue
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      RUN_MIGRATIONS: "false"
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600 --no-interaction
+    volumes:
+      - app_storage:/var/www/html/storage
+      - app_bootstrap_cache:/var/www/html/bootstrap/cache
+    depends_on:
+      app:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+    networks:
+      - monitoring-mcu
+
+  scheduler:
+    image: monitoring-mcu:latest
+    container_name: monitoring-mcu-scheduler
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      RUN_MIGRATIONS: "false"
+    command: >
+      /bin/sh -c "while true; do
+        php artisan schedule:run --verbose --no-interaction;
+        sleep 60;
+      done"
+    volumes:
+      - app_storage:/var/www/html/storage
+      - app_bootstrap_cache:/var/www/html/bootstrap/cache
+    depends_on:
+      app:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+    networks:
+      - monitoring-mcu
+
+  mysql:
+    image: mysql:8.4
+    container_name: monitoring-mcu-mysql
+    restart: unless-stopped
+    ports:
+      - "${FORWARD_DB_PORT:-3307}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_DATABASE: ${DB_DATABASE:-monitoring_mcu}
+      MYSQL_USER: ${DB_USERNAME:-monitoring}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_PASSWORD:-secret}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - monitoring-mcu
+
+volumes:
+  mysql_data:
+  app_storage:
+  app_bootstrap_cache:
+
+networks:
+  monitoring-mcu:
+    driver: bridge

@@ -1,0 +1,47 @@
+<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+    <div class="app-brand demo">
+        <a href="{{ Auth::user()->isAdmin() ? route('dashboard') : route('client.dashboard') }}" class="app-brand-link">
+            <span class="app-brand-logo demo">
+                <i class="bx bx-pulse bx-md text-primary"></i>
+            </span>
+            <span class="app-brand-text demo menu-text fw-bolder ms-2">MCU</span>
+        </a>
+        <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+            <i class="bx bx-chevron-left bx-sm align-middle"></i>
+        </a>
+    </div>
+
+    <div class="menu-inner-shadow"></div>
+
+    <ul class="menu-inner py-1">
+        <li class="menu-header small text-uppercase"><span class="menu-header-text">Menu</span></li>
+
+        @foreach(\App\Helpers\MenuHelper::getMainNavItems() as $item)
+            @if(isset($item['subItems']))
+                @php $subActive = \App\Helpers\MenuHelper::isSubmenuActive($item['subItems']); @endphp
+                <li class="menu-item {{ $subActive ? 'active open' : '' }}">
+                    <a href="javascript:void(0);" class="menu-link menu-toggle">
+                        <i class="menu-icon tf-icons bx {{ $item['icon'] ?? 'bx-grid-alt' }}"></i>
+                        <div>{{ $item['name'] }}</div>
+                    </a>
+                    <ul class="menu-sub">
+                        @foreach($item['subItems'] as $sub)
+                            <li class="menu-item {{ \App\Helpers\MenuHelper::isActive($sub['path']) ? 'active' : '' }}">
+                                <a href="{{ $sub['path'] }}" class="menu-link">
+                                    <div>{{ $sub['name'] }}</div>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </li>
+            @else
+                <li class="menu-item {{ \App\Helpers\MenuHelper::isActive($item['path']) ? 'active' : '' }}">
+                    <a href="{{ $item['path'] }}" class="menu-link">
+                        <i class="menu-icon tf-icons bx {{ $item['icon'] ?? 'bx-circle' }}"></i>
+                        <div>{{ $item['name'] }}</div>
+                    </a>
+                </li>
+            @endif
+        @endforeach
+    </ul>
+</aside>

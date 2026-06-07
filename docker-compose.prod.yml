@@ -1,0 +1,11 @@
+# Override untuk production — gunakan:
+# docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  mysql:
+    ports: !reset []
+
+  app:
+    environment:
+      APP_DEBUG: "false"
+      LOG_LEVEL: warning
