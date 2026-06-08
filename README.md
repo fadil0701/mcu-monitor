@@ -17,8 +17,7 @@ Panduan lengkap: **`docs/DEPLOY.md`**
 ```bash
 cp .env.production.example .env
 nano .env
-chmod +x deploy/install.sh
-./deploy/install.sh
+bash deploy/install.sh
 docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php artisan user:create-admin --from-env
 ```
 

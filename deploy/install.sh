@@ -18,11 +18,9 @@ fi
 
 load_proxy_from_env .env
 
-if ! grep -q '^APP_KEY=base64:' .env 2>/dev/null; then
+if ! app_key_is_set .env; then
     echo "Menghasilkan APP_KEY..."
-    # shellcheck disable=SC2046
-    docker run --rm $(docker_proxy_env_args) -v "$ROOT":/app -w /app php:8.3-cli php artisan key:generate --force 2>/dev/null \
-        || php artisan key:generate --force
+    generate_app_key_into_env .env
 fi
 
 echo "Memeriksa jaringan untuk build Docker..."

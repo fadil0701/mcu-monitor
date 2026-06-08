@@ -39,3 +39,24 @@ docker_proxy_env_args() {
 compose_prod_args() {
     printf '%s' "-f docker-compose.yml -f docker-compose.prod.yml"
 }
+
+generate_app_key_into_env() {
+    local env_file="${1:-.env}"
+    local key
+
+    key=$(docker run --rm $(docker_proxy_env_args) php:8.3-cli php -r "echo 'base64:'.base64_encode(random_bytes(32));")
+    if grep -q '^APP_KEY=' "$env_file"; then
+        sed -i "s|^APP_KEY=.*|APP_KEY=${key}|" "$env_file"
+    else
+        echo "APP_KEY=${key}" >>"$env_file"
+    fi
+    echo "APP_KEY dibuat (tanpa composer/artisan di host)."
+}
+
+app_key_is_set() {
+    local env_file="${1:-.env}"
+    local value
+
+    value=$(grep '^APP_KEY=' "$env_file" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+    [ -n "$value" ] && [ "$value" != "base64:" ] && [[ "$value" == base64:* ]]
+}

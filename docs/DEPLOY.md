@@ -22,15 +22,21 @@ Target server (satu VM dengan Dashboard CKG):
 
 ```bash
 cd /var/www/html
-git clone <url-repo-mcu-monitor> mcu-monitor
+git clone https://github.com/fadil0701/mcu-monitor.git mcu-monitor
 cd mcu-monitor
+
+# JANGAN sudo git clone — jika sudah terlanjur:
+# sudo chown -R $USER:$USER /var/www/html/mcu-monitor
 
 cp .env.production.example .env
 nano .env   # DB_PASSWORD, MYSQL_ROOT_PASSWORD, SUPER_ADMIN_*
 
-chmod +x deploy/install.sh deploy/update-production.sh deploy/verify.sh
-./deploy/install.sh
+bash deploy/install.sh
 ```
+
+> **Permission denied** pada `chmod` atau `cp .env`? Folder dimiliki `root` karena `sudo git clone`.
+> Perbaiki: `sudo chown -R $USER:$USER /var/www/html/mcu-monitor`
+> Skrip bisa dijalankan tanpa `chmod`: `bash deploy/install.sh`
 
 Buat super admin:
 
@@ -117,7 +123,7 @@ Spesifikasi: `dashboard-skrining/docs/BRIDGE-CKG-MCU.md`.
 
 | Gejala | Tindakan |
 |--------|----------|
-| `APP_KEY belum diisi` | `php artisan key:generate --show` → salin ke `.env` |
+| `APP_KEY` / `vendor/autoload.php` saat install | `bash deploy/install.sh` (generate key tanpa composer di host). Manual: `docker run --rm php:8.3-cli php -r "echo 'base64:'.base64_encode(random_bytes(32));"` |
 | Login redirect loop | Cek `SESSION_PATH` = `/mcuppkp/` saat pakai subpath |
 | 502 dari nginx | `docker compose ps`, `docker compose logs app` |
 | Build gagal (proxy) | Isi `HTTP_PROXY` di `.env` + `deploy/docker-http-proxy.conf.example` |
