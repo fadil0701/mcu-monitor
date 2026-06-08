@@ -59,12 +59,35 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php art
 
 ## Nginx host (path `/mcuppkp/`)
 
-Tambahkan **sebelum** `location /` pada config nginx portal:
+`include` adalah direktif **di dalam file config nginx**, bukan perintah bash.
 
 ```bash
-# Salin atau include:
-# deploy/nginx-mcuppkp-portal-snippet.conf
+cd /var/www/html/mcu-monitor
+bash deploy/install-nginx-snippet.sh
+sudo bash deploy/patch-nginx-mcuppkp-include.sh   # otomatis sisipkan include
+```
+
+**Jangan** edit `/etc/nginx/sites-available/default` — di VM ini file itu kosong/tidak dipakai.
+Vhost aktif: `/etc/nginx/sites-enabled/puspelkes.jakarta.go.id` (sama dengan CKG `/sikerja/`).
+
+Atau edit manual vhost portal:
+
+```nginx
+server {
+    listen 80;
+    server_name puspelkes.jakarta.go.id;
+
+    include /etc/nginx/snippets/mcuppkp.conf;   # <-- tambahkan SEBELUM location /
+
+    location / {
+        ...
+    }
+}
+```
+
+```bash
 sudo nginx -t && sudo systemctl reload nginx
+curl -I http://127.0.0.1/mcuppkp/
 ```
 
 Isi snippet mem-proxy ke `http://127.0.0.1:9003/` dengan strip prefix `/mcuppkp/`.
@@ -91,7 +114,7 @@ git pull origin main
 ## Verifikasi
 
 ```bash
-./deploy/verify.sh
+bash deploy/verify.sh
 curl -fsS http://127.0.0.1:9003/up
 curl -fsS https://puspelkes.jakarta.go.id/mcuppkp/up
 ```

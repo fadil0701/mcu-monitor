@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+chmod +x deploy/*.sh 2>/dev/null || true
 # shellcheck source=lib/env-proxy.sh
 source "$ROOT/deploy/lib/env-proxy.sh"
 
@@ -53,7 +54,7 @@ docker compose $(compose_prod_args) exec -T app php artisan view:cache
 
 echo ""
 echo "==> Selesai. Verifikasi:"
-echo "    ./deploy/verify.sh"
+echo "    bash deploy/verify.sh"
 echo ""
 echo "Bootstrap admin (sekali, jika belum ada):"
 echo "  docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php artisan user:create-admin --from-env"
