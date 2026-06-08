@@ -7,4 +7,4 @@
 [Service]
 Environment="HTTP_PROXY=http://10.15.3.20:80"
 Environment="HTTPS_PROXY=http://10.15.3.20:80"
-Environment="NO_PROXY=localhost,127.0.0.1,mysql,.local,10.0.0.0/8"
+Environment="NO_PROXY=localhost,127.0.0.1,mysql,.local,10.0.0.0/8,172.16.0.0/12,host.docker.internal,.docker.internal"

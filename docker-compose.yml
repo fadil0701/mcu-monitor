@@ -1,7 +1,7 @@
 x-build-proxy-args: &build-proxy-args
   HTTP_PROXY: ${HTTP_PROXY:-}
   HTTPS_PROXY: ${HTTPS_PROXY:-}
-  NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,mysql,.local}
+  NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,mysql,.local,10.0.0.0/8,172.16.0.0/12,host.docker.internal,.docker.internal}
 
 services:
   app:
@@ -13,6 +13,8 @@ services:
     image: monitoring-mcu:latest
     container_name: monitoring-mcu-app
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${APP_PORT:-9003}:80"
     env_file:
@@ -37,6 +39,8 @@ services:
     image: monitoring-mcu:latest
     container_name: monitoring-mcu-queue
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - .env
     environment:
@@ -63,6 +67,8 @@ services:
     image: monitoring-mcu:latest
     container_name: monitoring-mcu-scheduler
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - .env
     environment:

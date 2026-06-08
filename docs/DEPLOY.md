@@ -156,6 +156,7 @@ Spesifikasi: `dashboard-skrining/docs/BRIDGE-CKG-MCU.md`.
 | 502 dari nginx | `docker compose ps`, `docker compose logs app` |
 | Build gagal (proxy) | Isi `HTTP_PROXY=http://10.15.3.20:80` dan `HTTPS_PROXY` sama di `.env`. Jangan pakai placeholder `PROXY_HOST:PORT`. |
 | `npm ci` gagal saat build image | `install.sh` sekarang build Vite lewat `deploy/build-frontend.sh` di host (bukan di Dockerfile). Pastikan `git pull` terbaru. |
+| CKG bridge timeout / DNS error dari container | Jangan pakai `https://` atau `http://10.15.101.117:9006` (hairpin NAT). Pakai `http://host.docker.internal:9006` atau gateway jaringan compose (cek: `docker compose exec app ip route \| awk '/default/ {print $3}'`). Tambahkan `host.docker.internal,.docker.internal,172.16.0.0/12` ke `NO_PROXY` di `.env`, lalu **recreate** container. Jika dari host `curl http://172.17.0.1:9006/...` OK tapi dari container ke gateway (mis. `172.22.0.1:9006`) timeout, buka akses Docker→host: `sudo iptables -I DOCKER-USER -s 172.16.0.0/12 -p tcp --dport 9006 -j ACCEPT` lalu set bridge URL ke `http://<gateway>:9006`. |
 
 ## Perintah berguna
 

@@ -38,6 +38,10 @@
             <dd class="mb-0">{{ $participant->status_pegawai }}</dd>
         </div>
         <div class="col-md-6">
+            <dt class="text-muted mb-1">Pendidikan Terakhir</dt>
+            <dd class="mb-0">{{ $participant->pendidikan_terakhir ?: '-' }}</dd>
+        </div>
+        <div class="col-md-6">
             <dt class="text-muted mb-1">No. Telp</dt>
             <dd class="mb-0">{{ $participant->no_telp }}</dd>
         </div>

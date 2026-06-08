@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Notification;
 use App\Models\User;
 use App\Notifications\NewScheduleRequest;
 use App\Notifications\NewRegistrationNotification;
+use App\Support\ParticipantEducation;
+use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
 {
@@ -78,6 +80,7 @@ class ClientController extends Controller
 			'skpd' => 'required|string|max:255',
 			'ukpd' => 'required|string|max:255',
 			'status_pegawai' => 'required|in:CPNS,PNS,PPPK',
+			'pendidikan_terakhir' => ['required', Rule::in(ParticipantEducation::levels())],
 			'no_telp' => 'required|string|max:20',
 			'email' => 'required|email|max:255|unique:users,email,' . $user->id,
 		]);

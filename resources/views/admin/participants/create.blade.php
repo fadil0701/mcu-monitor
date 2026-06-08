@@ -63,6 +63,15 @@
                 @error('status_pegawai')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-6">
+                <label for="pendidikan_terakhir" class="form-label">Pendidikan Terakhir</label>
+                <x-participant.education-select
+                    :value="old('pendidikan_terakhir')"
+                    :required="false"
+                    class="@error('pendidikan_terakhir') is-invalid @enderror"
+                />
+                @error('pendidikan_terakhir')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-md-6">
                 <label for="no_telp" class="form-label">No. Telepon *</label>
                 <input type="text" id="no_telp" name="no_telp" value="{{ old('no_telp') }}" required class="form-control @error('no_telp') is-invalid @enderror">
                 @error('no_telp')<div class="invalid-feedback">{{ $message }}</div>@enderror

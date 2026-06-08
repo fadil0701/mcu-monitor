@@ -6,6 +6,8 @@ services:
     ports: !reset []
 
   app:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       APP_DEBUG: "false"
       LOG_LEVEL: warning
@@ -13,9 +15,13 @@ services:
       - no-new-privileges:true
 
   queue:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     security_opt:
       - no-new-privileges:true
 
   scheduler:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     security_opt:
       - no-new-privileges:true

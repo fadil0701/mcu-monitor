@@ -26,6 +26,7 @@ class Participant extends Model
         'no_telp',
         'email',
         'status_pegawai',
+        'pendidikan_terakhir',
         'status_mcu',
         'tanggal_mcu_terakhir',
         'catatan',

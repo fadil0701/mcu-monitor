@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Imports\ParticipantsImport;
 use App\Models\Participant;
+use App\Support\ParticipantEducation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ParticipantController extends Controller
@@ -47,6 +49,7 @@ class ParticipantController extends Controller
             'skpd' => 'required|string|max:255',
             'ukpd' => 'required|string|max:255',
             'status_pegawai' => 'required|in:CPNS,PNS,PPPK',
+            'pendidikan_terakhir' => ['nullable', Rule::in(ParticipantEducation::levels())],
             'no_telp' => 'required|string|max:20',
             'email' => 'required|email|max:255',
             'status_mcu' => 'nullable|in:Belum MCU,Sudah MCU,Ditolak',
@@ -81,6 +84,7 @@ class ParticipantController extends Controller
             'skpd' => 'required|string|max:255',
             'ukpd' => 'required|string|max:255',
             'status_pegawai' => 'required|in:CPNS,PNS,PPPK',
+            'pendidikan_terakhir' => ['nullable', Rule::in(ParticipantEducation::levels())],
             'no_telp' => 'required|string|max:20',
             'email' => 'required|email|max:255',
             'status_mcu' => 'nullable|in:Belum MCU,Sudah MCU,Ditolak',
