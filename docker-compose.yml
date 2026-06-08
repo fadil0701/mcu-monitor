@@ -1,8 +1,15 @@
+x-build-proxy-args: &build-proxy-args
+  HTTP_PROXY: ${HTTP_PROXY:-}
+  HTTPS_PROXY: ${HTTPS_PROXY:-}
+  NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1,mysql,.local}
+
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        <<: *build-proxy-args
     image: monitoring-mcu:latest
     container_name: monitoring-mcu-app
     restart: unless-stopped

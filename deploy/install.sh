@@ -44,6 +44,7 @@ fi
 
 echo "Membangun image dan menjalankan stack produksi..."
 export DOCKER_BUILDKIT=1
+export COMPOSE_PARALLEL_LIMIT=1
 # shellcheck disable=SC2046
 docker compose $(compose_prod_args) build app
 # shellcheck disable=SC2046

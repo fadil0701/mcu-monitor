@@ -1,8 +1,21 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.4
+
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
 
 FROM composer:2 AS composer
 
 FROM php:8.3-fpm-bookworm AS vendor
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+ENV HTTP_PROXY=${HTTP_PROXY} \
+    HTTPS_PROXY=${HTTPS_PROXY} \
+    NO_PROXY=${NO_PROXY} \
+    http_proxy=${HTTP_PROXY} \
+    https_proxy=${HTTPS_PROXY} \
+    no_proxy=${NO_PROXY}
 
 COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 
@@ -42,13 +55,22 @@ COPY . .
 
 RUN composer dump-autoload --optimize --no-dev --no-scripts
 
-FROM node:22-alpine AS frontend
-
+FROM node:22-bookworm-slim AS frontend
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+ENV HTTP_PROXY=${HTTP_PROXY} \
+    HTTPS_PROXY=${HTTPS_PROXY} \
+    NO_PROXY=${NO_PROXY} \
+    http_proxy=${HTTP_PROXY} \
+    https_proxy=${HTTPS_PROXY} \
+    no_proxy=${NO_PROXY}
 WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --no-audit --no-fund
 
 COPY vite.config.js ./
 COPY resources ./resources
@@ -56,6 +78,15 @@ COPY resources ./resources
 RUN npm run build
 
 FROM php:8.3-fpm-bookworm AS app
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+ENV HTTP_PROXY=${HTTP_PROXY} \
+    HTTPS_PROXY=${HTTPS_PROXY} \
+    NO_PROXY=${NO_PROXY} \
+    http_proxy=${HTTP_PROXY} \
+    https_proxy=${HTTPS_PROXY} \
+    no_proxy=${NO_PROXY}
 
 LABEL maintainer="Monitoring MCU"
 LABEL description="Laravel Monitoring MCU application"
