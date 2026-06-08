@@ -10,10 +10,12 @@ final class CkgBridgeSettings
     {
         $config = CkgBridgeConfig::current();
         if ($config?->is_active && filled($config->base_url)) {
-            return rtrim((string) $config->base_url, '/');
+            return CkgBridgeUrlNormalizer::normalize((string) $config->base_url);
         }
 
-        return rtrim((string) config('ckg_bridge.base_url', 'http://127.0.0.1:9006'), '/');
+        return CkgBridgeUrlNormalizer::normalize(
+            (string) config('ckg_bridge.base_url', 'http://127.0.0.1:9006')
+        );
     }
 
     public static function apiKey(): string

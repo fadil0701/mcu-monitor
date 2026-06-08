@@ -24,7 +24,7 @@ final class CkgBridgeUrlNormalizer
         $scheme = strtolower((string) ($parts['scheme'] ?? 'http'));
         $port = $parts['port'] ?? null;
 
-        if (in_array($host, ['10.15.101.117', '127.0.0.1', 'localhost'], true)) {
+        if (in_array($host, ['10.15.101.117', '127.0.0.1', 'localhost', 'host.docker.internal'], true)) {
             $scheme = 'http';
             $port ??= 9006;
         }

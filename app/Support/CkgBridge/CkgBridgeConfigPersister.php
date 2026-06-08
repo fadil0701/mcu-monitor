@@ -16,9 +16,8 @@ final class CkgBridgeConfigPersister
             unset($data['api_key']);
         }
 
-        $data['api_key_header'] = filled($data['api_key_header'] ?? null)
-            ? $data['api_key_header']
-            : 'X-Mcu-Api-Key';
+        $header = trim((string) ($data['api_key_header'] ?? ''));
+        $data['api_key_header'] = $header !== '' ? $header : 'X-Mcu-Api-Key';
 
         return CkgBridgeConfig::query()->updateOrCreate(
             ['name' => 'CKG Bridge'],

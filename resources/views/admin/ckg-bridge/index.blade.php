@@ -34,12 +34,14 @@
 
                     <div class="mb-3">
                         <label class="form-label" for="ckg_base_url">URL Portal CKG</label>
-                        <input type="url" class="form-control" id="ckg_base_url" name="base_url" required
+                        <input type="text" class="form-control font-monospace" id="ckg_base_url" name="base_url" required
+                               inputmode="url" spellcheck="false" autocomplete="off"
                                value="{{ old('base_url', $config->base_url) }}"
                                placeholder="http://10.15.101.117:9006">
                         <div class="form-text">
-                            <strong>VM produksi:</strong> <code>http://10.15.101.117:9006</code> (port Docker CKG, tanpa <code>/sikerja</code>, tanpa path <code>/api/...</code>).<br>
-                            Lokal Docker Windows: <code>http://host.docker.internal:9006</code>
+                            <strong>Wajib <code>http://</code></strong> (bukan <code>https://</code>). Port Docker CKG: <code>:9006</code>.<br>
+                            <strong>VM (dari container MCU):</strong> <code>http://host.docker.internal:9006</code> atau <code>http://10.15.101.117:9006</code><br>
+                            Tanpa <code>/sikerja</code> dan tanpa path <code>/api/...</code>.
                         </div>
                     </div>
 
@@ -59,8 +61,10 @@
 
                     <div class="mb-3">
                         <label class="form-label" for="ckg_api_key_header">Header API key</label>
-                        <input type="text" class="form-control" id="ckg_api_key_header" name="api_key_header"
-                               value="{{ old('api_key_header', $config->api_key_header) }}">
+                        <input type="hidden" name="api_key_header" value="X-Mcu-Api-Key">
+                        <input type="text" class="form-control" id="ckg_api_key_header" readonly
+                               value="X-Mcu-Api-Key">
+                        <div class="form-text">Harus sama dengan header di menu Bridging MCU CKG.</div>
                     </div>
 
                     <div class="row g-2 mb-3">
