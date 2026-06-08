@@ -9,3 +9,13 @@ services:
     environment:
       APP_DEBUG: "false"
       LOG_LEVEL: warning
+    security_opt:
+      - no-new-privileges:true
+
+  queue:
+    security_opt:
+      - no-new-privileges:true
+
+  scheduler:
+    security_opt:
+      - no-new-privileges:true

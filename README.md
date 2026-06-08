@@ -10,7 +10,23 @@ Sistem monitoring Medical Check Up (MCU) berbasis **Laravel 13** dengan template
 - Maatwebsite Excel, DomPDF, Intervention Image
 - Auth Laravel native (controller + route, tanpa Breeze/Filament)
 
-## Deploy dengan Docker
+## Deploy VM produksi (Docker)
+
+Panduan lengkap: **`docs/DEPLOY.md`**
+
+```bash
+cp .env.production.example .env
+nano .env
+chmod +x deploy/install.sh
+./deploy/install.sh
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php artisan user:create-admin --from-env
+```
+
+- Port produksi: **9003**
+- Path publik: **`/mcuppkp/`**
+- Update: `./deploy/update-production.sh`
+
+## Deploy dengan Docker (lokal / dev)
 
 Prasyarat: [Docker Desktop](https://www.docker.com/products/docker-desktop/) atau Docker Engine + Compose v2.
 

@@ -19,7 +19,7 @@ class AppServiceProvider extends ServiceProvider
         Paginator::defaultView('vendor.pagination.bootstrap-5');
         Paginator::defaultSimpleView('vendor.pagination.simple-bootstrap-5');
 
-        if (! $this->app->environment('local') && ! $this->app->runningInConsole() && $this->app->bound('request')) {
+        if (! $this->app->runningInConsole() && $this->app->bound('request')) {
             $request = $this->app->make('request');
 
             if ($this->shouldUseRequestOrigin($request)) {

@@ -7,7 +7,7 @@ services:
     container_name: monitoring-mcu-app
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-8080}:80"
+      - "${APP_PORT:-9003}:80"
     env_file:
       - .env
     environment:
@@ -84,14 +84,14 @@ services:
     ports:
       - "${FORWARD_DB_PORT:-3307}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${DB_PASSWORD:-secret}}
       MYSQL_DATABASE: ${DB_DATABASE:-monitoring_mcu}
       MYSQL_USER: ${DB_USERNAME:-monitoring}
       MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_PASSWORD:-secret}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10

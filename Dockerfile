@@ -1,8 +1,34 @@
 # syntax=docker/dockerfile:1
 
-FROM composer:2 AS vendor
+FROM composer:2 AS composer
+
+FROM php:8.3-fpm-bookworm AS vendor
+
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libzip-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    libxml2-dev \
+    libicu-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" \
+        bcmath \
+        exif \
+        gd \
+        intl \
+        mbstring \
+        opcache \
+        pcntl \
+        pdo_mysql \
+        zip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY composer.json composer.lock ./
 
