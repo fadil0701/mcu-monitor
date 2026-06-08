@@ -1,5 +1,25 @@
 /* Monitoring MCU — peningkatan kontras & konsistensi admin */
 
+.app-brand-logo-img {
+    display: block;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    max-height: 32px;
+    object-fit: contain;
+}
+
+.app-brand-logo-img--auth {
+    max-height: 56px;
+}
+
+.navbar-brand-logo {
+    display: block;
+    max-height: 40px;
+    width: auto;
+    object-fit: contain;
+}
+
 /* Breadcrumb & judul halaman */
 .container-p-y h4 {
     color: #384551 !important;

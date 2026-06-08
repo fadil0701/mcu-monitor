@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sistem Monitoring MCU - PPKP DKI Jakarta</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/img/icon-ppkp.png') }}">
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -183,6 +184,13 @@
             font-weight: 500;
             margin: 0 10px;
         }
+
+        .navbar-brand-logo {
+            display: block;
+            max-height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
         
         .logo-section {
             display: flex;
@@ -228,9 +236,8 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('home') }}">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo PPKP" height="36" onerror="this.style.display='none'">
-                MCU PPKP DKI Jakarta
+            <a class="navbar-brand d-flex align-items-center" href="{{ route('home') }}">
+                <img src="{{ asset('assets/img/logo-ppkp.png') }}" alt="PPKP DKI Jakarta" class="navbar-brand-logo">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
