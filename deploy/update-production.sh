@@ -25,8 +25,13 @@ if [ -d .git ]; then
     git pull origin "$BRANCH"
 fi
 
+echo "==> Build frontend (Vite)"
+chmod +x deploy/build-frontend.sh
+./deploy/build-frontend.sh
+
 echo "==> Docker build & up"
 export DOCKER_BUILDKIT=1
+export COMPOSE_PARALLEL_LIMIT=1
 # shellcheck disable=SC2046
 docker compose $(compose_prod_args) build app
 # shellcheck disable=SC2046

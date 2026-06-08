@@ -42,6 +42,15 @@ if command -v curl >/dev/null 2>&1; then
     fi
 fi
 
+echo "Build frontend (Vite) di host..."
+chmod +x deploy/build-frontend.sh
+./deploy/build-frontend.sh
+
+if [ ! -f public/build/manifest.json ]; then
+    echo "ERROR: public/build/manifest.json tidak ada. Build frontend gagal."
+    exit 1
+fi
+
 echo "Membangun image dan menjalankan stack produksi..."
 export DOCKER_BUILDKIT=1
 export COMPOSE_PARALLEL_LIMIT=1

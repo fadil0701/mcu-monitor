@@ -132,7 +132,7 @@ Spesifikasi: `dashboard-skrining/docs/BRIDGE-CKG-MCU.md`.
 | Login redirect loop | Cek `SESSION_PATH` = `/mcuppkp/` saat pakai subpath |
 | 502 dari nginx | `docker compose ps`, `docker compose logs app` |
 | Build gagal (proxy) | Isi `HTTP_PROXY=http://10.15.3.20:80` dan `HTTPS_PROXY` sama di `.env`. Jangan pakai placeholder `PROXY_HOST:PORT`. |
-| `npm ci` gagal saat build | `git pull` lalu `bash deploy/install.sh` (proxy diteruskan ke Dockerfile). Alternatif: `bash deploy/build-frontend.sh` lalu build ulang. |
+| `npm ci` gagal saat build image | `install.sh` sekarang build Vite lewat `deploy/build-frontend.sh` di host (bukan di Dockerfile). Pastikan `git pull` terbaru. |
 
 ## Perintah berguna
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build Vite di host (lewat container Node) — fallback jika npm ci di Dockerfile gagal.
+# Build Vite di host (container Node) sebelum docker compose build.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -26,4 +26,4 @@ docker run --rm \
         ls -la public/build/manifest.json
     '
 
-echo "Selesai. Lanjutkan: docker compose -f docker-compose.yml -f docker-compose.prod.yml build app"
+echo "Selesai."
