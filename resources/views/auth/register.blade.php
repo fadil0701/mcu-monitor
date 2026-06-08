@@ -86,6 +86,14 @@
             <input type="text" class="form-control" id="ukpd" name="ukpd" value="{{ old('ukpd') }}" />
         </div>
         <div class="col-md-6 mb-3">
+            <label for="pendidikan_terakhir" class="form-label">Pendidikan Terakhir <span class="text-danger">*</span></label>
+            <x-participant.education-select
+                :value="old('pendidikan_terakhir')"
+                class="@error('pendidikan_terakhir') is-invalid @enderror"
+            />
+            @error('pendidikan_terakhir')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+        </div>
+        <div class="col-md-6 mb-3">
             <label for="no_telp" class="form-label">No. Telepon</label>
             <input type="tel" class="form-control" id="no_telp" name="no_telp" value="{{ old('no_telp') }}" placeholder="08xxxxxxxxxx" />
         </div>

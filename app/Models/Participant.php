@@ -107,6 +107,22 @@ class Participant extends Model
         return $this->tanggal_mcu_terakhir ? $this->tanggal_mcu_terakhir->format('d/m/Y') : '-';
     }
 
+    public static function isPlaceholderEmail(?string $email): bool
+    {
+        $email = strtolower(trim((string) $email));
+
+        if ($email === '' || $email === '-') {
+            return true;
+        }
+
+        return str_ends_with($email, '@ckg-sync.local');
+    }
+
+    public function emailForForm(): string
+    {
+        return self::isPlaceholderEmail($this->email) ? '' : trim((string) $this->email);
+    }
+
     /**
      * Boot the model and clear cache on changes
      */

@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Participant;
+use App\Support\ParticipantEducation;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 use Carbon\Carbon;
@@ -40,6 +42,7 @@ class RegisteredUserController extends Controller
 			'tanggal_lahir' => ['nullable', 'date'],
 			'jenis_kelamin' => ['nullable', 'in:L,P'],
 			'status_pegawai' => ['required', 'in:CPNS,PNS,PPPK'],
+			'pendidikan_terakhir' => ['required', Rule::in(ParticipantEducation::levels())],
 			'skpd' => ['nullable', 'string', 'max:255'],
 			'ukpd' => ['nullable', 'string', 'max:255'],
 			'no_telp' => ['nullable', 'string', 'max:20'],
@@ -90,6 +93,7 @@ class RegisteredUserController extends Controller
 				'no_telp' => $request->no_telp,
 				'email' => $request->email_personal ?: $request->email,
 				'status_pegawai' => $request->status_pegawai,
+				'pendidikan_terakhir' => $request->pendidikan_terakhir,
 				'status_mcu' => 'Belum MCU',
 				'catatan' => 'Pendaftaran melalui sistem online',
 			]);

@@ -84,7 +84,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="email" class="form-label">Email *</label>
-                            <input type="email" id="email" name="email" value="{{ old('email', $participant->email ?: $user->email) }}" required class="form-control @error('email') is-invalid @enderror">
+                            <input type="email" id="email" name="email" value="{{ old('email', $participant->emailForForm() ?: $user->email) }}" required class="form-control @error('email') is-invalid @enderror">
                             @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>

@@ -98,7 +98,7 @@
 
     <div class="mb-3">
         <label for="email" class="form-label">Email Login *</label>
-        <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', $participant->email && $participant->email !== '-' ? $participant->email : '') }}" required autofocus placeholder="Email aktif" />
+        <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email', $participant->emailForForm()) }}" required autofocus placeholder="Email aktif" />
         @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
 
