@@ -7,6 +7,7 @@
                 class="app-brand-logo-img app-brand-logo-img--sidebar"
                 style="display:block;height:40px;width:auto;max-width:100%;object-fit:contain;"
             >
+            <span class="app-brand-text">Monitoring MCU</span>
         </a>
         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
             <i class="bx bx-chevron-left bx-sm align-middle"></i>
