@@ -10,6 +10,7 @@ final class CkgBridgeConfigPersister
     public function persist(UpdateCkgBridgeConfigRequest $request): CkgBridgeConfig
     {
         $data = $request->validated();
+        $data['base_url'] = CkgBridgeUrlNormalizer::normalize((string) $data['base_url']);
 
         if (($data['api_key'] ?? '') === '') {
             unset($data['api_key']);

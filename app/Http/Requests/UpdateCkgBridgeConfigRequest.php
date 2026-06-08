@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Support\CkgBridge\CkgBridgeUrlNormalizer;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class UpdateCkgBridgeConfigRequest extends FormRequest
 {
@@ -31,5 +33,37 @@ class UpdateCkgBridgeConfigRequest extends FormRequest
         if ($this->has('is_active') && ! $this->boolean('is_active')) {
             $this->merge(['is_active' => false]);
         }
+
+        if ($this->filled('base_url')) {
+            $this->merge([
+                'base_url' => CkgBridgeUrlNormalizer::normalize((string) $this->input('base_url')),
+            ]);
+        }
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $url = (string) $this->input('base_url', '');
+            if ($url === '') {
+                return;
+            }
+
+            if (str_contains(strtolower($url), '/api/bridge')) {
+                $validator->errors()->add(
+                    'base_url',
+                    'Isi hanya base URL (mis. http://10.15.101.117:9006), bukan path endpoint API.'
+                );
+            }
+
+            $host = parse_url($url, PHP_URL_HOST);
+            $port = parse_url($url, PHP_URL_PORT);
+            if (in_array($host, ['10.15.101.117', '127.0.0.1', 'localhost'], true) && $port === null) {
+                $validator->errors()->add(
+                    'base_url',
+                    'Untuk akses LAN/internal, sertakan port Docker CKG (biasanya :9006).'
+                );
+            }
+        });
     }
 }

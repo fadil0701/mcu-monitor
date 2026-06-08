@@ -36,8 +36,11 @@
                         <label class="form-label" for="ckg_base_url">URL Portal CKG</label>
                         <input type="url" class="form-control" id="ckg_base_url" name="base_url" required
                                value="{{ old('base_url', $config->base_url) }}"
-                               placeholder="http://host.docker.internal:9006">
-                        <div class="form-text">Lokal Docker Windows: <code>http://host.docker.internal:9006</code></div>
+                               placeholder="http://10.15.101.117:9006">
+                        <div class="form-text">
+                            <strong>VM produksi:</strong> <code>http://10.15.101.117:9006</code> (port Docker CKG, tanpa <code>/sikerja</code>, tanpa path <code>/api/...</code>).<br>
+                            Lokal Docker Windows: <code>http://host.docker.internal:9006</code>
+                        </div>
                     </div>
 
                     <div class="mb-3">
