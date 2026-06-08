@@ -32,5 +32,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="CKG_API_BASE_URL" value="http://ckg.test"/>
+        <env name="CKG_API_KEY" value="test-mcu-api-key"/>
     </php>
 </phpunit>

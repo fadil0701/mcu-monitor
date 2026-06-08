@@ -23,6 +23,7 @@ class MenuHelper
                 'name' => 'Kelola Data',
                 'icon' => 'bx-data',
                 'subItems' => [
+                    ['name' => 'Integrasi CKG', 'path' => route('admin.ckg-bridge.index')],
                     ['name' => 'Data Peserta', 'path' => route('admin.participants.index')],
                     ['name' => 'Jadwal MCU', 'path' => route('admin.schedules.index')],
                     ['name' => 'Hasil MCU', 'path' => route('admin.mcu-results.index')],

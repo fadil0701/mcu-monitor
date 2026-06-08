@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminNotificationsController;
+use App\Http\Controllers\Admin\CkgBridgeMonitoringController;
 use App\Http\Controllers\Admin\DiagnosisController;
 use App\Http\Controllers\Admin\EmailTemplateController;
 use App\Http\Controllers\Admin\McuResultController;
@@ -71,4 +72,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('settings/section/{section}', [SettingController::class, 'updateSection'])->name('settings.update-section');
+
+    Route::get('ckg-bridge', [CkgBridgeMonitoringController::class, 'index'])->name('ckg-bridge.index');
+    Route::put('ckg-bridge/config', [CkgBridgeMonitoringController::class, 'updateConfig'])->name('ckg-bridge.config.update');
+    Route::post('ckg-bridge/test', [CkgBridgeMonitoringController::class, 'testConnection'])->name('ckg-bridge.test');
+    Route::post('ckg-bridge/sync', [CkgBridgeMonitoringController::class, 'runSync'])->name('ckg-bridge.sync');
 });

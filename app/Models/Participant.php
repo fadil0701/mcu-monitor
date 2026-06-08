@@ -12,6 +12,9 @@ class Participant extends Model
     use HasFactory;
 
     protected $fillable = [
+        'ckg_peserta_id',
+        'ckg_registration_code',
+        'ckg_synced_at',
         'nik_ktp',
         'nrk_pegawai',
         'nama_lengkap',
@@ -31,6 +34,7 @@ class Participant extends Model
     protected $casts = [
         'tanggal_lahir' => 'date',
         'tanggal_mcu_terakhir' => 'date',
+        'ckg_synced_at' => 'datetime',
     ];
 
     public function schedules(): HasMany
