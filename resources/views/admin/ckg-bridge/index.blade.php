@@ -10,6 +10,19 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
 @endif
+
+@if($urlUsesHttps ?? false)
+    <div class="alert alert-danger" role="alert">
+        URL saat ini memakai <strong>https://</strong>. Portal CKG di VM hanya menerima <strong>http://</strong>
+        (contoh: <code>http://10.15.101.117:9006</code>). Ubah URL lalu klik <strong>Simpan konfigurasi</strong>.
+    </div>
+@endif
+
+<div class="alert alert-info" role="alert">
+    Field URL <strong>bisa diedit</strong>. Jika simpan ditolak WAF (<em>URL yang diminta ditolak</em>), atur lewat SSH:
+    <code class="d-block mt-2 small user-select-all">docker compose exec app php artisan ckg-bridge:configure --base-url=http://10.15.101.117:9006 --api-key=KEY_DARI_CKG --activate --test</code>
+</div>
+
 @if($errors->any())
     <div class="alert alert-danger alert-dismissible" role="alert">
         <ul class="mb-0">
@@ -34,12 +47,13 @@
 
                     <div class="mb-3">
                         <label class="form-label" for="ckg_base_url">URL Portal CKG</label>
-                        <input type="text" class="form-control font-monospace" id="ckg_base_url" name="base_url" required
+                        <input type="text" class="form-control font-monospace bg-white" id="ckg_base_url" name="base_url" required
                                inputmode="url" spellcheck="false" autocomplete="off"
-                               value="{{ old('base_url', $config->base_url) }}"
+                               value="{{ old('base_url', $displayBaseUrl ?? $config->base_url) }}"
                                placeholder="http://10.15.101.117:9006">
                         <div class="form-text">
-                            Contoh VM: <code>http://10.15.101.117:9006</code> (http, port 9006, tanpa path <code>/api/...</code>).
+                            <strong>Wajib <code>http://</code></strong>, bukan <code>https://</code>.
+                            Contoh VM: <code>http://10.15.101.117:9006</code> — tanpa path <code>/api/...</code> atau <code>/sikerja</code>.
                         </div>
                     </div>
 

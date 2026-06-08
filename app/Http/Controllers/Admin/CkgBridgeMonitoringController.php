@@ -42,8 +42,10 @@ class CkgBridgeMonitoringController extends Controller
             ->first();
 
         $effectiveBaseUrl = CkgBridgeSettings::baseUrl();
-        $configUsesDatabase = (bool) ($config->is_active && filled($config->api_key));
+        $configUsesDatabase = (bool) $config->is_active;
         $hasEffectiveApiKey = CkgBridgeSettings::apiKey() !== '';
+        $displayBaseUrl = $config->base_url ?: config('ckg_bridge.base_url', 'http://127.0.0.1:9006');
+        $urlUsesHttps = str_starts_with(strtolower($displayBaseUrl), 'https://');
 
         return view('admin.ckg-bridge.index', compact(
             'config',
@@ -52,6 +54,8 @@ class CkgBridgeMonitoringController extends Controller
             'effectiveBaseUrl',
             'configUsesDatabase',
             'hasEffectiveApiKey',
+            'displayBaseUrl',
+            'urlUsesHttps',
         ));
     }
 
