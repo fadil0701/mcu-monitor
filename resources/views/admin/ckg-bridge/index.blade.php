@@ -10,12 +10,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
 @endif
-<div class="alert alert-warning" role="alert">
-    Jika simpan form ditolak WAF (<em>URL yang diminta ditolak</em>), atur lewat SSH:
-    <code class="d-block mt-2 small">docker compose exec app php artisan ckg-bridge:configure --base-url=http://10.15.101.117:9006 --api-key=KEY_DARI_CKG --activate --test</code>
-    Atau akses admin via LAN: <code>http://10.15.101.117:9003/mcuppkp/admin/ckg-bridge</code>
-</div>
-
 @if($errors->any())
     <div class="alert alert-danger alert-dismissible" role="alert">
         <ul class="mb-0">
@@ -45,9 +39,7 @@
                                value="{{ old('base_url', $config->base_url) }}"
                                placeholder="http://10.15.101.117:9006">
                         <div class="form-text">
-                            <strong class="text-danger">Jangan <code>127.0.0.1</code></strong> dan jangan <code>host.docker.internal</code> (terblokir proxy FortiGate).<br>
-                            <strong>VM (disarankan):</strong> <code>http://10.15.101.117:9006</code> atau <code>http://web</code> (jaringan Docker bersama CKG).<br>
-                            Wajib <code>http://</code>, bukan <code>https://</code>.
+                            Contoh VM: <code>http://10.15.101.117:9006</code> (http, port 9006, tanpa path <code>/api/...</code>).
                         </div>
                     </div>
 
@@ -67,10 +59,8 @@
 
                     <div class="mb-3">
                         <label class="form-label" for="ckg_api_key_header">Header API key</label>
-                        <input type="hidden" name="api_key_header" value="X-Mcu-Api-Key">
-                        <input type="text" class="form-control" id="ckg_api_key_header" readonly
-                               value="X-Mcu-Api-Key">
-                        <div class="form-text">Harus sama dengan header di menu Bridging MCU CKG.</div>
+                        <input type="text" class="form-control" id="ckg_api_key_header" name="api_key_header"
+                               value="{{ old('api_key_header', $config->api_key_header ?: 'X-Mcu-Api-Key') }}">
                     </div>
 
                     <div class="row g-2 mb-3">

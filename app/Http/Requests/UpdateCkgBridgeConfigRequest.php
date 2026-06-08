@@ -21,7 +21,7 @@ class UpdateCkgBridgeConfigRequest extends FormRequest
         return [
             'base_url' => ['required', 'string', 'max:500', 'regex:/^https?:\/\/.+/i'],
             'api_key' => 'nullable|string|max:500',
-            'api_key_header' => 'nullable|string|max:64|in:X-Mcu-Api-Key',
+            'api_key_header' => 'nullable|string|max:64',
             'per_page' => 'integer|min:1|max:500',
             'timeout_seconds' => 'integer|min:10|max:120',
             'is_active' => 'boolean',
@@ -58,21 +58,7 @@ class UpdateCkgBridgeConfigRequest extends FormRequest
 
             $host = parse_url($url, PHP_URL_HOST);
             $port = parse_url($url, PHP_URL_PORT);
-            if (str_starts_with(strtolower($url), 'https://') && in_array($host, ['10.15.101.117', '127.0.0.1', 'localhost', 'host.docker.internal'], true)) {
-                $validator->errors()->add(
-                    'base_url',
-                    'Akses internal Docker CKG memakai http:// (bukan https://).'
-                );
-            }
-
-            if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
-                $validator->errors()->add(
-                    'base_url',
-                    'Jangan pakai 127.0.0.1 dari aplikasi MCU (berjalan di container Docker). Gunakan http://host.docker.internal:9006 atau http://10.15.101.117:9006.'
-                );
-            }
-
-            if (in_array($host, ['10.15.101.117', 'host.docker.internal'], true) && $port === null) {
+            if (in_array($host, ['10.15.101.117', '127.0.0.1', 'localhost', 'host.docker.internal'], true) && $port === null) {
                 $validator->errors()->add(
                     'base_url',
                     'Untuk akses LAN/internal, sertakan port Docker CKG (biasanya :9006).'
