@@ -16,7 +16,12 @@ if [ ! -f .env ]; then
     echo "File .env dibuat dari .env.production.example — edit DB_PASSWORD, MYSQL_ROOT_PASSWORD, APP_KEY, SUPER_ADMIN_*."
 fi
 
+fix_placeholder_proxy_in_env .env
 load_proxy_from_env .env
+
+if ! proxy_is_set; then
+    unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy 2>/dev/null || true
+fi
 
 if ! app_key_is_set .env; then
     echo "Menghasilkan APP_KEY..."

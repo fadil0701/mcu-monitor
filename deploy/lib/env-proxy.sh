@@ -1,6 +1,29 @@
+fix_placeholder_proxy_in_env() {
+    local env_file="${1:-.env}"
+    local changed=0
+
+    [ -f "$env_file" ] || return 0
+
+    if grep -qE '^HTTP_PROXY=.*(PROXY_HOST|:PORT|PROXY|example\.com)' "$env_file" 2>/dev/null; then
+        sed -i 's|^HTTP_PROXY=.*|HTTP_PROXY=|' "$env_file"
+        changed=1
+    fi
+    if grep -qE '^HTTPS_PROXY=.*(PROXY_HOST|:PORT|PROXY|example\.com)' "$env_file" 2>/dev/null; then
+        sed -i 's|^HTTPS_PROXY=.*|HTTPS_PROXY=|' "$env_file"
+        changed=1
+    fi
+
+    if [ "$changed" -eq 1 ]; then
+        echo "PERINGATAN: placeholder proxy di ${env_file} dikosongkan."
+        echo "Jika VM wajib proxy, isi manual — contoh: HTTP_PROXY=http://10.15.3.20:80"
+    fi
+}
+
 load_proxy_from_env() {
     local env_file="${1:-.env}"
     [ -f "$env_file" ] || return 0
+
+    fix_placeholder_proxy_in_env "$env_file"
 
     while IFS= read -r line || [ -n "$line" ]; do
         case "$line" in
