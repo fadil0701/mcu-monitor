@@ -27,8 +27,8 @@ echo "Memeriksa jaringan untuk build Docker..."
 if proxy_is_set; then
     echo "Proxy aktif: HTTPS_PROXY=${HTTPS_PROXY:-$HTTP_PROXY}"
 else
-    echo "PERINGATAN: HTTP_PROXY/HTTPS_PROXY belum diset di .env."
-    echo "Jika VM wajib lewat proxy, isi dulu lalu jalankan ulang install.sh"
+    echo "Proxy tidak dipakai (HTTP_PROXY/HTTPS_PROXY kosong atau placeholder diabaikan)."
+    echo "Jika VM wajib lewat proxy, isi nilai asli di .env — contoh: HTTP_PROXY=http://10.15.3.20:80"
 fi
 
 if command -v curl >/dev/null 2>&1; then

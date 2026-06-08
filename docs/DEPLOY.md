@@ -126,7 +126,7 @@ Spesifikasi: `dashboard-skrining/docs/BRIDGE-CKG-MCU.md`.
 | `APP_KEY` / `vendor/autoload.php` saat install | `bash deploy/install.sh` (generate key tanpa composer di host). Manual: `docker run --rm php:8.3-cli php -r "echo 'base64:'.base64_encode(random_bytes(32));"` |
 | Login redirect loop | Cek `SESSION_PATH` = `/mcuppkp/` saat pakai subpath |
 | 502 dari nginx | `docker compose ps`, `docker compose logs app` |
-| Build gagal (proxy) | Isi `HTTP_PROXY` di `.env` + `deploy/docker-http-proxy.conf.example` |
+| Build gagal (proxy) | Hapus placeholder `PROXY_HOST:PORT` di `.env` atau isi proxy asli, mis. `HTTP_PROXY=http://10.15.3.20:80`. Kosongkan jika tidak pakai proxy. |
 
 ## Perintah berguna
 

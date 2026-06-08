@@ -16,9 +16,26 @@ load_proxy_from_env() {
     [ -n "${HTTP_PROXY:-}" ] && export http_proxy="$HTTP_PROXY"
     [ -n "${HTTPS_PROXY:-}" ] && export https_proxy="$HTTPS_PROXY"
     [ -n "${NO_PROXY:-}" ] && export no_proxy="$NO_PROXY"
+
+    sanitize_proxy_env
+}
+
+sanitize_proxy_env() {
+    local proxy="${HTTPS_PROXY:-${HTTP_PROXY:-}}"
+
+    if [ -z "$proxy" ]; then
+        return 0
+    fi
+
+    case "$proxy" in
+        *PROXY_HOST*|*PROXY*|*":PORT"*|*example.com*|*CHANGE_ME*)
+            unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy
+            ;;
+    esac
 }
 
 proxy_is_set() {
+    sanitize_proxy_env
     [ -n "${HTTPS_PROXY:-${HTTP_PROXY:-}}" ]
 }
 
