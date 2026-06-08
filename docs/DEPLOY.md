@@ -278,6 +278,7 @@ Spesifikasi API bridge: `dashboard-skrining/docs/BRIDGE-CKG-MCU.md`.
 
 | Commit | Ringkasan |
 |--------|-----------|
+| `941cf20` | Update riwayat perubahan sidebar logo |
 | `804974d` | Sidebar admin: ganti ke `icon-ppkp.png` (logo horizontal terpotong) |
 | `df7c728` | Kebijakan dokumentasi wajib + riwayat perubahan di DEPLOY.md |
 | `564d58d` | Fix logo auth: `height:48px` inline + style di `auth.blade.php` |
