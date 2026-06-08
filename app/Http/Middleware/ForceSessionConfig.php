@@ -15,23 +15,19 @@ class ForceSessionConfig
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Override session config untuk IP access dan production
         if (app()->environment('production') || app()->environment('staging')) {
-            // Detect if accessing via IP address (not domain)
             $host = $request->getHost();
-            
-            // If accessing via IP or localhost, disable secure cookies
-            if (filter_var($host, FILTER_VALIDATE_IP) || 
-                str_contains($host, 'localhost') || 
+
+            if (filter_var($host, FILTER_VALIDATE_IP) ||
+                str_contains($host, 'localhost') ||
                 str_contains($host, '127.0.0.1')) {
-                
+
                 config([
                     'session.secure' => false,
                     'session.domain' => null,
                     'session.same_site' => 'lax',
                 ]);
-                
-                // Log for debugging
+
                 if (config('app.debug')) {
                     \Log::info('ForceSessionConfig: Adjusting session for IP access', [
                         'host' => $host,

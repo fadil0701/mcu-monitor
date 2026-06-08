@@ -10,7 +10,11 @@ if [ ! -f "$ENV_FILE" ]; then
     exit 1
 fi
 
-LAN_IP="${LAN_IP:-10.15.101.117}"
+if [ -z "${LAN_IP:-}" ]; then
+    echo "ERROR: Set LAN_IP terlebih dahulu (lihat docs/DEPLOY.md)"
+    exit 1
+fi
+
 APP_PORT="${APP_PORT:-9003}"
 if grep -q '^APP_PORT=' "$ENV_FILE"; then
     APP_PORT="$(grep '^APP_PORT=' "$ENV_FILE" | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")"

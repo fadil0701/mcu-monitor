@@ -15,7 +15,7 @@ fix_placeholder_proxy_in_env() {
 
     if [ "$changed" -eq 1 ]; then
         echo "PERINGATAN: placeholder proxy di ${env_file} dikosongkan."
-        echo "Jika VM wajib proxy, isi manual — contoh: HTTP_PROXY=http://10.15.3.20:80"
+        echo "Jika VM wajib proxy, isi manual di .env — lihat docs/DEPLOY.md"
     fi
 }
 

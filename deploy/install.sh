@@ -34,7 +34,7 @@ if proxy_is_set; then
     echo "Proxy aktif: HTTPS_PROXY=${HTTPS_PROXY:-$HTTP_PROXY}"
 else
     echo "Proxy tidak dipakai (HTTP_PROXY/HTTPS_PROXY kosong atau placeholder diabaikan)."
-    echo "Jika VM wajib lewat proxy, isi nilai asli di .env — contoh: HTTP_PROXY=http://10.15.3.20:80"
+    echo "Jika VM wajib lewat proxy, isi HTTP_PROXY/HTTPS_PROXY di .env — lihat docs/DEPLOY.md"
 fi
 
 if command -v curl >/dev/null 2>&1; then

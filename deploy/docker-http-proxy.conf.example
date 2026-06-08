@@ -1,10 +1,6 @@
-# Contoh konfigurasi proxy untuk Docker daemon di VM (jika build image wajib lewat proxy).
-# Salin ke /etc/systemd/system/docker.service.d/http-proxy.conf lalu:
-#   sudo systemctl daemon-reload && sudo systemctl restart docker
-#
-# Sesuaikan dengan HTTP_PROXY / HTTPS_PROXY di .env aplikasi.
+# Contoh proxy Docker daemon — lihat docs/DEPLOY.md
 
 [Service]
-Environment="HTTP_PROXY=http://10.15.3.20:80"
-Environment="HTTPS_PROXY=http://10.15.3.20:80"
+Environment="HTTP_PROXY=http://PROXY_HOST:PORT"
+Environment="HTTPS_PROXY=http://PROXY_HOST:PORT"
 Environment="NO_PROXY=localhost,127.0.0.1,mysql,.local,10.0.0.0/8,172.16.0.0/12,host.docker.internal,.docker.internal"

@@ -14,13 +14,12 @@
 @if($urlUsesHttps ?? false)
     <div class="alert alert-danger" role="alert">
         URL saat ini memakai <strong>https://</strong>. Portal CKG di VM hanya menerima <strong>http://</strong>
-        (contoh: <code>http://10.15.101.117:9006</code>). Ubah URL lalu klik <strong>Simpan konfigurasi</strong>.
+        (contoh: <code>http://HOST:9006</code>). Ubah URL lalu klik <strong>Simpan konfigurasi</strong>.
     </div>
 @endif
 
 <div class="alert alert-info" role="alert">
-    Field URL <strong>bisa diedit</strong>. Jika simpan ditolak WAF (<em>URL yang diminta ditolak</em>), atur lewat SSH:
-    <code class="d-block mt-2 small user-select-all">docker compose exec app php artisan ckg-bridge:configure --base-url=http://10.15.101.117:9006 --api-key=KEY_DARI_CKG --activate --test</code>
+    Jika form simpan ditolak, atur bridge lewat CLI — panduan di <code>docs/DEPLOY.md</code> (bagian Bridge CKG).
 </div>
 
 @if($errors->any())
@@ -50,10 +49,10 @@
                         <input type="text" class="form-control font-monospace bg-white" id="ckg_base_url" name="base_url" required
                                inputmode="url" spellcheck="false" autocomplete="off"
                                value="{{ old('base_url', $displayBaseUrl ?? $config->base_url) }}"
-                               placeholder="http://10.15.101.117:9006">
+                               placeholder="http://HOST:9006">
                         <div class="form-text">
                             <strong>Wajib <code>http://</code></strong>, bukan <code>https://</code>.
-                            Contoh VM: <code>http://10.15.101.117:9006</code> — tanpa path <code>/api/...</code> atau <code>/sikerja</code>.
+                            Tanpa path <code>/api/...</code> atau <code>/sikerja</code>. Detail di <code>docs/DEPLOY.md</code>.
                         </div>
                     </div>
 

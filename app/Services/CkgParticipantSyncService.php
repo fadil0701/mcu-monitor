@@ -125,7 +125,7 @@ class CkgParticipantSyncService
         if (! $health->successful()) {
             throw new RuntimeException(
                 'Health check gagal (HTTP '.$health->status().') ke '.$healthUrl
-                .'. Pastikan URL bukan 127.0.0.1 (gunakan host.docker.internal:9006 dari container MCU).'
+                .'. Periksa base URL bridge di admin atau docs/DEPLOY.md.'
             );
         }
 

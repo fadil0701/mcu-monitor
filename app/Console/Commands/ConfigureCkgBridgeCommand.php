@@ -11,13 +11,13 @@ use Illuminate\Console\Command;
 class ConfigureCkgBridgeCommand extends Command
 {
     protected $signature = 'ckg-bridge:configure
-        {--base-url= : Base URL CKG, mis. http://10.15.101.117:9006 atau http://web}
+        {--base-url= : Base URL CKG (http://HOST:PORT)}
         {--api-key= : API key dari menu Bridging MCU di CKG}
         {--activate : Aktifkan konfigurasi database (override .env)}
         {--test : Tes koneksi setelah simpan}
         {--sync : Jalankan sinkron setelah tes berhasil}';
 
-    protected $description = 'Atur bridge CKG lewat CLI (hindari blokir WAF pada form web)';
+    protected $description = 'Atur bridge CKG lewat CLI';
 
     public function handle(CkgParticipantSyncService $syncService): int
     {
@@ -25,7 +25,7 @@ class ConfigureCkgBridgeCommand extends Command
         $apiKey = $this->option('api-key');
 
         if (! is_string($baseUrl) || $baseUrl === '') {
-            $this->error('Wajib --base-url, contoh: --base-url=http://10.15.101.117:9006');
+            $this->error('Wajib --base-url, contoh: --base-url=http://HOST:9006');
 
             return self::FAILURE;
         }

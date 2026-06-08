@@ -14,11 +14,11 @@ class CkgBridgeConfigModelTest extends TestCase
     {
         $config = CkgBridgeConfig::query()->create([
             'name' => 'CKG Bridge',
-            'base_url' => 'https://10.15.101.117:9006',
+            'base_url' => 'https://172.22.0.1:9006',
             'api_key_header' => 'X-Mcu-Api-Key',
             'is_active' => true,
         ]);
 
-        $this->assertSame('http://10.15.101.117:9006', $config->fresh()->base_url);
+        $this->assertSame('http://172.22.0.1:9006', $config->fresh()->base_url);
     }
 }

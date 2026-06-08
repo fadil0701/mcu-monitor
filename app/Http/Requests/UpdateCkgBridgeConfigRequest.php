@@ -52,13 +52,20 @@ class UpdateCkgBridgeConfigRequest extends FormRequest
             if (str_contains(strtolower($url), '/api/bridge')) {
                 $validator->errors()->add(
                     'base_url',
-                    'Isi hanya base URL (mis. http://10.15.101.117:9006), bukan path endpoint API.'
+                    'Isi hanya base URL (mis. http://HOST:9006), bukan path endpoint API.'
                 );
             }
 
             $host = parse_url($url, PHP_URL_HOST);
             $port = parse_url($url, PHP_URL_PORT);
-            if (in_array($host, ['10.15.101.117', '127.0.0.1', 'localhost', 'host.docker.internal'], true) && $port === null) {
+            $internalHost = (string) config('ckg_bridge.internal_host', '127.0.0.1');
+            $internalHosts = array_filter(array_unique([
+                '127.0.0.1',
+                'localhost',
+                'host.docker.internal',
+                $internalHost,
+            ]));
+            if (in_array($host, $internalHosts, true) && $port === null) {
                 $validator->errors()->add(
                     'base_url',
                     'Untuk akses LAN/internal, sertakan port Docker CKG (biasanya :9006).'
