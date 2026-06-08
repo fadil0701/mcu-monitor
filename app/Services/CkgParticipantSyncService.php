@@ -199,11 +199,17 @@ class CkgParticipantSyncService
 
     private function client(): PendingRequest
     {
-        return Http::acceptJson()
+        $client = Http::acceptJson()
             ->timeout(CkgBridgeSettings::timeoutSeconds())
             ->withHeaders([
                 CkgBridgeSettings::apiKeyHeader() => CkgBridgeSettings::apiKey(),
             ]);
+
+        if (config('ckg_bridge.disable_proxy', true)) {
+            $client = $client->withOptions(['proxy' => false]);
+        }
+
+        return $client;
     }
 
     private function endpoint(string $path): string

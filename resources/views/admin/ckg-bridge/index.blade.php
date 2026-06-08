@@ -39,9 +39,9 @@
                                value="{{ old('base_url', $config->base_url) }}"
                                placeholder="http://10.15.101.117:9006">
                         <div class="form-text">
-                            <strong class="text-danger">Jangan <code>127.0.0.1</code></strong> — curl dari SSH host berhasil, tapi MCU berjalan di container Docker.<br>
-                            <strong>Wajib <code>http://</code></strong> (bukan <code>https://</code>), port <code>:9006</code>.<br>
-                            <strong>VM:</strong> <code>http://host.docker.internal:9006</code> atau <code>http://10.15.101.117:9006</code>
+                            <strong class="text-danger">Jangan <code>127.0.0.1</code></strong> dan jangan <code>host.docker.internal</code> (terblokir proxy FortiGate).<br>
+                            <strong>VM (disarankan):</strong> <code>http://10.15.101.117:9006</code> atau <code>http://web</code> (jaringan Docker bersama CKG).<br>
+                            Wajib <code>http://</code>, bukan <code>https://</code>.
                         </div>
                     </div>
 

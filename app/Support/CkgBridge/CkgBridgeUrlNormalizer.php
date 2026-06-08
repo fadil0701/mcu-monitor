@@ -25,16 +25,22 @@ final class CkgBridgeUrlNormalizer
         $port = $parts['port'] ?? null;
 
         if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
-            $host = 'host.docker.internal';
+            $host = (string) config('ckg_bridge.internal_host', '10.15.101.117');
+            $port = (int) config('ckg_bridge.internal_port', 9006);
+        }
+
+        if ($host === 'web') {
+            $scheme = 'http';
+            $port ??= 80;
         }
 
         if (in_array($host, ['10.15.101.117', 'host.docker.internal'], true)) {
             $scheme = 'http';
-            $port ??= 9006;
+            $port ??= (int) config('ckg_bridge.internal_port', 9006);
         }
 
         $normalized = $scheme.'://'.$host;
-        if ($port !== null) {
+        if ($port !== null && ! ($scheme === 'http' && $port === 80)) {
             $normalized .= ':'.$port;
         }
 

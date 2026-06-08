@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use App\Support\CkgBridge\CkgBridgeUrlNormalizer;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class CkgBridgeUrlNormalizerTest extends TestCase
 {
@@ -23,11 +23,24 @@ class CkgBridgeUrlNormalizerTest extends TestCase
         );
     }
 
-    public function test_remaps_localhost_to_host_docker_internal(): void
+    public function test_remaps_localhost_to_vm_internal_host(): void
+    {
+        config([
+            'ckg_bridge.internal_host' => '10.15.101.117',
+            'ckg_bridge.internal_port' => 9006,
+        ]);
+
+        $this->assertSame(
+            'http://10.15.101.117:9006',
+            CkgBridgeUrlNormalizer::normalize('http://127.0.0.1:9006')
+        );
+    }
+
+    public function test_supports_ckg_web_service_hostname(): void
     {
         $this->assertSame(
-            'http://host.docker.internal:9006',
-            CkgBridgeUrlNormalizer::normalize('http://127.0.0.1:9006')
+            'http://web',
+            CkgBridgeUrlNormalizer::normalize('http://web')
         );
     }
 }

@@ -34,6 +34,7 @@ services:
       - "host.docker.internal:host-gateway"
     networks:
       - monitoring-mcu
+      - ckg
 
   queue:
     image: monitoring-mcu:latest
@@ -62,6 +63,7 @@ services:
       disable: true
     networks:
       - monitoring-mcu
+      - ckg
 
   scheduler:
     image: monitoring-mcu:latest
@@ -94,6 +96,7 @@ services:
       disable: true
     networks:
       - monitoring-mcu
+      - ckg
 
   mysql:
     image: mysql:8.4
@@ -125,3 +128,6 @@ volumes:
 networks:
   monitoring-mcu:
     driver: bridge
+  ckg:
+    external: true
+    name: ${CKG_DOCKER_NETWORK:-dashboard-skrining_ckg}
