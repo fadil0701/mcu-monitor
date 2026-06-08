@@ -109,6 +109,6 @@ class RegisteredUserController extends Controller
 
 		Auth::login($user);
 
-		return redirect('/client/dashboard')->with('success', 'Pendaftaran MCU berhasil! Selamat datang di sistem monitoring MCU PPKP DKI Jakarta.');
+		return redirect()->route('client.dashboard')->with('success', 'Pendaftaran MCU berhasil! Selamat datang di sistem monitoring MCU PPKP DKI Jakarta.');
 	}
 }

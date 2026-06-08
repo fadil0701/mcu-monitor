@@ -89,7 +89,7 @@
             Tim teknis telah diberi notifikasi dan sedang memperbaikinya.
         </p>
         <div class="error-actions">
-            <a href="/" class="btn">Kembali ke Beranda</a>
+            <a href="{{ route('home') }}" class="btn">Kembali ke Beranda</a>
             <button onclick="location.reload()" class="btn">Coba Lagi</button>
         </div>
         <div class="info-box">

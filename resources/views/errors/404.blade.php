@@ -91,7 +91,7 @@
             Halaman mungkin telah dipindahkan, dihapus, atau URL yang Anda masukkan salah.
         </p>
         <div class="error-actions">
-            <a href="/" class="btn">Kembali ke Beranda</a>
+            <a href="{{ route('home') }}" class="btn">Kembali ke Beranda</a>
             @auth
                 <a href="{{ route('dashboard') }}" class="btn btn-secondary">Ke Dashboard</a>
             @endauth

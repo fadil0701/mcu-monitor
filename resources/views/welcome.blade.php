@@ -228,7 +228,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ route('home') }}">
                 <img src="{{ asset('images/logo.png') }}" alt="Logo PPKP" height="36" onerror="this.style.display='none'">
                 MCU PPKP DKI Jakarta
             </a>
@@ -241,10 +241,10 @@
                         <a class="nav-link" href="#features">Fitur</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/login">Login</a>
+                        <a class="nav-link" href="{{ route('login') }}">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-primary text-white px-3" href="/register" style="background-color: #007bff !important; border-color: #007bff !important; color: white !important; text-decoration: none !important;">Daftar MCU</a>
+                        <a class="nav-link btn btn-primary text-white px-3" href="{{ route('register') }}" style="background-color: #007bff !important; border-color: #007bff !important; color: white !important; text-decoration: none !important;">Daftar MCU</a>
                     </li>
                 </ul>
             </div>
@@ -267,10 +267,10 @@
                     <h1 class="hero-title">Sistem Monitoring MCU</h1>
                     <p class="hero-subtitle">Platform terpadu untuk monitoring dan penjadwalan Medical Check Up ASN DKI Jakarta</p>
                     <div class="hero-buttons">
-                        <a href="/register" class="btn-hero btn-primary-hero" style="text-decoration: none !important;">
+                        <a href="{{ route('register') }}" class="btn-hero btn-primary-hero" style="text-decoration: none !important;">
                             <i class="fas fa-user-plus me-2"></i>Daftar MCU Sekarang
                         </a>
-                        <a href="/login" class="btn-hero btn-outline-hero" style="text-decoration: none !important;">
+                        <a href="{{ route('login') }}" class="btn-hero btn-outline-hero" style="text-decoration: none !important;">
                             <i class="fas fa-sign-in-alt me-2"></i>Login
                         </a>
                     </div>
@@ -396,10 +396,10 @@
             <h2 class="display-4 fw-bold mb-4">Siap untuk Mendaftar MCU?</h2>
             <p class="lead mb-5">Bergabunglah dengan sistem monitoring MCU terpadu untuk ASN DKI Jakarta</p>
             <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="/register" class="btn btn-success btn-lg px-5 py-3" style="text-decoration: none !important;">
+                <a href="{{ route('register') }}" class="btn btn-success btn-lg px-5 py-3" style="text-decoration: none !important;">
                     <i class="fas fa-user-plus me-2"></i>Daftar Sekarang
                 </a>
-                <a href="/login" class="btn btn-outline-light btn-lg px-5 py-3" style="text-decoration: none !important;">
+                <a href="{{ route('login') }}" class="btn btn-outline-light btn-lg px-5 py-3" style="text-decoration: none !important;">
                     <i class="fas fa-sign-in-alt me-2"></i>Login
                 </a>
             </div>

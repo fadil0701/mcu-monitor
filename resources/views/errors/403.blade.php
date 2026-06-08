@@ -81,9 +81,9 @@
             Jika Anda merasa ini adalah kesalahan, silakan hubungi administrator.
         </p>
         <div class="error-actions">
-            <a href="/" class="btn">Kembali ke Beranda</a>
+            <a href="{{ route('home') }}" class="btn">Kembali ke Beranda</a>
             @guest
-                <a href="/login" class="btn">Login</a>
+                <a href="{{ route('login') }}" class="btn">Login</a>
             @endguest
         </div>
     </div>

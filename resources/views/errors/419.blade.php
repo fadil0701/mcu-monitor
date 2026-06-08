@@ -85,7 +85,7 @@
         </p>
         <div class="error-actions">
             <button onclick="location.reload()" class="btn">Refresh Halaman</button>
-            <a href="/" class="btn">Kembali ke Beranda</a>
+            <a href="{{ route('home') }}" class="btn">Kembali ke Beranda</a>
         </div>
     </div>
 </body>
