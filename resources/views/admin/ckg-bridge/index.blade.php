@@ -10,6 +10,12 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
     </div>
 @endif
+<div class="alert alert-warning" role="alert">
+    Jika simpan form ditolak WAF (<em>URL yang diminta ditolak</em>), atur lewat SSH:
+    <code class="d-block mt-2 small">docker compose exec app php artisan ckg-bridge:configure --base-url=http://10.15.101.117:9006 --api-key=KEY_DARI_CKG --activate --test</code>
+    Atau akses admin via LAN: <code>http://10.15.101.117:9003/mcuppkp/admin/ckg-bridge</code>
+</div>
+
 @if($errors->any())
     <div class="alert alert-danger alert-dismissible" role="alert">
         <ul class="mb-0">
