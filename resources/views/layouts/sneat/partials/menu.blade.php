@@ -1,13 +1,13 @@
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
     <div class="app-brand demo">
         <a href="{{ Auth::user()->isAdmin() ? route('dashboard') : route('client.dashboard') }}" class="app-brand-link">
-            <img
-                src="{{ asset('assets/img/icon-ppkp.png') }}"
+            <!-- <img
+                src="{{ asset('assets/img/logo-ppkp.png') }}"
                 alt="PPKP DKI Jakarta"
                 class="app-brand-logo-img app-brand-logo-img--sidebar"
                 style="display:block;height:40px;width:auto;max-width:100%;object-fit:contain;"
-            >
-            <span class="app-brand-text">Monitoring MCU</span>
+            > -->
+            <span class="app-brand-text text-primary fw-bold fs-4">Monitoring MCU</span>
         </a>
         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
             <i class="bx bx-chevron-left bx-sm align-middle"></i>
