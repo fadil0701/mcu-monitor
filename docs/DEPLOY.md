@@ -118,10 +118,13 @@ Setelah deploy UI, hard refresh browser (`Ctrl+Shift+R`) atau tab incognito.
 | Aset | Path | Dipakai di |
 |------|------|------------|
 | Favicon | `public/assets/img/icon-ppkp.png` | Semua layout (`app`, `auth`, `welcome`) |
-| Logo horizontal | `public/assets/img/logo-ppkp.png` | Sidebar admin, navbar landing, form auth |
+| Ikon (persegi) | `public/assets/img/icon-ppkp.png` | **Sidebar** admin (`menu.blade.php`), tinggi 40px |
+| Logo horizontal | `public/assets/img/logo-ppkp.png` | Navbar landing, form login/daftar/aktivasi |
 | CSS logo | `public/assets/css/mcu-admin.css` | Admin + auth (via `auth.blade.php`) |
 
-**Form login / daftar / aktivasi:** logo dibatasi `height: 48px` (inline style di `layouts/sneat/partials/brand.blade.php` + style di `auth.blade.php`) agar file PNG resolusi tinggi tidak membesar penuh.
+**Sidebar:** jangan pakai `logo-ppkp.png` (horizontal) — di lebar sidebar logo terpotong jadi garis warna. Pakai `icon-ppkp.png`.
+
+**Form login / daftar / aktivasi:** `logo-ppkp.png` dibatasi `height: 48px` (inline style di `brand.blade.php` + style di `auth.blade.php`).
 
 **Ganti logo/favicon:** ganti file PNG di path di atas, commit, lalu `bash deploy/update-production.sh`.
 
@@ -251,6 +254,7 @@ curl -fsS https://puspelkes.jakarta.go.id/mcuppkp/up
 | Form/view/logo tidak berubah setelah `git pull` | `bash deploy/update-production.sh` (rebuild image), lalu hard refresh browser |
 | Link login ke `http://<IP>:9003` bukan domain | `bash deploy/set-domain-env.sh`, `config:cache`; jangan pakai `set-lan-env.sh` di produksi |
 | Logo form auth membesar / terpotong | Pastikan commit branding terbaru ter-deploy; cek `height:48px` di `brand.blade.php` di dalam container |
+| Logo sidebar garis warna / terpotong | Sidebar harus pakai `icon-ppkp.png`, bukan `logo-ppkp.png`; rebuild image |
 | Login redirect loop | `SESSION_PATH=/mcuppkp/` |
 | 502 nginx | `docker compose ps`, `docker compose logs app` |
 | Build gagal (proxy) | Isi `HTTP_PROXY`/`HTTPS_PROXY` di `.env` |
@@ -274,6 +278,8 @@ Spesifikasi API bridge: `dashboard-skrining/docs/BRIDGE-CKG-MCU.md`.
 
 | Commit | Ringkasan |
 |--------|-----------|
+| *(pending)* | Sidebar admin: ganti ke `icon-ppkp.png` (logo horizontal terpotong) |
+| `df7c728` | Kebijakan dokumentasi wajib + riwayat perubahan di DEPLOY.md |
 | `564d58d` | Fix logo auth: `height:48px` inline + style di `auth.blade.php` |
 | `2f8a441` | Muat `mcu-admin.css` di layout auth |
 | `55b2e62` | Branding: favicon `icon-ppkp.png`, logo `logo-ppkp.png` |

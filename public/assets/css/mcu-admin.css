@@ -5,7 +5,21 @@
     max-width: 100%;
     width: auto;
     height: auto;
-    max-height: 32px;
+    object-fit: contain;
+}
+
+.layout-menu .app-brand .app-brand-link {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    padding: 0 0.5rem;
+    overflow: hidden;
+}
+
+.app-brand-logo-img--sidebar {
+    height: 40px;
+    width: auto;
+    max-width: 100%;
     object-fit: contain;
 }
 
