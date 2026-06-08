@@ -34,7 +34,10 @@ final class CkgBridgeUrlNormalizer
             $port ??= 80;
         }
 
-        if (in_array($host, ['10.15.101.117', 'host.docker.internal'], true)) {
+        if (self::isInternalDockerHost($host)) {
+            $scheme = 'http';
+            $port ??= (int) config('ckg_bridge.internal_port', 9006);
+        } elseif (in_array($host, ['10.15.101.117', 'host.docker.internal'], true)) {
             $scheme = 'http';
             $port ??= (int) config('ckg_bridge.internal_port', 9006);
         }
@@ -45,5 +48,13 @@ final class CkgBridgeUrlNormalizer
         }
 
         return $normalized;
+    }
+
+    /**
+     * IP gateway jaringan Docker (172.16–172.31) — jangan remap ke IP VM.
+     */
+    private static function isInternalDockerHost(string $host): bool
+    {
+        return preg_match('/^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/', $host) === 1;
     }
 }

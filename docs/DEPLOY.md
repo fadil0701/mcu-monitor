@@ -147,6 +147,35 @@ CKG_API_KEY=<sama dengan MCU_API_KEY di CKG>
 
 Spesifikasi: `dashboard-skrining/docs/BRIDGE-CKG-MCU.md`.
 
+## Update production — jangan rusak bridge CKG
+
+Konfigurasi bridge **disimpan di database** (`ckg_bridge_configs`) saat `is_active = true`. Deploy **tidak** menimpa baris ini.
+
+| Aman | Hindari |
+|------|---------|
+| `bash deploy/update-production.sh` | Menimpa `.env` dengan `.env.production.example` |
+| `php artisan migrate --force` | `migrate:fresh` / `db:wipe` di production |
+| `php artisan ckg-bridge:verify` | Mengubah `CKG_API_BASE_URL` di `.env` tanpa cek DB |
+| Recreate container dengan `extra_hosts` + UFW port 9006 | URL `https://` atau `http://10.15.101.117:9006` dari container |
+
+Setelah setiap update, script deploy menjalankan **`php artisan ckg-bridge:verify --warn-only`** (read-only, tidak mengubah setting).
+
+Verifikasi manual:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php artisan ckg-bridge:verify
+```
+
+Jika gagal, perbaiki tanpa reset database:
+
+```bash
+GW=$(docker compose exec -T app ip route show default | awk '{print $3}')
+docker compose exec app php artisan ckg-bridge:configure \
+  --base-url="http://${GW}:9006" \
+  --api-key=<KEY> \
+  --activate --test
+```
+
 ## Troubleshooting
 
 | Gejala | Tindakan |
@@ -156,7 +185,7 @@ Spesifikasi: `dashboard-skrining/docs/BRIDGE-CKG-MCU.md`.
 | 502 dari nginx | `docker compose ps`, `docker compose logs app` |
 | Build gagal (proxy) | Isi `HTTP_PROXY=http://10.15.3.20:80` dan `HTTPS_PROXY` sama di `.env`. Jangan pakai placeholder `PROXY_HOST:PORT`. |
 | `npm ci` gagal saat build image | `install.sh` sekarang build Vite lewat `deploy/build-frontend.sh` di host (bukan di Dockerfile). Pastikan `git pull` terbaru. |
-| CKG bridge timeout / DNS error dari container | Jangan pakai `https://` atau `http://10.15.101.117:9006` (hairpin NAT). Pakai `http://host.docker.internal:9006` atau gateway jaringan compose (cek: `docker compose exec app ip route \| awk '/default/ {print $3}'`). Tambahkan `host.docker.internal,.docker.internal,172.16.0.0/12` ke `NO_PROXY` di `.env`, lalu **recreate** container. Jika dari host `curl http://172.17.0.1:9006/...` OK tapi dari container ke gateway (mis. `172.22.0.1:9006`) timeout, buka akses Docker→host: `sudo iptables -I DOCKER-USER -s 172.16.0.0/12 -p tcp --dport 9006 -j ACCEPT` lalu set bridge URL ke `http://<gateway>:9006`. |
+| CKG bridge timeout / DNS error dari container | Jangan pakai `https://` atau `http://10.15.101.117:9006` (hairpin NAT). Pakai gateway jaringan compose (mis. `http://172.22.0.1:9006`). Tambahkan `host.docker.internal,.docker.internal,172.16.0.0/12` ke `NO_PROXY` di `.env`, lalu **recreate** container. Buka UFW: `sudo ufw allow from 172.16.0.0/12 to any port 9006 proto tcp`. |
 
 ## Perintah berguna
 

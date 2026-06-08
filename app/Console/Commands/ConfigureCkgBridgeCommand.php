@@ -35,17 +35,27 @@ class ConfigureCkgBridgeCommand extends Command
             'api_key_header' => 'X-Mcu-Api-Key',
             'per_page' => 100,
             'timeout_seconds' => 60,
-            'is_active' => $this->option('activate') ? true : false,
         ];
 
         if (is_string($apiKey) && $apiKey !== '') {
             $data['api_key'] = $apiKey;
         }
 
-        $config = CkgBridgeConfig::query()->updateOrCreate(
-            ['name' => 'CKG Bridge'],
-            $data
-        )->fresh();
+        $config = CkgBridgeConfig::query()->firstWhere('name', 'CKG Bridge');
+
+        if ($config === null) {
+            $data['name'] = 'CKG Bridge';
+            $data['is_active'] = (bool) $this->option('activate');
+            $config = CkgBridgeConfig::query()->create($data);
+        } else {
+            if ($this->option('activate')) {
+                $data['is_active'] = true;
+            }
+            $config->fill($data);
+            $config->save();
+        }
+
+        $config = $config->fresh();
 
         $this->info('Konfigurasi bridge CKG disimpan.');
         $this->line('  Base URL : '.$config->base_url);

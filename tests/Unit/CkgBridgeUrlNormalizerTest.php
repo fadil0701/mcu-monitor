@@ -43,4 +43,12 @@ class CkgBridgeUrlNormalizerTest extends TestCase
             CkgBridgeUrlNormalizer::normalize('http://web')
         );
     }
+
+    public function test_preserves_docker_compose_gateway_ip(): void
+    {
+        $this->assertSame(
+            'http://172.22.0.1:9006',
+            CkgBridgeUrlNormalizer::normalize('http://172.22.0.1:9006')
+        );
+    }
 }

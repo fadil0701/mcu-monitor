@@ -29,3 +29,8 @@ if [ -f .env ] && grep -q '^APP_URL=https://puspelkes' .env; then
         && echo "OK — /mcuppkp/up via nginx host" \
         || echo "LEWATI — snippet nginx belum dipasang atau path berbeda"
 fi
+
+echo ""
+echo "==> bridge CKG (read-only)"
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app php artisan ckg-bridge:verify --warn-only 2>/dev/null \
+    || echo "LEWATI — container app tidak jalan atau bridge belum dikonfigurasi"

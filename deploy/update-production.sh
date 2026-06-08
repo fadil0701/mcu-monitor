@@ -53,6 +53,16 @@ docker compose $(compose_prod_args) exec -T app php artisan route:cache
 docker compose $(compose_prod_args) exec -T app php artisan view:cache
 
 echo ""
+echo "==> Verifikasi bridge CKG (read-only, tidak mengubah konfigurasi DB)"
+# shellcheck disable=SC2046
+if ! docker compose $(compose_prod_args) exec -T app php artisan ckg-bridge:verify --warn-only; then
+    echo ""
+    echo "PERINGATAN: Bridge CKG gagal setelah update."
+    echo "  - Jangan timpa .env dari .env.production.example (setting bridge ada di DB + .env)."
+    echo "  - Perbaiki: docker compose $(compose_prod_args) exec app php artisan ckg-bridge:configure --base-url=http://<gateway>:9006 --api-key=... --activate --test"
+fi
+
+echo ""
 echo "==> Selesai. Verifikasi:"
 echo "    bash deploy/verify.sh"
 echo ""
