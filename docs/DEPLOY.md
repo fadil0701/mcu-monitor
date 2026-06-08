@@ -38,6 +38,11 @@ bash deploy/install.sh
 > Perbaiki: `sudo chown -R $USER:$USER /var/www/html/mcu-monitor`
 > Skrip bisa dijalankan tanpa `chmod`: `bash deploy/install.sh`
 
+> **`fatal: detected dubious ownership`** pada `git pull`? Akibat clone pakai `sudo`.
+> Perbaikan disarankan (satu kali):
+> `sudo chown -R $USER:$USER /var/www/html/mcu-monitor`
+> Lalu `git pull origin main` biasa tanpa ubah `git config`.
+
 Buat super admin:
 
 ```bash
