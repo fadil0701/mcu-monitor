@@ -20,8 +20,9 @@
 }
 
 .app-brand-logo-img--auth {
-    max-height: 56px;
-    max-width: min(100%, 280px);
+    height: 48px;
+    width: auto;
+    max-width: 100%;
     margin: 0 auto;
 }
 

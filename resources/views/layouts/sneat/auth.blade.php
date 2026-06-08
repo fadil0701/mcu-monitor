@@ -24,6 +24,24 @@
     <link rel="stylesheet" href="{{ asset('assets/css/mcu-admin.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
     <link rel="stylesheet" href="{{ asset('assets/vendor/css/pages/page-auth.css') }}" />
+    <style>
+        .authentication-inner .app-brand {
+            width: 100%;
+            overflow: hidden;
+        }
+        .authentication-inner .app-brand .app-brand-link {
+            display: inline-block;
+            max-width: 100%;
+        }
+        .authentication-inner .app-brand-logo-img--auth {
+            display: block;
+            height: 48px;
+            width: auto;
+            max-width: 100%;
+            margin: 0 auto;
+            object-fit: contain;
+        }
+    </style>
     @stack('page-css')
     <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
     <script src="{{ asset('assets/js/config.js') }}"></script>
