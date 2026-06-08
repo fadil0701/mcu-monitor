@@ -12,7 +12,7 @@ Sistem monitoring Medical Check Up (MCU) berbasis **Laravel 13** dengan template
 
 ## Deploy VM produksi (Docker)
 
-Panduan operasi & deploy (dokumen tunggal): **`docs/DEPLOY.md`**
+Panduan operasi & deploy (dokumen tunggal): **`docs/DEPLOY.md`** — setiap perubahan fitur/deploy wajib didokumentasikan di sana.
 
 ```bash
 cp .env.production.example .env

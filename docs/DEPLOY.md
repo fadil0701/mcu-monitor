@@ -1,7 +1,15 @@
 # Panduan Operasi & Deploy — Monitoring MCU PPKP
 
-> **Dokumen tunggal** untuk instalasi, keamanan, bridge CKG, proxy, dan troubleshooting.  
+> **Dokumen tunggal** untuk instalasi, keamanan, bridge CKG, proxy, branding, fitur aplikasi, dan troubleshooting.  
 > Detail infrastruktur internal **hanya** di sini — jangan ulangi di komentar kode, view admin, atau pesan error publik.
+
+## Kebijakan dokumentasi
+
+**Setiap perubahan** (fitur, fix, konfigurasi deploy, aset UI, bridge CKG, `.env`) wajib dicatat di file ini:
+
+1. Tambah atau perbarui bagian yang relevan (bukan hanya commit message).
+2. Untuk perubahan kecil, tambah baris di [Riwayat perubahan](#riwayat-perubahan).
+3. Jangan menulis IP, proxy, atau workaround sensitif di kode/view — cukup di sini.
 
 ---
 
@@ -47,11 +55,28 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php art
 
 ## Tiga mode akses
 
-| Mode | URL contoh | Script |
-|------|------------|--------|
-| Docker langsung | `http://<VM_IP>:9003/` | `LAN_IP=<VM_IP> ./deploy/set-lan-env.sh` |
-| Portal + subpath | `http://<VM_IP>/mcuppkp/` | `./deploy/set-domain-env.sh` + snippet nginx |
-| Domain HTTPS | `https://puspelkes.jakarta.go.id/mcuppkp/` | `./deploy/set-domain-env.sh` + SSL |
+| Mode | URL contoh | Script | `APP_USE_REQUEST_URL` |
+|------|------------|--------|------------------------|
+| Docker langsung | `http://<VM_IP>:9003/` | `LAN_IP=<VM_IP> ./deploy/set-lan-env.sh` | `true` |
+| Portal + subpath | `http://<VM_IP>/mcuppkp/` | `./deploy/set-domain-env.sh` + snippet nginx | `false` |
+| Domain HTTPS | `https://puspelkes.jakarta.go.id/mcuppkp/` | `./deploy/set-domain-env.sh` + SSL | `false` |
+
+### URL aplikasi & link login
+
+Laravel membangun semua `route()` (login, daftar, dll.) dari `AppServiceProvider`:
+
+- **`APP_USE_REQUEST_URL=false`** (produksi domain): pakai `APP_URL` → link mengarah ke domain, mis. `https://puspelkes.jakarta.go.id/mcuppkp/login`.
+- **`APP_USE_REQUEST_URL=true`** (mode LAN `:9003`): pakai host permintaan saat ini → jika dibuka lewat `http://10.15.101.117:9003`, link login ikut ke IP tersebut.
+
+**Produksi publik wajib domain:**
+
+```bash
+bash deploy/set-domain-env.sh
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php artisan config:clear
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php artisan config:cache
+```
+
+Jangan pakai `set-lan-env.sh` untuk pengguna akhir — script itu hanya untuk debug/akses internal port `9003`.
 
 ## Nginx host (path `/mcuppkp/`)
 
@@ -84,13 +109,29 @@ git pull origin main
 bash deploy/update-production.sh
 ```
 
-**Penting:** perubahan view/PHP ada di **image Docker**. `docker compose restart` saja **tidak cukup** — wajib `build app` (sudah ada di `update-production.sh`).
+**Penting:** perubahan view/PHP/CSS/aset gambar ada di **image Docker**. `docker compose restart` atau `git pull` saja **tidak cukup** — wajib `bash deploy/update-production.sh` (rebuild image).
+
+Setelah deploy UI, hard refresh browser (`Ctrl+Shift+R`) atau tab incognito.
+
+## Branding & aset UI
+
+| Aset | Path | Dipakai di |
+|------|------|------------|
+| Favicon | `public/assets/img/icon-ppkp.png` | Semua layout (`app`, `auth`, `welcome`) |
+| Logo horizontal | `public/assets/img/logo-ppkp.png` | Sidebar admin, navbar landing, form auth |
+| CSS logo | `public/assets/css/mcu-admin.css` | Admin + auth (via `auth.blade.php`) |
+
+**Form login / daftar / aktivasi:** logo dibatasi `height: 48px` (inline style di `layouts/sneat/partials/brand.blade.php` + style di `auth.blade.php`) agar file PNG resolusi tinggi tidak membesar penuh.
+
+**Ganti logo/favicon:** ganti file PNG di path di atas, commit, lalu `bash deploy/update-production.sh`.
 
 ## Variabel `.env` penting
 
-| Variabel | Produksi (domain) |
-|----------|-------------------|
-| `APP_URL` | `https://puspelkes.jakarta.go.id/mcuppkp` |
+| Variabel | Produksi (domain) | Mode LAN (`:9003`) |
+|----------|-------------------|---------------------|
+| `APP_URL` | `https://puspelkes.jakarta.go.id/mcuppkp` | `http://<VM_IP>:9003` |
+| `ASSET_URL` | sama dengan `APP_URL` | (kosong / sama `APP_URL`) |
+| `APP_USE_REQUEST_URL` | `false` | `true` |
 | `APP_PORT` | `9003` |
 | `SESSION_PATH` | `/mcuppkp/` |
 | `SESSION_SECURE_COOKIE` | `true` |
@@ -207,7 +248,9 @@ curl -fsS https://puspelkes.jakarta.go.id/mcuppkp/up
 | Gejala | Tindakan |
 |--------|----------|
 | `APP_KEY` / `vendor` saat install | `bash deploy/install.sh` |
-| Form/view tidak berubah setelah `git pull` | `bash deploy/update-production.sh` (rebuild image) |
+| Form/view/logo tidak berubah setelah `git pull` | `bash deploy/update-production.sh` (rebuild image), lalu hard refresh browser |
+| Link login ke `http://<IP>:9003` bukan domain | `bash deploy/set-domain-env.sh`, `config:cache`; jangan pakai `set-lan-env.sh` di produksi |
+| Logo form auth membesar / terpotong | Pastikan commit branding terbaru ter-deploy; cek `height:48px` di `brand.blade.php` di dalam container |
 | Login redirect loop | `SESSION_PATH=/mcuppkp/` |
 | 502 nginx | `docker compose ps`, `docker compose logs app` |
 | Build gagal (proxy) | Isi `HTTP_PROXY`/`HTTPS_PROXY` di `.env` |
@@ -226,3 +269,17 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml down
 ```
 
 Spesifikasi API bridge: `dashboard-skrining/docs/BRIDGE-CKG-MCU.md`.
+
+## Riwayat perubahan
+
+| Commit | Ringkasan |
+|--------|-----------|
+| `564d58d` | Fix logo auth: `height:48px` inline + style di `auth.blade.php` |
+| `2f8a441` | Muat `mcu-admin.css` di layout auth |
+| `55b2e62` | Branding: favicon `icon-ppkp.png`, logo `logo-ppkp.png` |
+| `5568cf9` | Konsolidasi catatan operasi/keamanan ke `docs/DEPLOY.md` |
+| `71ecf7d` | Field pendidikan terakhir di form daftar MCU; email placeholder kosong |
+| `d4d9546` | Lindungi konfigurasi bridge CKG saat `update-production.sh` |
+| `0a6250b` | Form aktivasi peserta lengkap + pendidikan terakhir |
+
+> Tambahkan baris baru di tabel ini setiap ada perubahan yang di-deploy.
