@@ -8,6 +8,7 @@ use App\Models\CkgBridgeConfig;
 use App\Models\CkgBridgeSyncLog;
 use App\Services\CkgParticipantSyncService;
 use App\Support\CkgBridge\CkgBridgeConfigPersister;
+use App\Support\CkgBridge\CkgBridgeSettings;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,7 +41,18 @@ class CkgBridgeMonitoringController extends Controller
             ->latest('finished_at')
             ->first();
 
-        return view('admin.ckg-bridge.index', compact('config', 'logs', 'lastSuccess'));
+        $effectiveBaseUrl = CkgBridgeSettings::baseUrl();
+        $configUsesDatabase = (bool) ($config->is_active && filled($config->api_key));
+        $hasEffectiveApiKey = CkgBridgeSettings::apiKey() !== '';
+
+        return view('admin.ckg-bridge.index', compact(
+            'config',
+            'logs',
+            'lastSuccess',
+            'effectiveBaseUrl',
+            'configUsesDatabase',
+            'hasEffectiveApiKey',
+        ));
     }
 
     public function updateConfig(UpdateCkgBridgeConfigRequest $request, CkgBridgeConfigPersister $persister): RedirectResponse

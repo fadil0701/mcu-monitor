@@ -65,7 +65,14 @@ class UpdateCkgBridgeConfigRequest extends FormRequest
                 );
             }
 
-            if (in_array($host, ['10.15.101.117', '127.0.0.1', 'localhost', 'host.docker.internal'], true) && $port === null) {
+            if (in_array($host, ['127.0.0.1', 'localhost'], true)) {
+                $validator->errors()->add(
+                    'base_url',
+                    'Jangan pakai 127.0.0.1 dari aplikasi MCU (berjalan di container Docker). Gunakan http://host.docker.internal:9006 atau http://10.15.101.117:9006.'
+                );
+            }
+
+            if (in_array($host, ['10.15.101.117', 'host.docker.internal'], true) && $port === null) {
                 $validator->errors()->add(
                     'base_url',
                     'Untuk akses LAN/internal, sertakan port Docker CKG (biasanya :9006).'

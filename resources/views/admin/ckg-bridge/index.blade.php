@@ -39,9 +39,9 @@
                                value="{{ old('base_url', $config->base_url) }}"
                                placeholder="http://10.15.101.117:9006">
                         <div class="form-text">
-                            <strong>Wajib <code>http://</code></strong> (bukan <code>https://</code>). Port Docker CKG: <code>:9006</code>.<br>
-                            <strong>VM (dari container MCU):</strong> <code>http://host.docker.internal:9006</code> atau <code>http://10.15.101.117:9006</code><br>
-                            Tanpa <code>/sikerja</code> dan tanpa path <code>/api/...</code>.
+                            <strong class="text-danger">Jangan <code>127.0.0.1</code></strong> — curl dari SSH host berhasil, tapi MCU berjalan di container Docker.<br>
+                            <strong>Wajib <code>http://</code></strong> (bukan <code>https://</code>), port <code>:9006</code>.<br>
+                            <strong>VM:</strong> <code>http://host.docker.internal:9006</code> atau <code>http://10.15.101.117:9006</code>
                         </div>
                     </div>
 
@@ -106,6 +106,27 @@
     </div>
 
     <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <small class="text-muted d-block mb-1">Konfigurasi aktif (dipakai saat tes/sync)</small>
+                <code class="d-block small mb-2">{{ $effectiveBaseUrl }}/api/bridge/mcu/health</code>
+                <div class="small">
+                    Sumber:
+                    @if($configUsesDatabase)
+                        <span class="badge bg-label-primary">database</span>
+                    @else
+                        <span class="badge bg-label-secondary">.env</span>
+                    @endif
+                    · API key:
+                    @if($hasEffectiveApiKey)
+                        <span class="text-success fw-semibold">terisi</span>
+                    @else
+                        <span class="text-danger fw-semibold">kosong</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+
         <div class="card mb-4">
             <div class="card-body">
                 <div class="row g-3">

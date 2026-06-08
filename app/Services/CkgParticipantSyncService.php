@@ -120,17 +120,22 @@ class CkgParticipantSyncService
             throw new RuntimeException('API key bridge CKG belum diisi.');
         }
 
-        $health = $this->client()->get($this->endpoint('/api/bridge/mcu/health'));
+        $healthUrl = $this->endpoint('/api/bridge/mcu/health');
+        $health = $this->client()->get($healthUrl);
         if (! $health->successful()) {
-            throw new RuntimeException('Health check gagal (HTTP '.$health->status().').');
+            throw new RuntimeException(
+                'Health check gagal (HTTP '.$health->status().') ke '.$healthUrl
+                .'. Pastikan URL bukan 127.0.0.1 (gunakan host.docker.internal:9006 dari container MCU).'
+            );
         }
 
-        $participants = $this->client()->get($this->endpoint('/api/bridge/mcu/participants'), [
+        $participantsUrl = $this->endpoint('/api/bridge/mcu/participants');
+        $participants = $this->client()->get($participantsUrl, [
             'per_page' => 1,
         ]);
 
         if (! $participants->successful()) {
-            throw new RuntimeException('Endpoint participants gagal (HTTP '.$participants->status().').');
+            throw new RuntimeException('Endpoint participants gagal (HTTP '.$participants->status().') ke '.$participantsUrl.'.');
         }
 
         return [

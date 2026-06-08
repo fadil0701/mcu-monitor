@@ -22,4 +22,12 @@ class CkgBridgeUrlNormalizerTest extends TestCase
             CkgBridgeUrlNormalizer::normalize('http://10.15.101.117:9006/')
         );
     }
+
+    public function test_remaps_localhost_to_host_docker_internal(): void
+    {
+        $this->assertSame(
+            'http://host.docker.internal:9006',
+            CkgBridgeUrlNormalizer::normalize('http://127.0.0.1:9006')
+        );
+    }
 }
