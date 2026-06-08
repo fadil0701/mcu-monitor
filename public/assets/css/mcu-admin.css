@@ -9,8 +9,20 @@
     object-fit: contain;
 }
 
+.authentication-inner .app-brand {
+    width: 100%;
+}
+
+.authentication-inner .app-brand .app-brand-link {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
 .app-brand-logo-img--auth {
     max-height: 56px;
+    max-width: min(100%, 280px);
+    margin: 0 auto;
 }
 
 .navbar-brand-logo {
