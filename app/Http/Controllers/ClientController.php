@@ -15,6 +15,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Notification;
 use App\Models\User;
 use App\Notifications\NewScheduleRequest;
+use App\Support\ScheduleExaminationTime;
+use App\Support\ScheduleParticipantNotifier;
 use App\Notifications\NewRegistrationNotification;
 use App\Support\ParticipantEducation;
 use Illuminate\Validation\Rule;
@@ -335,10 +337,19 @@ class ClientController extends Controller
 
         $request->validate([
             'tanggal_pemeriksaan' => ['required', 'date', 'after_or_equal:' . now()->startOfDay()->toDateString()],
-			'jam_pemeriksaan' => ['required', 'date_format:H:i'],
-			'lokasi_pemeriksaan' => ['required', 'string', 'max:255'],
+			'jam_pemeriksaan' => [
+                'required',
+                'date_format:H:i',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! ScheduleExaminationTime::isAllowed((string) $value)) {
+                        $fail(ScheduleExaminationTime::allowedRangeMessage());
+                    }
+                },
+            ],
 			'catatan' => ['nullable', 'string', 'max:1000'],
 		]);
+
+        $lokasiPemeriksaan = ScheduleExaminationTime::defaultLocation();
 
 		$schedule = Schedule::create([
 			'participant_id' => $participant->id,
@@ -353,7 +364,7 @@ class ClientController extends Controller
 			'email' => $participant->email,
 			'tanggal_pemeriksaan' => $request->tanggal_pemeriksaan,
 			'jam_pemeriksaan' => $request->jam_pemeriksaan,
-			'lokasi_pemeriksaan' => $request->lokasi_pemeriksaan,
+			'lokasi_pemeriksaan' => $lokasiPemeriksaan,
 			'status' => 'Terjadwal',
 			'catatan' => $request->catatan,
 		]);
@@ -361,6 +372,8 @@ class ClientController extends Controller
         // Assign queue number for the date
         $max = Schedule::whereDate('tanggal_pemeriksaan', $schedule->tanggal_pemeriksaan)->max('queue_number');
         $schedule->update(['queue_number' => ((int) $max) + 1]);
+
+        ScheduleParticipantNotifier::notify($schedule->fresh(), 'schedule_confirmed');
 
 		// Notify admins about repeat registration (schedule request)
 		User::query()->whereIn('role', ['admin','super_admin'])->get()->each(function (User $admin) use ($participant, $schedule) {

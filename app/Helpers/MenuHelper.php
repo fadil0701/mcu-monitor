@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Support\NotificationBadgeCounts;
 use Illuminate\Support\Facades\Auth;
 
 class MenuHelper
@@ -46,11 +47,7 @@ class MenuHelper
                     'icon' => 'bx-calendar-edit',
                     'name' => 'Permintaan Reschedule',
                     'path' => route('admin.reschedule-center.index'),
-                ];
-                $items[] = [
-                    'icon' => 'bx-bell',
-                    'name' => 'Notifikasi',
-                    'path' => route('admin.notifications.index'),
+                    'badge' => NotificationBadgeCounts::pendingReschedules(),
                 ];
                 $items[] = [
                     'icon' => 'bx-message-dots',
@@ -68,6 +65,13 @@ class MenuHelper
             }
 
             $items[] = [
+                'icon' => 'bx-bell',
+                'name' => 'Notifikasi',
+                'path' => route('admin.notifications.index'),
+                'badge' => NotificationBadgeCounts::unreadFor(),
+            ];
+
+            $items[] = [
                 'icon' => 'bx-bar-chart-alt-2',
                 'name' => 'Laporan',
                 'path' => route('admin.reports.index'),
@@ -79,6 +83,12 @@ class MenuHelper
             ];
         } else {
             $items[] = ['icon' => 'bx-user', 'name' => 'Profile Saya', 'path' => route('client.profile')];
+            $items[] = [
+                'icon' => 'bx-bell',
+                'name' => 'Notifikasi',
+                'path' => route('client.notifications.index'),
+                'badge' => NotificationBadgeCounts::unreadFor(),
+            ];
             $items[] = ['icon' => 'bx-calendar', 'name' => 'Jadwal MCU', 'path' => route('client.schedules')];
             $items[] = ['icon' => 'bx-file', 'name' => 'Hasil MCU', 'path' => route('client.results')];
         }

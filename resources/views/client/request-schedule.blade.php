@@ -24,13 +24,31 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Jam Pemeriksaan *</label>
-                        <input type="time" name="jam_pemeriksaan" class="form-control @error('jam_pemeriksaan') is-invalid @enderror" value="{{ old('jam_pemeriksaan') }}" {{ $eligible ? '' : 'disabled' }} required>
+                        <input
+                            type="time"
+                            name="jam_pemeriksaan"
+                            class="form-control @error('jam_pemeriksaan') is-invalid @enderror"
+                            value="{{ old('jam_pemeriksaan', config('mcu.examination_hours.start', '07:30')) }}"
+                            min="{{ config('mcu.examination_hours.start', '07:30') }}"
+                            max="{{ config('mcu.examination_hours.end', '10:00') }}"
+                            step="60"
+                            {{ $eligible ? '' : 'disabled' }}
+                            required
+                        >
+                        <div class="form-text">Jam pendaftaran: {{ config('mcu.examination_hours.start', '07:30') }} – {{ config('mcu.examination_hours.end', '10:00') }} WIB.</div>
                         @error('jam_pemeriksaan')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-12">
                         <label class="form-label">Lokasi Pemeriksaan *</label>
-                        <input type="text" name="lokasi_pemeriksaan" class="form-control @error('lokasi_pemeriksaan') is-invalid @enderror" value="{{ old('lokasi_pemeriksaan', config('mcu.default_location')) }}" {{ $eligible ? '' : 'disabled' }} required>
-                        @error('lokasi_pemeriksaan')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <input
+                            type="text"
+                            class="form-control bg-light"
+                            value="{{ config('mcu.default_location') }}"
+                            readonly
+                            tabindex="-1"
+                            aria-readonly="true"
+                        >
+                        <div class="form-text">Lokasi pemeriksaan ditetapkan sistem dan tidak dapat diubah.</div>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Catatan (opsional)</label>

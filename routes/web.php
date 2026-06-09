@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientNotificationsController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,10 @@ Route::prefix('client')->middleware(['auth'])->group(function () {
     Route::get('/results', [ClientController::class, 'results'])->name('client.results');
     Route::get('/results/{result}/download', [ClientController::class, 'downloadResult'])->name('client.results.download');
     Route::get('/results/{result}/download-all', [ClientController::class, 'downloadAllResult'])->name('client.results.downloadAll');
+
+    Route::get('/notifications', [ClientNotificationsController::class, 'index'])->name('client.notifications.index');
+    Route::post('/notifications/{id}/read', [ClientNotificationsController::class, 'markAsRead'])->name('client.notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [ClientNotificationsController::class, 'markAllAsRead'])->name('client.notifications.mark-all-read');
 
     Route::get('/schedule/request', [ClientController::class, 'requestScheduleForm'])->name('client.schedule.request');
     Route::post('/schedule/request', [ClientController::class, 'storeScheduleRequest'])->name('client.schedule.request.store');

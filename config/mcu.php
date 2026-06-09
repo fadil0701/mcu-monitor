@@ -60,6 +60,12 @@ return [
 
     'default_location' => env('MCU_DEFAULT_LOCATION', 'Klinik Utama Balaikota'),
 
+    // Jam pengajuan jadwal MCU oleh peserta (portal)
+    'examination_hours' => [
+        'start' => env('MCU_EXAMINATION_TIME_START', '07:30'),
+        'end' => env('MCU_EXAMINATION_TIME_END', '10:00'),
+    ],
+
     'daily_quota' => (int) env('MCU_DAILY_QUOTA', 100),
 
     'menu' => [

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Schedule;
+use App\Support\ScheduleParticipantNotifier;
 use Illuminate\Http\Request;
 
 class RescheduleCenterController extends Controller
@@ -58,6 +59,9 @@ class RescheduleCenterController extends Controller
         $schedule->reschedule_reason = null;
         $schedule->reschedule_requested_at = null;
         $schedule->save();
+
+        ScheduleParticipantNotifier::notify($schedule->fresh(), 'reschedule_approved');
+
         return redirect()->route('admin.reschedule-center.index')->with('success', 'Permintaan reschedule disetujui.');
     }
 
@@ -73,6 +77,9 @@ class RescheduleCenterController extends Controller
             'reschedule_reason' => null,
             'reschedule_requested_at' => null,
         ]);
+
+        ScheduleParticipantNotifier::notify($schedule->fresh(), 'reschedule_rejected');
+
         return redirect()->route('admin.reschedule-center.index')->with('success', 'Permintaan reschedule ditolak.');
     }
 }

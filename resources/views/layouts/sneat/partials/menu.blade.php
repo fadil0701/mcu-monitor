@@ -25,13 +25,23 @@
                 <li class="menu-item {{ $subActive ? 'active open' : '' }}">
                     <a href="javascript:void(0);" class="menu-link menu-toggle">
                         <i class="menu-icon tf-icons bx {{ $item['icon'] ?? 'bx-grid-alt' }}"></i>
-                        <div>{{ $item['name'] }}</div>
+                        <div class="d-flex align-items-center justify-content-between w-100 pe-1">
+                            <span>{{ $item['name'] }}</span>
+                            @if(!empty($item['badge']))
+                                <span class="badge rounded-pill bg-danger">{{ $item['badge'] }}</span>
+                            @endif
+                        </div>
                     </a>
                     <ul class="menu-sub">
                         @foreach($item['subItems'] as $sub)
                             <li class="menu-item {{ \App\Helpers\MenuHelper::isActive($sub['path']) ? 'active' : '' }}">
                                 <a href="{{ $sub['path'] }}" class="menu-link">
-                                    <div>{{ $sub['name'] }}</div>
+                                    <div class="d-flex align-items-center justify-content-between w-100 pe-1">
+                                        <span>{{ $sub['name'] }}</span>
+                                        @if(!empty($sub['badge']))
+                                            <span class="badge rounded-pill bg-danger">{{ $sub['badge'] }}</span>
+                                        @endif
+                                    </div>
                                 </a>
                             </li>
                         @endforeach
@@ -41,7 +51,12 @@
                 <li class="menu-item {{ \App\Helpers\MenuHelper::isActive($item['path']) ? 'active' : '' }}">
                     <a href="{{ $item['path'] }}" class="menu-link">
                         <i class="menu-icon tf-icons bx {{ $item['icon'] ?? 'bx-circle' }}"></i>
-                        <div>{{ $item['name'] }}</div>
+                        <div class="d-flex align-items-center justify-content-between w-100 pe-1">
+                            <span>{{ $item['name'] }}</span>
+                            @if(!empty($item['badge']))
+                                <span class="badge rounded-pill bg-danger">{{ $item['badge'] }}</span>
+                            @endif
+                        </div>
                     </a>
                 </li>
             @endif

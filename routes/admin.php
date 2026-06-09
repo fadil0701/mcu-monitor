@@ -41,6 +41,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('users', UserController::class);
     Route::post('users/{user}', [UserController::class, 'update'])->name('users.update.post');
 
+    Route::get('notifications', [AdminNotificationsController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/{id}/read', [AdminNotificationsController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('notifications/mark-all-read', [AdminNotificationsController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+
     Route::middleware('super_admin')->group(function () {
         Route::get('diagnoses/template/download', [DiagnosisController::class, 'downloadTemplate'])->name('diagnoses.template');
         Route::post('diagnoses/import', [DiagnosisController::class, 'import'])->name('diagnoses.import');
@@ -51,10 +55,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('reschedule-center', [RescheduleCenterController::class, 'index'])->name('reschedule-center.index');
         Route::post('reschedule-center/{schedule}/approve', [RescheduleCenterController::class, 'approve'])->name('reschedule-center.approve');
         Route::post('reschedule-center/{schedule}/reject', [RescheduleCenterController::class, 'reject'])->name('reschedule-center.reject');
-
-        Route::get('notifications', [AdminNotificationsController::class, 'index'])->name('notifications.index');
-        Route::post('notifications/{id}/read', [AdminNotificationsController::class, 'markAsRead'])->name('notifications.mark-read');
-        Route::post('notifications/mark-all-read', [AdminNotificationsController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 
         Route::get('whatsapp-templates', [WhatsAppTemplatesController::class, 'index'])->name('whatsapp-templates.index');
         Route::post('whatsapp-templates', [WhatsAppTemplatesController::class, 'update'])->name('whatsapp-templates.update');

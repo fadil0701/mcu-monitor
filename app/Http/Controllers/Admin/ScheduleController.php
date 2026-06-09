@@ -7,6 +7,7 @@ use App\Models\Schedule;
 use App\Models\Participant;
 use App\Services\EmailService;
 use App\Services\WhatsAppService;
+use App\Support\ScheduleParticipantNotifier;
 use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
@@ -74,6 +75,8 @@ class ScheduleController extends Controller
             $schedule->id
         )]);
 
+        ScheduleParticipantNotifier::notify($schedule->fresh(), 'schedule_created');
+
         return redirect()->route('admin.schedules.index')->with('success', 'Jadwal berhasil ditambahkan.');
     }
 
@@ -107,6 +110,7 @@ class ScheduleController extends Controller
         $schedule->tanggal_pemeriksaan = $valid['tanggal_pemeriksaan'];
         $schedule->jam_pemeriksaan = \Carbon\Carbon::parse($valid['jam_pemeriksaan'])->format('H:i:s');
         $schedule->lokasi_pemeriksaan = $valid['lokasi_pemeriksaan'] ?? config('mcu.default_location');
+        $previousStatus = $schedule->status;
         $schedule->status = $valid['status'];
         $schedule->catatan = $valid['catatan'] ?? null;
 
@@ -128,6 +132,9 @@ class ScheduleController extends Controller
         }
 
         $schedule->save();
+
+        $this->notifyParticipantOnStatusChange($schedule, $previousStatus);
+
         return redirect()->route('admin.schedules.index')->with('success', 'Jadwal berhasil diubah.');
     }
 
@@ -148,8 +155,27 @@ class ScheduleController extends Controller
     public function quickStatus(Request $request, Schedule $schedule)
     {
         $request->validate(['status' => 'required|in:Terjadwal,Selesai,Batal,Ditolak']);
+        $previousStatus = $schedule->status;
         $schedule->update(['status' => $request->status]);
+
+        $this->notifyParticipantOnStatusChange($schedule->fresh(), $previousStatus);
+
         return redirect()->back()->with('success', 'Status jadwal berhasil diubah.');
+    }
+
+    private function notifyParticipantOnStatusChange(Schedule $schedule, string $previousStatus): void
+    {
+        if ($schedule->status === $previousStatus) {
+            return;
+        }
+
+        $type = match ($schedule->status) {
+            'Terjadwal', 'Selesai' => 'schedule_confirmed',
+            'Batal', 'Ditolak' => 'schedule_rejected',
+            default => 'status_updated',
+        };
+
+        ScheduleParticipantNotifier::notify($schedule, $type);
     }
 
     public function sendEmail(Schedule $schedule)

@@ -1,7 +1,8 @@
 @extends('layouts.sneat.app')
 
-@section('title', 'Notifikasi Admin')
-@section('pageTitle', 'Notifikasi Admin')
+@section('title', 'Notifikasi')
+@section('breadcrumb', 'Portal Peserta')
+@section('pageTitle', 'Notifikasi Saya')
 
 @section('content')
 @if(session('success'))
@@ -11,7 +12,7 @@
 <x-common.component-card title="Daftar Notifikasi">
     @php $user = auth()->user(); @endphp
     @if($user->unreadNotifications->count() > 0)
-        <form method="POST" action="{{ route('admin.notifications.mark-all-read') }}" class="mb-4">
+        <form method="POST" action="{{ route('client.notifications.mark-all-read') }}" class="mb-4">
             @csrf
             <button type="submit" class="btn btn-primary btn-sm"><i class="bx bx-check-double me-1"></i> Tandai Semua Dibaca</button>
         </form>
@@ -30,7 +31,7 @@
                             <p class="text-muted small mb-0">{{ $n->created_at->diffForHumans() }}</p>
                         </div>
                         @if(is_null($n->read_at))
-                            <form method="POST" action="{{ route('admin.notifications.mark-read', $n->id) }}" class="flex-shrink-0">
+                            <form method="POST" action="{{ route('client.notifications.mark-read', $n->id) }}" class="flex-shrink-0">
                                 @csrf
                                 <button type="submit" class="btn btn-sm btn-outline-secondary">Tandai dibaca</button>
                             </form>
@@ -39,7 +40,7 @@
                 </div>
             </div>
         @empty
-            <p class="text-center text-muted py-4 mb-0">Tidak ada notifikasi.</p>
+            <p class="text-center text-muted py-4 mb-0">Belum ada notifikasi.</p>
         @endforelse
     </div>
     <div class="mt-3">{{ $notifications->links() }}</div>

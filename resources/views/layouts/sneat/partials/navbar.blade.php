@@ -10,6 +10,7 @@
             <span class="badge bg-label-primary me-3 d-none d-md-inline">Portal Peserta</span>
         @endunless
         <ul class="navbar-nav flex-row align-items-center ms-auto">
+            @include('layouts.sneat.partials.notification-bell')
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
