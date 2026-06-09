@@ -60,6 +60,11 @@ return [
 
     'default_location' => env('MCU_DEFAULT_LOCATION', 'Klinik Utama Balaikota'),
 
+    // Captcha hitung angka pada form login
+    'login_captcha' => [
+        'ttl_minutes' => (int) env('MCU_LOGIN_CAPTCHA_TTL_MINUTES', 10),
+    ],
+
     // Jam pengajuan jadwal MCU oleh peserta (portal)
     'examination_hours' => [
         'start' => env('MCU_EXAMINATION_TIME_START', '07:30'),

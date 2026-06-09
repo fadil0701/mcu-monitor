@@ -35,6 +35,8 @@
         </div>
     </div>
 
+    <x-math-captcha :captcha="$loginCaptcha ?? null" />
+
     <button type="submit" class="btn btn-primary d-grid w-100 mb-3">Login</button>
 </form>
 

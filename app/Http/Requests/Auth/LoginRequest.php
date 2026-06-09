@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Support\MathCaptcha;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -30,6 +31,8 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'captcha_token' => ['required', 'string', 'max:64'],
+            'captcha_answer' => ['required', 'string', 'max:16'],
         ];
     }
 
@@ -41,6 +44,12 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
+
+        if (! MathCaptcha::validate($this)) {
+            throw ValidationException::withMessages([
+                'captcha_answer' => 'Jawaban verifikasi salah atau sudah kadaluarsa.',
+            ]);
+        }
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());

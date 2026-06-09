@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Support\MathCaptcha;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,16 +15,19 @@ class AuthenticationTest extends TestCase
     {
         $response = $this->get('/login');
 
-        $response->assertStatus(200);
+        $response->assertStatus(200)
+            ->assertSee('Verifikasi:', false)
+            ->assertSee(' = ?', false);
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'admin']);
 
-        $response = $this->post('/login', [
+        $response = $this->from('/login')->post('/login', [
             'email' => $user->email,
             'password' => 'password',
+            ...$this->validCaptchaPayload(),
         ]);
 
         $this->assertAuthenticated();
@@ -32,14 +36,44 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role' => 'admin']);
 
-        $this->post('/login', [
+        $this->from('/login')->post('/login', [
             'email' => $user->email,
             'password' => 'wrong-password',
+            ...$this->validCaptchaPayload(),
         ]);
 
         $this->assertGuest();
+    }
+
+    public function test_users_can_not_authenticate_with_invalid_captcha(): void
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        $captcha = MathCaptcha::issue();
+
+        $this->from('/login')->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'captcha_token' => $captcha['captcha_token'],
+            'captcha_answer' => '99',
+        ])->assertSessionHasErrors('captcha_answer');
+
+        $this->assertGuest();
+    }
+
+    /**
+     * @return array{captcha_token: string, captcha_answer: string}
+     */
+    private function validCaptchaPayload(): array
+    {
+        $captcha = MathCaptcha::issue();
+        $stored = session(MathCaptcha::SESSION_KEY);
+
+        return [
+            'captcha_token' => $captcha['captcha_token'],
+            'captcha_answer' => (string) ($stored['answer'] ?? ''),
+        ];
     }
 
     public function test_users_can_logout(): void
