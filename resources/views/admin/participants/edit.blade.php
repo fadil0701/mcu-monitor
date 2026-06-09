@@ -7,7 +7,7 @@
 @section('content')
 
 <x-common.component-card title="Form Peserta">
-    <form method="POST" action="{{ route('admin.participants.update', $participant) }}">
+    <form method="POST" action="{{ route('admin.participants.update.post', $participant) }}">
         @csrf
         <div class="row g-3">
             <div class="col-md-6">
@@ -67,7 +67,6 @@
                 <x-participant.education-select
                     :value="old('pendidikan_terakhir', $participant->pendidikan_terakhir)"
                     :required="false"
-                    class="@error('pendidikan_terakhir') is-invalid @enderror"
                 />
                 @error('pendidikan_terakhir')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>

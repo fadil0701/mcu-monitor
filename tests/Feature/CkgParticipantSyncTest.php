@@ -100,6 +100,60 @@ class CkgParticipantSyncTest extends TestCase
         $this->assertSame('2024-06-01', $participant->tanggal_mcu_terakhir?->format('Y-m-d'));
     }
 
+    public function test_sync_updates_existing_participant_when_ckg_peserta_id_changes_next_year(): void
+    {
+        Participant::query()->create([
+            'ckg_peserta_id' => 100,
+            'ckg_registration_code' => 'CKG-2025-100',
+            'nik_ktp' => '3173012345678100',
+            'nrk_pegawai' => '556677',
+            'nama_lengkap' => 'Pegawai Tahun Lalu',
+            'tempat_lahir' => '-',
+            'tanggal_lahir' => '1988-03-15',
+            'jenis_kelamin' => 'L',
+            'skpd' => 'SKPD Lama',
+            'ukpd' => 'UPT Lama',
+            'no_telp' => '081300000000',
+            'email' => '3173012345678100@ckg-sync.local',
+            'status_pegawai' => 'PNS',
+            'status_mcu' => 'Sudah MCU',
+            'tanggal_mcu_terakhir' => '2025-08-01',
+        ]);
+
+        Http::fake([
+            'http://ckg.test/api/bridge/mcu/participants*' => Http::response([
+                'meta' => ['page' => 1, 'per_page' => 100, 'total' => 1, 'last_page' => 1],
+                'data' => [[
+                    'ckg_peserta_id' => 500,
+                    'ckg_registration_code' => 'CKG-2026-500',
+                    'nik' => '3173012345678100',
+                    'nama_lengkap' => 'Pegawai Tahun Baru',
+                    'tanggal_lahir' => '1988-03-15',
+                    'jenis_kelamin' => 'male',
+                    'no_hp' => '081399999999',
+                    'work_unit' => 'ASN DKI Jakarta',
+                    'participant_category' => 'pns',
+                    'employee_nrk' => '556677',
+                    'skpd' => 'SKPD Baru',
+                    'ukpd' => 'UPT Baru',
+                ]],
+            ]),
+        ]);
+
+        $stats = app(CkgParticipantSyncService::class)->sync();
+
+        $this->assertSame(0, $stats['inserted']);
+        $this->assertSame(1, $stats['updated']);
+        $this->assertDatabaseCount('participants', 1);
+        $this->assertDatabaseHas('participants', [
+            'nik_ktp' => '3173012345678100',
+            'ckg_peserta_id' => 500,
+            'ckg_registration_code' => 'CKG-2026-500',
+            'nama_lengkap' => 'Pegawai Tahun Baru',
+            'status_mcu' => 'Sudah MCU',
+        ]);
+    }
+
     public function test_sync_skips_ineligible_payload(): void
     {
         Http::fake([

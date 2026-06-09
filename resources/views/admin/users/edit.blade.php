@@ -7,7 +7,7 @@
 @section('content')
 
 <x-common.component-card title="Form User">
-    <form method="POST" action="{{ route('admin.users.update', $user) }}">
+    <form method="POST" action="{{ route('admin.users.update.post', $user) }}">
         @csrf
         <div class="row g-3">
             <div class="col-md-6">

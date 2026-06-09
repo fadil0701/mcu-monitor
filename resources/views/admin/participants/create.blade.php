@@ -67,7 +67,6 @@
                 <x-participant.education-select
                     :value="old('pendidikan_terakhir')"
                     :required="false"
-                    class="@error('pendidikan_terakhir') is-invalid @enderror"
                 />
                 @error('pendidikan_terakhir')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>

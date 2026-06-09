@@ -89,7 +89,6 @@
             <label for="pendidikan_terakhir" class="form-label">Pendidikan Terakhir <span class="text-danger">*</span></label>
             <x-participant.education-select
                 :value="old('pendidikan_terakhir')"
-                class="@error('pendidikan_terakhir') is-invalid @enderror"
             />
             @error('pendidikan_terakhir')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
         </div>

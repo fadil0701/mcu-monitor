@@ -7,6 +7,7 @@ use App\Models\Participant;
 use App\Support\CkgBridge\CkgBridgeSettings;
 use App\Support\CkgBridge\CkgParticipantMapper;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -159,31 +160,82 @@ class CkgParticipantSyncService
             return 'skipped';
         }
 
-        $existing = null;
-        if (! empty($attributes['ckg_peserta_id'])) {
-            $existing = Participant::query()
-                ->where('ckg_peserta_id', $attributes['ckg_peserta_id'])
-                ->first();
+        $existing = $this->findExistingParticipant($attributes);
+
+        if ($existing === null) {
+            try {
+                Participant::query()->create(array_merge($attributes, [
+                    'status_mcu' => 'Belum MCU',
+                    'tanggal_mcu_terakhir' => null,
+                ]));
+
+                return 'inserted';
+            } catch (QueryException $exception) {
+                if (! $this->isUniqueConstraintViolation($exception)) {
+                    throw $exception;
+                }
+
+                $existing = $this->findExistingParticipant($attributes);
+                if ($existing === null) {
+                    throw $exception;
+                }
+            }
         }
 
-        $existing ??= Participant::query()
+        $this->applyParticipantUpdate($existing, $attributes);
+
+        return 'updated';
+    }
+
+    /**
+     * Kunci idempotensi: NIK stabil antar tahun; ckg_peserta_id bisa berubah tiap siklus CKG.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    private function findExistingParticipant(array $attributes): ?Participant
+    {
+        $byNik = Participant::query()
             ->where('nik_ktp', $attributes['nik_ktp'])
             ->first();
 
-        if ($existing === null) {
-            Participant::query()->create(array_merge($attributes, [
-                'status_mcu' => 'Belum MCU',
-                'tanggal_mcu_terakhir' => null,
-            ]));
-
-            return 'inserted';
+        if ($byNik !== null) {
+            return $byNik;
         }
+
+        if (! empty($attributes['ckg_peserta_id'])) {
+            $byCkgId = Participant::query()
+                ->where('ckg_peserta_id', $attributes['ckg_peserta_id'])
+                ->first();
+
+            if ($byCkgId !== null) {
+                return $byCkgId;
+            }
+        }
+
+        $nrk = trim((string) ($attributes['nrk_pegawai'] ?? ''));
+        if ($nrk !== '' && ! str_starts_with($nrk, 'NRK-')) {
+            return Participant::query()
+                ->where('nrk_pegawai', $nrk)
+                ->first();
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function applyParticipantUpdate(Participant $existing, array $attributes): void
+    {
+        $nrk = (string) $attributes['nrk_pegawai'];
+        $safeNrk = $this->resolveSafeNrk($existing, $nrk);
 
         $existing->fill([
             'ckg_peserta_id' => $attributes['ckg_peserta_id'] ?? $existing->ckg_peserta_id,
             'ckg_registration_code' => $attributes['ckg_registration_code'] ?? $existing->ckg_registration_code,
+            'nik_ktp' => $attributes['nik_ktp'],
             'nama_lengkap' => $attributes['nama_lengkap'],
-            'nrk_pegawai' => $attributes['nrk_pegawai'],
+            'nrk_pegawai' => $safeNrk,
             'tanggal_lahir' => $attributes['tanggal_lahir'],
             'jenis_kelamin' => $attributes['jenis_kelamin'],
             'skpd' => $attributes['skpd'],
@@ -193,8 +245,27 @@ class CkgParticipantSyncService
             'ckg_synced_at' => $attributes['ckg_synced_at'],
         ]);
         $existing->save();
+    }
 
-        return 'updated';
+    private function resolveSafeNrk(Participant $existing, string $nrk): string
+    {
+        if ($nrk === '' || $nrk === $existing->nrk_pegawai) {
+            return $existing->nrk_pegawai;
+        }
+
+        $taken = Participant::query()
+            ->where('nrk_pegawai', $nrk)
+            ->where('id', '!=', $existing->id)
+            ->exists();
+
+        return $taken ? $existing->nrk_pegawai : $nrk;
+    }
+
+    private function isUniqueConstraintViolation(QueryException $exception): bool
+    {
+        $sqlState = $exception->errorInfo[0] ?? '';
+
+        return in_array($sqlState, ['23000', '23505'], true);
     }
 
     private function client(): PendingRequest

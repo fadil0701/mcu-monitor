@@ -24,6 +24,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('participants', ParticipantController::class);
     Route::post('participants/import', [ParticipantController::class, 'import'])->name('participants.import');
     Route::post('participants/bulk-destroy', [ParticipantController::class, 'bulkDestroy'])->name('participants.bulk-destroy');
+    Route::post('participants/{participant}', [ParticipantController::class, 'update'])->name('participants.update.post');
 
     Route::resource('schedules', ScheduleController::class);
     Route::post('schedules/bulk-destroy', [ScheduleController::class, 'bulkDestroy'])->name('schedules.bulk-destroy');
@@ -38,6 +39,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('mcu-results/{mcu_result}/send-whatsapp', [McuResultController::class, 'sendWhatsApp'])->name('mcu-results.send-whatsapp');
 
     Route::resource('users', UserController::class);
+    Route::post('users/{user}', [UserController::class, 'update'])->name('users.update.post');
 
     Route::middleware('super_admin')->group(function () {
         Route::get('diagnoses/template/download', [DiagnosisController::class, 'downloadTemplate'])->name('diagnoses.template');
