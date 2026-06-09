@@ -51,7 +51,12 @@ run_setup() {
     if [ "$APP_ENV" = "production" ]; then
         php artisan config:cache --no-interaction
         php artisan route:cache --no-interaction
-        php artisan view:cache --no-interaction
+        if [ "${VIEW_CLEAR_ON_BOOT:-1}" = "1" ]; then
+            rm -f storage/framework/views/*.php 2>/dev/null || true
+            php artisan view:clear --no-interaction 2>/dev/null || true
+        else
+            php artisan view:cache --no-interaction
+        fi
     fi
 
     fix_permissions

@@ -27,8 +27,17 @@ final class MathCaptcha
         return [
             'captcha_token' => $token,
             'captcha_question' => "{$expression} = ?",
-            'captcha_image_url' => route('login.captcha.image', ['token' => $token]),
+            'captcha_image_url' => self::imageDataUri($expression),
         ];
+    }
+
+    private static function imageDataUri(string $expression): string
+    {
+        if (! extension_loaded('gd')) {
+            return '';
+        }
+
+        return 'data:image/png;base64,' . base64_encode(MathCaptchaImageRenderer::render($expression));
     }
 
     public static function renderImage(string $token): ?string

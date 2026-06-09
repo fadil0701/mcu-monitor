@@ -41,6 +41,47 @@
             margin: 0 auto;
             object-fit: contain;
         }
+        .authentication-wrapper.authentication-basic .authentication-inner.auth-form-wide {
+            max-width: 960px;
+        }
+        .auth-form-field-row > [class*="col-"] {
+            align-items: stretch;
+        }
+        .form-field-stack {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .form-field-stack > .form-label {
+            margin-bottom: 0.5rem;
+        }
+        .form-field-stack > .form-field-control {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-field-stack .form-control,
+        .form-field-stack .instansi-combobox .form-control {
+            width: 100%;
+            min-height: calc(1.53em + 0.875rem + 2px);
+            padding: 0.4375rem 0.875rem;
+            font-size: 0.9375rem;
+            line-height: 1.53;
+        }
+        .form-field-stack .instansi-combobox {
+            display: block;
+            width: 100%;
+        }
+        .form-field-stack select[data-instansi-searchable]:not([data-instansi-searchable-init="1"]) {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
     </style>
     @stack('page-css')
     <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>

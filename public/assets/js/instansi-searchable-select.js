@@ -26,14 +26,18 @@
         selectEl.dataset.instansiSearchableInit = '1';
 
         var wrap = document.createElement('div');
-        wrap.className = 'position-relative';
+        wrap.className = 'position-relative instansi-combobox';
         wrap.setAttribute('data-instansi-combobox-for', selectEl.id || '');
 
         var input = document.createElement('input');
         input.type = 'text';
         input.autocomplete = 'off';
         input.placeholder = 'Ketik untuk mencari instansi…';
-        input.className = selectEl.className;
+        input.className = 'form-control' + (selectEl.classList.contains('is-invalid') ? ' is-invalid' : '');
+        if (selectEl.id) {
+            input.id = selectEl.id;
+            selectEl.removeAttribute('id');
+        }
         input.setAttribute('aria-autocomplete', 'list');
         input.setAttribute('aria-expanded', 'false');
         input.setAttribute('role', 'combobox');

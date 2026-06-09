@@ -1,6 +1,7 @@
 @extends('layouts.sneat.auth')
 
 @section('title', 'Pendaftaran MCU')
+@section('auth-inner-class', 'auth-form-wide')
 @section('auth-max-width', '960px')
 @section('heading', 'Pendaftaran Medical Check Up')
 @section('subheading', 'PPKP DKI Jakarta — lengkapi data akun dan data pribadi')

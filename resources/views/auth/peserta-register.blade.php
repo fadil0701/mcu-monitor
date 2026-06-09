@@ -1,10 +1,18 @@
 @extends('layouts.sneat.auth')
 
 @section('title', 'Buat Akun Peserta')
+@section('auth-inner-class', 'auth-form-wide')
+@section('auth-max-width', '960px')
 @section('heading', 'Buat Akun Login Peserta')
 @section('subheading', 'Lengkapi data peserta dan buat akun login')
 
 @section('content')
+@php
+    $nrkValue = old('nrk_pegawai', $participant->nrk_pegawai);
+    if ($nrkValue === '-' || str_starts_with((string) $nrkValue, 'NRK-')) {
+        $nrkValue = '';
+    }
+@endphp
 <form method="POST" action="{{ url('/peserta/aktivasi-akun/register') }}">
     @csrf
 
@@ -55,26 +63,28 @@
     </div>
 
     <div class="mb-3">
-        <label for="nrk_pegawai" class="form-label">NRK Pegawai *</label>
-        <input type="text" class="form-control @error('nrk_pegawai') is-invalid @enderror" id="nrk_pegawai" name="nrk_pegawai" value="{{ old('nrk_pegawai', $participant->nrk_pegawai) }}" required />
+        <label for="nrk_pegawai" class="form-label">NRK Pegawai <span class="text-danger">*</span></label>
+        <input type="text" class="form-control @error('nrk_pegawai') is-invalid @enderror" id="nrk_pegawai" name="nrk_pegawai" value="{{ $nrkValue }}" required />
         @error('nrk_pegawai')<div class="invalid-feedback">{{ $message }}</div>@enderror
-        @if(str_starts_with($participant->nrk_pegawai, 'NRK-'))
-            <small class="text-muted">NRK sementara dari sistem — silakan isi NRK resmi Anda.</small>
-        @endif
     </div>
 
-    <div class="row g-3 mb-3">
-        <div class="col-md-6">
+    <div class="row g-3 mb-3 auth-form-field-row">
+        <div class="col-md-6 d-flex">
             <x-instansi-pemprov-select
+                class="flex-fill"
                 :selected="old('skpd', $participant->skpd === '-' ? '' : $participant->skpd)"
                 :required="true"
                 :hasError="$errors->has('skpd')"
             />
         </div>
-        <div class="col-md-6">
-            <label for="ukpd" class="form-label">UKPD *</label>
-            <input type="text" class="form-control @error('ukpd') is-invalid @enderror" id="ukpd" name="ukpd" value="{{ old('ukpd', $participant->ukpd === '-' ? '' : $participant->ukpd) }}" required />
-            @error('ukpd')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        <div class="col-md-6 d-flex">
+            <div class="form-field-stack flex-fill">
+                <label for="ukpd" class="form-label">UKPD <span class="text-danger">*</span></label>
+                <div class="form-field-control">
+                    <input type="text" class="form-control @error('ukpd') is-invalid @enderror" id="ukpd" name="ukpd" value="{{ old('ukpd', $participant->ukpd === '-' ? '' : $participant->ukpd) }}" required />
+                    @error('ukpd')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+            </div>
         </div>
     </div>
 

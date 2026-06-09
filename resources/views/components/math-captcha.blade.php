@@ -78,7 +78,9 @@
                         return;
                     }
                     tokenInput.value = data.captcha_token;
-                    image.src = `${data.captcha_image_url}?t=${Date.now()}`;
+                    image.src = data.captcha_image_url.startsWith('data:')
+                        ? data.captcha_image_url
+                        : `${data.captcha_image_url}?t=${Date.now()}`;
                     if (answerInput) {
                         answerInput.value = '';
                     }

@@ -17,7 +17,8 @@ class AuthenticationTest extends TestCase
 
         $response->assertStatus(200)
             ->assertSee('Masukkan hasil penjumlahan di atas', false)
-            ->assertSee('data-captcha-image', false);
+            ->assertSee('data-captcha-image', false)
+            ->assertSee('data:image/png;base64,', false);
     }
 
     public function test_login_captcha_refresh_returns_json(): void
