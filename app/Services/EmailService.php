@@ -12,23 +12,25 @@ class EmailService
 {
     public function sendMcuInvitation(Schedule $schedule): bool
     {
+        if (blank($schedule->email)) {
+            Log::warning('MCU invitation email skipped: schedule has no recipient email', [
+                'schedule_id' => $schedule->id,
+            ]);
+
+            return false;
+        }
+
         try {
-            // Configure SMTP settings
-            $this->configureMailSettings();
-            
-            // Get email template from Settings (new simple template)
+            $mailer = $this->configuredMailer();
+
             $subject = Setting::getValue('email_invitation_subject', 'Undangan Medical Check Up');
             $template = Setting::getValue('email_invitation_template', 'Kepada {nama_lengkap}, Anda diundang untuk mengikuti Medical Check Up.');
-            
-            // Prepare template data
+
             $templateData = $this->prepareTemplateData($schedule);
-            
-            // Render template (replace variables)
             $renderedSubject = $this->renderTemplate($subject, $templateData);
             $renderedBody = $this->renderTemplate($template, $templateData);
-            
-            // Send plain text email (no PDF attachment)
-            Mail::raw($renderedBody, function ($message) use ($schedule, $renderedSubject) {
+
+            $mailer->raw($renderedBody, function ($message) use ($schedule, $renderedSubject) {
                 $message->to($schedule->email)
                     ->subject($renderedSubject);
             });
@@ -41,16 +43,38 @@ class EmailService
 
             Log::info("Email invitation sent successfully to {$schedule->email}");
             return true;
-        } catch (\Exception $e) {
-            Log::error('Failed to send email invitation: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Failed to send email invitation: '.$e->getMessage(), [
+                'schedule_id' => $schedule->id,
+                'recipient' => $schedule->email,
+                'exception' => $e::class,
+            ]);
+
             return false;
         }
     }
 
+    public function sendTestMessage(string $recipient, ?string $body = null): void
+    {
+        if (blank($recipient)) {
+            throw new \InvalidArgumentException('Alamat email penerima wajib diisi.');
+        }
+
+        $mailer = $this->configuredMailer();
+        $fromAddress = Config::get('mail.from.address');
+        $fromName = Config::get('mail.from.name');
+
+        $mailer->raw($body ?? 'Tes kirim email dari Sistem Monitoring MCU PPKP.', function ($message) use ($recipient, $fromAddress, $fromName) {
+            $message->to($recipient)
+                ->subject('Tes SMTP — Sistem Monitoring MCU')
+                ->from($fromAddress, $fromName);
+        });
+    }
+
     /**
-     * Configure mail settings from Settings table
+     * @return \Illuminate\Contracts\Mail\Mailer
      */
-    private function configureMailSettings(): void
+    private function configuredMailer()
     {
         $smtpSettings = Setting::getGroup('smtp');
 
@@ -59,14 +83,21 @@ class EmailService
             $encryption = null;
         }
 
+        $port = (int) ($smtpSettings['smtp_port'] ?? env('MAIL_PORT', 587));
+
         Config::set('mail.default', 'smtp');
+        Config::set('mail.mailers.smtp.transport', 'smtp');
         Config::set('mail.mailers.smtp.host', $smtpSettings['smtp_host'] ?? env('MAIL_HOST', 'smtp.gmail.com'));
-        Config::set('mail.mailers.smtp.port', $smtpSettings['smtp_port'] ?? env('MAIL_PORT', 587));
+        Config::set('mail.mailers.smtp.port', $port);
         Config::set('mail.mailers.smtp.username', $smtpSettings['smtp_username'] ?? env('MAIL_USERNAME', ''));
         Config::set('mail.mailers.smtp.password', $smtpSettings['smtp_password'] ?? env('MAIL_PASSWORD', ''));
         Config::set('mail.mailers.smtp.encryption', $encryption);
         Config::set('mail.from.address', $smtpSettings['smtp_from_address'] ?? env('MAIL_FROM_ADDRESS', 'noreply@mcu.local'));
         Config::set('mail.from.name', $smtpSettings['smtp_from_name'] ?? env('MAIL_FROM_NAME', 'Sistem MCU'));
+
+        Mail::purge('smtp');
+
+        return Mail::mailer('smtp');
     }
 
     /**
