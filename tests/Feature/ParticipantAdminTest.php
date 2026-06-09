@@ -51,6 +51,29 @@ class ParticipantAdminTest extends TestCase
             ->assertSee(route('admin.participants.update.post', $participant), false);
     }
 
+    public function test_admin_can_delete_participant(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $participant = $this->makeParticipant();
+
+        $this->actingAs($admin)
+            ->delete(route('admin.participants.destroy', $participant))
+            ->assertRedirect(route('admin.participants.index'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('participants', ['id' => $participant->id]);
+    }
+
+    public function test_delete_bulk_destroy_path_does_not_return_404(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->delete('/admin/participants/bulk-destroy')
+            ->assertRedirect(route('admin.participants.index'))
+            ->assertSessionHas('error');
+    }
+
     public function test_edit_form_does_not_mark_filled_education_as_invalid(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

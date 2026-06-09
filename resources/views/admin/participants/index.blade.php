@@ -48,32 +48,28 @@
         </div>
     </div>
 
-    <form id="bulk-delete-form" method="POST" action="{{ route('admin.participants.bulk-destroy') }}">
-        @csrf
-        <input type="hidden" name="search" value="{{ request('search') }}">
-        <input type="hidden" name="status_mcu" value="{{ request('status_mcu') }}">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">
+                        <input type="checkbox" id="select-all" class="form-check-input" title="Pilih semua">
+                    </th>
+                    <th>NIK</th>
+                    <th>NRK Pegawai</th>
+                    <th>Nama Lengkap</th>
+                    <th>SKPD</th>
+                    <th>Status</th>
+                    <th>Status MCU</th>
+                    <th class="text-center" style="width: 120px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($participants as $p)
                     <tr>
-                        <th style="width: 40px;">
-                            <input type="checkbox" id="select-all" class="form-check-input" title="Pilih semua">
-                        </th>
-                        <th>NIK</th>
-                        <th>NRK Pegawai</th>
-                        <th>Nama Lengkap</th>
-                        <th>SKPD</th>
-                        <th>Status</th>
-                        <th>Status MCU</th>
-                        <th class="text-center" style="width: 120px;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($participants as $p)
-                        <tr>
-                            <td>
-                                <input type="checkbox" name="ids[]" value="{{ $p->id }}" class="form-check-input participant-checkbox">
-                            </td>
+                        <td>
+                            <input type="checkbox" value="{{ $p->id }}" class="form-check-input participant-checkbox">
+                        </td>
                             <td>{{ $p->nik_ktp }}</td>
                             <td>{{ $p->nrk_pegawai }}</td>
                             <td class="fw-medium">{{ $p->nama_lengkap }}</td>
@@ -107,13 +103,18 @@
                                 </div>
                             </td>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        @if($participants->hasPages())
-            <div class="mt-3">{{ $participants->links() }}</div>
-        @endif
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    @if($participants->hasPages())
+        <div class="mt-3">{{ $participants->links() }}</div>
+    @endif
+
+    <form id="bulk-delete-form" method="POST" action="{{ route('admin.participants.bulk-destroy') }}" class="d-none">
+        @csrf
+        <input type="hidden" name="search" value="{{ request('search') }}">
+        <input type="hidden" name="status_mcu" value="{{ request('status_mcu') }}">
     </form>
 </x-common.component-card>
 @endsection
@@ -148,6 +149,14 @@
     bulkDeleteBtn?.addEventListener('click', function() {
         if (this.disabled) return;
         if (!confirm('Yakin hapus peserta yang dipilih?')) return;
+        bulkDeleteForm.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
+        document.querySelectorAll('.participant-checkbox:checked').forEach(function(cb) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids[]';
+            input.value = cb.value;
+            bulkDeleteForm.appendChild(input);
+        });
         bulkDeleteForm.submit();
     });
     updateUI();

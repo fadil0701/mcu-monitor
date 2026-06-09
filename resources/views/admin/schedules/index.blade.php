@@ -47,14 +47,8 @@
             </form>
         </div>
 
-        <form id="bulk-delete-form" method="POST" action="{{ route('admin.schedules.bulk-destroy') }}">
-            @csrf
-            <input type="hidden" name="search" value="{{ request('search') }}">
-            <input type="hidden" name="date" value="{{ request('date') }}">
-            <input type="hidden" name="status" value="{{ request('status') }}">
-
-            <div class="table-responsive">
-                <table class="table table-hover">
+        <div class="table-responsive">
+            <table class="table table-hover">
                     <thead>
                         <tr>
                             <th style="width: 42px;">
@@ -111,11 +105,17 @@
                     </tbody>
                 </table>
             </div>
-        </form>
 
         @if($schedules->hasPages())
             <div class="mt-3">{{ $schedules->links() }}</div>
         @endif
+
+        <form id="bulk-delete-form" method="POST" action="{{ route('admin.schedules.bulk-destroy') }}" class="d-none">
+            @csrf
+            <input type="hidden" name="search" value="{{ request('search') }}">
+            <input type="hidden" name="date" value="{{ request('date') }}">
+            <input type="hidden" name="status" value="{{ request('status') }}">
+        </form>
     </div>
 </div>
 @endsection

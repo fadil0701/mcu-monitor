@@ -21,13 +21,21 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth'])->get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('participants', ParticipantController::class);
     Route::post('participants/import', [ParticipantController::class, 'import'])->name('participants.import');
     Route::post('participants/bulk-destroy', [ParticipantController::class, 'bulkDestroy'])->name('participants.bulk-destroy');
+    Route::delete('participants/bulk-destroy', function () {
+        return redirect()->route('admin.participants.index')
+            ->with('error', 'Permintaan hapus tidak valid. Gunakan ikon hapus per baris atau tombol Bulk Hapus.');
+    });
+    Route::resource('participants', ParticipantController::class);
     Route::post('participants/{participant}', [ParticipantController::class, 'update'])->name('participants.update.post');
 
-    Route::resource('schedules', ScheduleController::class);
     Route::post('schedules/bulk-destroy', [ScheduleController::class, 'bulkDestroy'])->name('schedules.bulk-destroy');
+    Route::delete('schedules/bulk-destroy', function () {
+        return redirect()->route('admin.schedules.index')
+            ->with('error', 'Permintaan hapus tidak valid. Gunakan ikon hapus per baris atau tombol Bulk Hapus.');
+    });
+    Route::resource('schedules', ScheduleController::class);
     Route::post('schedules/{schedule}/quick-status', [ScheduleController::class, 'quickStatus'])->name('schedules.quick-status');
     Route::post('schedules/{schedule}/send-email', [ScheduleController::class, 'sendEmail'])->name('schedules.send-email');
     Route::post('schedules/{schedule}/send-whatsapp', [ScheduleController::class, 'sendWhatsApp'])->name('schedules.send-whatsapp');
