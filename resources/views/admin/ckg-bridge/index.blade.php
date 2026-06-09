@@ -158,11 +158,16 @@
         <div class="card">
             <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <h5 class="mb-0">Log Sinkronisasi</h5>
-                <form method="GET" action="{{ route('admin.ckg-bridge.index') }}">
-                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                <form method="GET" action="{{ route('admin.ckg-bridge.index') }}" class="d-flex flex-wrap align-items-center gap-2">
+                    <select name="status" class="form-select form-select-sm" style="width:auto;min-width:9rem;" onchange="this.form.submit()">
                         <option value="">Semua status</option>
                         @foreach(['running', 'success', 'failed'] as $status)
                             <option value="{{ $status }}" @selected(request('status') === $status)>{{ $status }}</option>
+                        @endforeach
+                    </select>
+                    <select name="per_page" class="form-select form-select-sm" style="width:auto;min-width:7rem;" onchange="this.form.submit()">
+                        @foreach([10, 20, 50, 100] as $size)
+                            <option value="{{ $size }}" @selected((int) request('per_page', 20) === $size)>{{ $size }}/hal</option>
                         @endforeach
                     </select>
                 </form>
@@ -213,8 +218,15 @@
                     </tbody>
                 </table>
             </div>
-            @if($logs->hasPages())
-                <div class="card-footer">{{ $logs->links() }}</div>
+            @if($logs->total() > 0)
+                <div class="card-footer d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <small class="text-muted">
+                        Menampilkan {{ $logs->firstItem() }}–{{ $logs->lastItem() }} dari {{ $logs->total() }} log
+                    </small>
+                    @if($logs->hasPages())
+                        <div class="mb-0">{{ $logs->links() }}</div>
+                    @endif
+                </div>
             @endif
         </div>
     </div>

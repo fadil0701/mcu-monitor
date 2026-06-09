@@ -15,18 +15,9 @@
     <div class="page-toolbar mb-4">
         <div class="filter-toolbar">
             <form method="GET" class="row g-2 align-items-end">
-                <div class="col-md-5 col-lg-4">
+                <div class="col-md-6 col-lg-5">
                     <label class="form-label mb-1">Cari</label>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama / NIK peserta..." class="form-control form-control-sm">
-                </div>
-                <div class="col-md-4 col-lg-3">
-                    <label class="form-label mb-1">Status Kesehatan</label>
-                    <select name="status_kesehatan" class="form-select form-select-sm">
-                        <option value="">Semua Status Kesehatan</option>
-                        <option value="Sehat" {{ request('status_kesehatan') === 'Sehat' ? 'selected' : '' }}>Sehat</option>
-                        <option value="Kurang Sehat" {{ request('status_kesehatan') === 'Kurang Sehat' ? 'selected' : '' }}>Kurang Sehat</option>
-                        <option value="Tidak Sehat" {{ request('status_kesehatan') === 'Tidak Sehat' ? 'selected' : '' }}>Tidak Sehat</option>
-                    </select>
                 </div>
                 <div class="col-md-auto">
                     <button type="submit" class="btn btn-primary btn-sm"><i class="bx bx-search me-1"></i> Cari</button>
@@ -44,7 +35,6 @@
                 <tr>
                     <th>Tanggal</th>
                     <th>Peserta</th>
-                    <th>Status Kesehatan</th>
                     <th>Publikasi</th>
                     <th class="text-center">Aksi</th>
                 </tr>
@@ -54,16 +44,6 @@
                     <tr>
                         <td>{{ $r->tanggal_pemeriksaan?->format('d/m/Y') }}</td>
                         <td class="fw-medium">{{ $r->participant?->nama_lengkap ?? $r->participant_id }}</td>
-                        <td>
-                            @php
-                                $badge = match($r->status_kesehatan) {
-                                    'Sehat' => 'bg-label-success',
-                                    'Tidak Sehat' => 'bg-label-danger',
-                                    default => 'bg-label-warning',
-                                };
-                            @endphp
-                            <span class="badge {{ $badge }}">{{ $r->status_kesehatan }}</span>
-                        </td>
                         <td>
                             <span class="badge {{ $r->is_published ? 'bg-label-success' : 'bg-label-warning' }}">{{ $r->is_published ? 'Ya' : 'Tidak' }}</span>
                         </td>
@@ -87,7 +67,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="text-center text-muted py-4">Belum ada hasil MCU.</td></tr>
+                    <tr><td colspan="4" class="text-center text-muted py-4">Belum ada hasil MCU.</td></tr>
                 @endforelse
             </tbody>
         </table>

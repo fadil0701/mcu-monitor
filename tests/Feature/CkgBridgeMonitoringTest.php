@@ -59,4 +59,27 @@ class CkgBridgeMonitoringTest extends TestCase
         ]);
         $this->assertSame(1, CkgBridgeSyncLog::query()->count());
     }
+
+    public function test_sync_logs_are_paginated(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        for ($i = 0; $i < 25; $i++) {
+            CkgBridgeSyncLog::query()->create([
+                'status' => 'success',
+                'trigger' => 'schedule',
+                'inserted' => 0,
+                'updated' => 0,
+                'skipped' => 0,
+                'started_at' => now(),
+                'finished_at' => now(),
+            ]);
+        }
+
+        $this->actingAs($admin)
+            ->get(route('admin.ckg-bridge.index', ['per_page' => 20]))
+            ->assertOk()
+            ->assertSee('Menampilkan 1–20 dari 25 log', false)
+            ->assertSee('page=2', false);
+    }
 }

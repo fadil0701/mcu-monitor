@@ -11,7 +11,7 @@ class WhatsAppTemplatesController extends Controller
     public function index()
     {
         $invitation_template = Setting::getValue('whatsapp_invitation_template', '');
-        $resultDefault = "Halo {participant_name},\n\nHasil MCU Anda untuk pemeriksaan tanggal {tanggal_pemeriksaan} telah tersedia.\n\n📋 Status Kesehatan: {status_kesehatan}\n📝 Diagnosis: {diagnosis}\n\nSilakan login ke {hasil_url} untuk melihat dan mendownload hasil lengkap.\n\nTerima kasih.";
+        $resultDefault = "Halo {participant_name},\n\nHasil MCU Anda untuk pemeriksaan tanggal {tanggal_pemeriksaan} telah tersedia.\n\nSilakan login ke {hasil_url} untuk melihat dan mendownload hasil lengkap.\n\nTerima kasih.";
         $result_template = Setting::getValue('whatsapp_result_template', $resultDefault) ?: $resultDefault;
         return view('admin.whatsapp-templates.index', compact('invitation_template', 'result_template'));
     }
@@ -63,7 +63,7 @@ class WhatsAppTemplatesController extends Controller
 
     public function resetResult()
     {
-        $default = "Halo {participant_name},\n\nHasil MCU Anda untuk pemeriksaan tanggal {tanggal_pemeriksaan} telah tersedia.\n\n📋 Status Kesehatan: {status_kesehatan}\n📝 Diagnosis: {diagnosis}\n\nSilakan login ke {hasil_url} untuk melihat dan mendownload hasil lengkap.\n\nTerima kasih.";
+        $default = "Halo {participant_name},\n\nHasil MCU Anda untuk pemeriksaan tanggal {tanggal_pemeriksaan} telah tersedia.\n\nSilakan login ke {hasil_url} untuk melihat dan mendownload hasil lengkap.\n\nTerima kasih.";
         Setting::setValue('whatsapp_result_template', $default, 'text', 'whatsapp_template', 'Template WhatsApp Hasil MCU');
         return redirect()->route('admin.whatsapp-templates.index')->with('success', 'Template hasil MCU direset ke default.');
     }

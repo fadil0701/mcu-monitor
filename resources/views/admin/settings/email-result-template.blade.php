@@ -11,7 +11,7 @@
         Template fallback saat mengirim hasil MCU via email (plain text). Untuk template HTML lengkap, gunakan menu <a href="{{ route('admin.email-templates.index', ['type' => 'mcu_result']) }}">Email Templates</a>.
     </p>
     <p class="text-muted mb-4">
-        Variabel: <code class="bg-light px-1 rounded">{participant_name}, {participant_email}, {tanggal_pemeriksaan}, {status_kesehatan}, {diagnosis}, {hasil_url}, {app_name}</code>
+        Variabel: <code class="bg-light px-1 rounded">{participant_name}, {participant_email}, {tanggal_pemeriksaan}, {hasil_url}, {app_name}</code>
     </p>
 
     <form method="POST" action="{{ route('admin.settings.update-email-result-template') }}">

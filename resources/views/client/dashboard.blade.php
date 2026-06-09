@@ -122,8 +122,7 @@
                     <span class="avatar-initial rounded bg-label-success me-3 p-2"><i class="bx bx-file"></i></span>
                     <div class="flex-grow-1">
                         <h6 class="mb-0">{{ $result->tanggal_pemeriksaan_formatted }}</h6>
-                        <small class="text-muted">{{ Str::limit($result->diagnosis_text !== '-' ? $result->diagnosis_text : 'Tidak ada diagnosis', 40) }}</small>
-                        <div class="mt-1"><span class="badge bg-label-{{ $result->status_kesehatan_color }}">{{ $result->status_kesehatan }}</span></div>
+                        <small class="text-muted">{{ $result->hasFile() ? 'Dokumen tersedia' : 'Belum ada dokumen' }}</small>
                     </div>
                 </div>
             @empty

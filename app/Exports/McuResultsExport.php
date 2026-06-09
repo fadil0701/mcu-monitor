@@ -35,7 +35,7 @@ class McuResultsExport implements FromCollection, WithHeadings, WithMapping, Sho
     public function headings(): array
     {
         return [
-            'Tanggal Pemeriksaan', 'Status Kesehatan', 'Diagnosis', 'Rekomendasi',
+            'Tanggal Pemeriksaan', 'Rekomendasi',
             'NIK', 'NRK', 'Nama', 'JK', 'SKPD', 'UKPD', 'No Telp', 'Email',
         ];
     }
@@ -45,8 +45,6 @@ class McuResultsExport implements FromCollection, WithHeadings, WithMapping, Sho
     {
         return [
             optional($row->tanggal_pemeriksaan)->format('Y-m-d'),
-            $row->status_kesehatan,
-            $row->diagnosis_text,
             $row->rekomendasi,
             optional($row->participant)->nik_ktp,
             optional($row->participant)->nrk_pegawai,

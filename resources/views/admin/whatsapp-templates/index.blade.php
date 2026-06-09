@@ -24,7 +24,7 @@
 </x-common.component-card>
 
 <x-common.component-card title="Template Hasil MCU">
-    <p class="text-muted mb-3">Variabel: <code class="bg-light px-1 rounded">{participant_name}, {participant_email}, {participant_phone}, {tanggal_pemeriksaan}, {status_kesehatan}, {diagnosis}, {rekomendasi}, {hasil_url}, {app_name}</code></p>
+    <p class="text-muted mb-3">Variabel: <code class="bg-light px-1 rounded">{participant_name}, {participant_email}, {participant_phone}, {tanggal_pemeriksaan}, {rekomendasi}, {hasil_url}, {app_name}</code></p>
     <form method="POST" action="{{ route('admin.whatsapp-templates.update-result') }}">
         @csrf
         <div class="mb-3">

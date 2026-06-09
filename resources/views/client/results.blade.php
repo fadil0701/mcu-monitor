@@ -13,8 +13,6 @@
                     <tr>
                         <th>No</th>
                         <th>Tanggal</th>
-                        <th>Diagnosis</th>
-                        <th>Status</th>
                         <th>File</th>
                         <th class="text-center">Aksi</th>
                     </tr>
@@ -24,8 +22,6 @@
                         <tr>
                             <td>{{ $mcuResults->firstItem() ? $mcuResults->firstItem() + $index : $index + 1 }}</td>
                             <td class="fw-medium">{{ $result->tanggal_pemeriksaan_formatted }}</td>
-                            <td>{{ ($result->diagnosis_text && $result->diagnosis_text !== '-') ? $result->diagnosis_text : '-' }}</td>
-                            <td><span class="badge bg-label-{{ $result->status_kesehatan_color }}">{{ $result->status_kesehatan }}</span></td>
                             <td>
                                 @if($result->hasFile())
                                     <span class="badge bg-label-success">Tersedia</span>

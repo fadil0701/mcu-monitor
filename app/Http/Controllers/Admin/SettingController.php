@@ -87,7 +87,7 @@ class SettingController extends Controller
     public function emailResultTemplate()
     {
         $defaultSubject = 'Hasil MCU Anda Tersedia';
-        $defaultBody = "Kepada {participant_name},\n\nHasil MCU Anda untuk pemeriksaan tanggal {tanggal_pemeriksaan} telah tersedia.\n\nStatus Kesehatan: {status_kesehatan}\nDiagnosis: {diagnosis}\n\nSilakan login ke {hasil_url} untuk melihat dan mendownload hasil lengkap.\n\nTerima kasih.";
+        $defaultBody = "Kepada {participant_name},\n\nHasil MCU Anda untuk pemeriksaan tanggal {tanggal_pemeriksaan} telah tersedia.\n\nSilakan login ke {hasil_url} untuk melihat dan mendownload hasil lengkap.\n\nTerima kasih.";
         $subject = Setting::getValue('email_result_subject', $defaultSubject) ?: $defaultSubject;
         $body = Setting::getValue('email_result_template', $defaultBody) ?: $defaultBody;
 

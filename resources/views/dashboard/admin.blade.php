@@ -88,19 +88,11 @@
 
 {{-- Charts --}}
 <div class="row mb-4">
-    <div class="col-lg-8 mb-4">
+    <div class="col-12 mb-4">
         <div class="card h-100">
             <div class="card-header"><h5 class="mb-0">Statistik MCU (6 Bulan)</h5></div>
             <div class="card-body">
                 <div style="height: 320px;"><canvas id="mcuChart"></canvas></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-4 mb-4">
-        <div class="card h-100">
-            <div class="card-header"><h5 class="mb-0">Status Kesehatan</h5></div>
-            <div class="card-body">
-                <div style="height: 320px;"><canvas id="healthChart"></canvas></div>
             </div>
         </div>
     </div>
@@ -273,24 +265,6 @@
             maintainAspectRatio: false,
             plugins: { legend: { position: 'bottom' } },
             scales: { y: { beginAtZero: true } }
-        }
-    });
-
-    const healthStats = @json($healthStats);
-    const healthLabels = healthStats.map(s => s.status_kesehatan || 'Lainnya');
-    const healthCounts = healthStats.map(s => s.count);
-    const healthColors = ['#71dd37', '#ffab00', '#ff3e1d', '#03c3ec'];
-
-    new Chart(document.getElementById('healthChart'), {
-        type: 'doughnut',
-        data: {
-            labels: healthLabels,
-            datasets: [{ data: healthCounts, backgroundColor: healthColors.slice(0, healthLabels.length) }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } }
         }
     });
 

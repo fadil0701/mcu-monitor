@@ -103,7 +103,7 @@
                 <thead>
                     <tr>
                         <th>Tanggal</th>
-                        <th>Status Kesehatan</th>
+                        <th>Publikasi</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -111,7 +111,7 @@
                     @foreach($participant->mcuResults as $r)
                         <tr>
                             <td>{{ $r->tanggal_pemeriksaan?->format('d/m/Y') }}</td>
-                            <td>{{ $r->status_kesehatan }}</td>
+                            <td>{{ $r->is_published ? 'Ya' : 'Tidak' }}</td>
                             <td><a href="{{ route('admin.mcu-results.edit', $r) }}">Edit</a></td>
                         </tr>
                     @endforeach

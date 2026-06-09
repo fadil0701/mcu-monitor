@@ -29,11 +29,13 @@ class CkgBridgeMonitoringController extends Controller
             ]
         );
 
+        $perPage = min(max((int) $request->input('per_page', 20), 10), 100);
+
         $logs = CkgBridgeSyncLog::query()
             ->with('triggeredBy:id,name,email')
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->latest()
-            ->paginate(20)
+            ->paginate($perPage)
             ->withQueryString();
 
         $lastSuccess = CkgBridgeSyncLog::query()

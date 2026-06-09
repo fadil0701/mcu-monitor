@@ -31,8 +31,6 @@ class DashboardController extends Controller
         $stats = QueryOptimizationService::getDashboardStats();
         $topSkpds = QueryOptimizationService::getSkpdStats(5);
         $chartData = QueryOptimizationService::getChartData(6);
-        $healthStats = QueryOptimizationService::getHealthStatusDistribution();
-
         // Data untuk line chart (6 bulan)
         $months = collect();
         $participantsData = $chartData['participantsData'];
@@ -103,7 +101,6 @@ class DashboardController extends Controller
             'chartLabels' => $months->toArray(),
             'participantsByMonth' => $participantsByMonth,
             'mcuResultsByMonth' => $mcuResultsByMonth,
-            'healthStats' => $healthStats,
             'confirmedToday' => $confirmedToday,
             'confirmedTodayCount' => $confirmedTodayCount,
             'pendingRescheduleToday' => $pendingRescheduleToday,

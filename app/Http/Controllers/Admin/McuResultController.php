@@ -20,9 +20,6 @@ class McuResultController extends Controller
                 $qry->where('nama_lengkap', 'like', "%{$q}%")->orWhere('nik_ktp', 'like', "%{$q}%");
             });
         }
-        if ($request->filled('status_kesehatan')) {
-            $query->where('status_kesehatan', $request->status_kesehatan);
-        }
         $results = $query->paginate(15)->withQueryString();
         return view('admin.mcu-results.index', compact('results'));
     }
@@ -47,7 +44,6 @@ class McuResultController extends Controller
         $valid['is_published'] = (bool) ($valid['is_published'] ?? false);
         $valid['uploaded_by'] = auth()->id();
         $valid['schedule_id'] = $valid['schedule_id'] ?? null;
-        $valid['status_kesehatan'] = 'Sehat';
         $valid['hasil_pemeriksaan'] = '';
         $valid['rekomendasi'] = null;
         $valid['diagnosis'] = null;
