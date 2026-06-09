@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Participant;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ParticipantsExport;
@@ -15,8 +14,7 @@ class ReportController extends Controller
 {
     public function index()
     {
-        $skpds = Participant::distinct()->pluck('skpd', 'skpd');
-        return view('admin.reports.index', compact('skpds'));
+        return view('admin.reports.index');
     }
 
     public function download(Request $request, string $type)

@@ -27,8 +27,8 @@ class RescheduleCenterController extends Controller
         }
 
         $schedules = $query->paginate(15)->withQueryString();
-        $skpds = \App\Models\Participant::distinct()->pluck('skpd', 'skpd');
-        return view('admin.reschedule-center.index', compact('schedules', 'skpds'));
+
+        return view('admin.reschedule-center.index', compact('schedules'));
     }
 
     public function approve(Schedule $schedule)

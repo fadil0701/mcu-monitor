@@ -44,9 +44,11 @@
                 @error('jenis_kelamin')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-6">
-                <label for="skpd" class="form-label">SKPD *</label>
-                <input type="text" id="skpd" name="skpd" value="{{ old('skpd') }}" required class="form-control @error('skpd') is-invalid @enderror">
-                @error('skpd')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <x-instansi-pemprov-select
+                    :selected="old('skpd')"
+                    :required="true"
+                    :hasError="$errors->has('skpd')"
+                />
             </div>
             <div class="col-md-6">
                 <label for="ukpd" class="form-label">UKPD *</label>

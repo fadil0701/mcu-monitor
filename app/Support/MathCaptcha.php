@@ -12,20 +12,58 @@ final class MathCaptcha
 
     public static function issue(): array
     {
-        $a = random_int(1, 9);
+        $a = random_int(10, 39);
         $b = random_int(1, 9);
+        $expression = "{$a} + {$b}";
         $token = Str::random(32);
 
         Session::put(self::SESSION_KEY, [
             'token' => $token,
             'answer' => (string) ($a + $b),
+            'expression' => $expression,
             'expires_at' => now()->addMinutes((int) config('mcu.login_captcha.ttl_minutes', 10))->timestamp,
         ]);
 
         return [
             'captcha_token' => $token,
-            'captcha_question' => "{$a} + {$b} = ?",
+            'captcha_question' => "{$expression} = ?",
+            'captcha_image_url' => route('login.captcha.image', ['token' => $token]),
         ];
+    }
+
+    public static function renderImage(string $token): ?string
+    {
+        $stored = self::storedForToken($token);
+
+        if ($stored === null || ! extension_loaded('gd')) {
+            return null;
+        }
+
+        return MathCaptchaImageRenderer::render((string) ($stored['expression'] ?? ''));
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private static function storedForToken(string $token): ?array
+    {
+        $stored = Session::get(self::SESSION_KEY);
+
+        if (! is_array($stored)) {
+            return null;
+        }
+
+        if (($stored['expires_at'] ?? 0) < now()->timestamp) {
+            Session::forget(self::SESSION_KEY);
+
+            return null;
+        }
+
+        if (! hash_equals((string) ($stored['token'] ?? ''), $token)) {
+            return null;
+        }
+
+        return $stored;
     }
 
     public static function validate(Request $request): bool

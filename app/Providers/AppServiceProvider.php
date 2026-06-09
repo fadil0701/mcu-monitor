@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Support\InstansiPemprovDkiCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -16,6 +18,18 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        View::composer([
+            'auth.register',
+            'auth.peserta-register',
+            'client.profile',
+            'admin.participants.create',
+            'admin.participants.edit',
+            'admin.reports.index',
+            'admin.reschedule-center.index',
+        ], function ($view): void {
+            $view->with('instansiPemprov', InstansiPemprovDkiCatalog::optionsForForms());
+        });
+
         Paginator::defaultView('vendor.pagination.bootstrap-5');
         Paginator::defaultSimpleView('vendor.pagination.simple-bootstrap-5');
 

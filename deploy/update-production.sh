@@ -44,6 +44,8 @@ echo "==> Laravel migrate & cache"
 # shellcheck disable=SC2046
 docker compose $(compose_prod_args) exec -T app php artisan migrate --force
 # shellcheck disable=SC2046
+docker compose $(compose_prod_args) exec -T app php artisan db:seed --class=InstansiPemprovDkiSeeder --force
+# shellcheck disable=SC2046
 docker compose $(compose_prod_args) exec -T app php artisan optimize:clear
 # shellcheck disable=SC2046
 docker compose $(compose_prod_args) exec -T app php artisan config:cache

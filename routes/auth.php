@@ -20,6 +20,14 @@ Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 
+    Route::get('login/captcha/{token}.png', [AuthenticatedSessionController::class, 'captchaImage'])
+        ->middleware('throttle:30,1')
+        ->name('login.captcha.image');
+
+    Route::get('login/captcha/refresh', [AuthenticatedSessionController::class, 'refreshCaptcha'])
+        ->middleware('throttle:20,1')
+        ->name('login.captcha.refresh');
+
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])

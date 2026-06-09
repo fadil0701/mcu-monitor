@@ -16,8 +16,15 @@ class AuthenticationTest extends TestCase
         $response = $this->get('/login');
 
         $response->assertStatus(200)
-            ->assertSee('Verifikasi:', false)
-            ->assertSee(' = ?', false);
+            ->assertSee('Masukkan hasil penjumlahan di atas', false)
+            ->assertSee('data-captcha-image', false);
+    }
+
+    public function test_login_captcha_refresh_returns_json(): void
+    {
+        $this->getJson('/login/captcha/refresh')
+            ->assertOk()
+            ->assertJsonStructure(['captcha_token', 'captcha_image_url']);
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void

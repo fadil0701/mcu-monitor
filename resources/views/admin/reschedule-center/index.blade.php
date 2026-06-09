@@ -10,8 +10,8 @@
             <label class="form-label mb-1">SKPD</label>
             <select name="skpd" class="form-select form-select-sm">
                 <option value="">Semua</option>
-                @foreach($skpds as $k => $v)
-                    <option value="{{ $k }}" {{ request('skpd') == $k ? 'selected' : '' }}>{{ $v }}</option>
+                @foreach($instansiPemprov ?? [] as $instansi)
+                    <option value="{{ $instansi }}" {{ request('skpd') == $instansi ? 'selected' : '' }}>{{ $instansi }}</option>
                 @endforeach
             </select>
         </div>

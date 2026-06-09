@@ -32,4 +32,17 @@ class MathCaptchaTest extends TestCase
 
         $this->assertFalse(MathCaptcha::validate($request));
     }
+
+    public function test_render_image_returns_png_bytes(): void
+    {
+        if (! extension_loaded('gd')) {
+            $this->markTestSkipped('GD extension is required for captcha images.');
+        }
+
+        $captcha = MathCaptcha::issue();
+        $png = MathCaptcha::renderImage($captcha['captcha_token']);
+
+        $this->assertIsString($png);
+        $this->assertStringStartsWith("\x89PNG\r\n\x1a\n", $png ?? '');
+    }
 }
