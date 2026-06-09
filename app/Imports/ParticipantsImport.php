@@ -12,6 +12,10 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 
 class ParticipantsImport implements ToModel, WithHeadingRow, SkipsEmptyRows, WithValidation
 {
+    public int $createdCount = 0;
+
+    public int $updatedCount = 0;
+
     public function prepareForValidation($row, $index)
     {
         return $this->normalizeRowKeys($row);
@@ -20,31 +24,192 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Wit
     public function model(array $row)
     {
         $row = $this->normalizeRowKeys($row);
+        $mandatory = $this->mandatoryFields($row);
+        $existing = $this->findExisting(
+            $mandatory['nik_ktp'],
+            $this->resolveNrk($row, $mandatory['nik_ktp']),
+        );
 
+        if ($existing !== null) {
+            $this->applyUpdate($existing, $row, $mandatory);
+            $this->updatedCount++;
+
+            return null;
+        }
+
+        $this->createdCount++;
+
+        return new Participant($this->buildParticipantDataForCreate($row, $mandatory));
+    }
+
+    /**
+     * @return array{nik_ktp: string, nama_lengkap: string, jenis_kelamin: string}
+     */
+    private function mandatoryFields(array $row): array
+    {
         $nik = $this->normalizeNik($row['nik_ktp'] ?? null);
-        $nrk = $this->normalizeString($row['nrk_pegawai'] ?? null);
-        $noTelp = $this->normalizePhone($row['no_telp'] ?? null, required: true);
 
-        $data = [
+        return [
             'nik_ktp' => $nik,
-            'nrk_pegawai' => $nrk !== '' ? $nrk : 'NRK-' . $nik,
             'nama_lengkap' => trim((string) ($row['nama_lengkap'] ?? '')),
-            'tempat_lahir' => trim((string) ($row['tempat_lahir'] ?? '')) ?: '-',
-            'tanggal_lahir' => $this->parseDate($row['tanggal_lahir'] ?? null)
-                ?? $this->birthDateFromNik($nik)
-                ?? '1990-01-01',
             'jenis_kelamin' => $this->normalizeGender($row['jenis_kelamin'] ?? null, required: true),
-            'skpd' => trim((string) ($row['skpd'] ?? '')) ?: '-',
-            'ukpd' => trim((string) ($row['ukpd'] ?? '')) ?: '-',
-            'no_telp' => $noTelp,
-            'email' => trim((string) ($row['email'] ?? '')),
-            'status_pegawai' => $this->normalizeStatusPegawai($row['status_pegawai'] ?? null),
-            'status_mcu' => $this->normalizeStatusMcu($row['status_mcu'] ?? null),
-            'tanggal_mcu_terakhir' => $this->parseDate($row['tanggal_mcu_terakhir'] ?? null),
-            'catatan' => trim((string) ($row['catatan'] ?? '')),
         ];
+    }
 
-        return new Participant($data);
+    /**
+     * @param  array{nik_ktp: string, nama_lengkap: string, jenis_kelamin: string}  $mandatory
+     * @return array<string, mixed>
+     */
+    private function buildParticipantDataForCreate(array $row, array $mandatory): array
+    {
+        $nik = $mandatory['nik_ktp'];
+
+        return array_merge(
+            $this->defaultOptionalFields($nik),
+            $this->optionalFieldsFromRow($row, $nik),
+            $mandatory,
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function defaultOptionalFields(string $nik): array
+    {
+        return [
+            'nrk_pegawai' => 'NRK-' . $nik,
+            'tempat_lahir' => '-',
+            'tanggal_lahir' => $this->birthDateFromNik($nik) ?? '1990-01-01',
+            'skpd' => '-',
+            'ukpd' => '-',
+            'no_telp' => '-',
+            'email' => '',
+            'status_pegawai' => 'PNS',
+            'status_mcu' => 'Belum MCU',
+            'tanggal_mcu_terakhir' => null,
+            'catatan' => '',
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function optionalFieldsFromRow(array $row, string $nik): array
+    {
+        $optional = [];
+
+        if (! $this->isEmpty($row['nrk_pegawai'] ?? null)) {
+            $nrk = $this->normalizeString($row['nrk_pegawai']);
+            if ($nrk !== '') {
+                $optional['nrk_pegawai'] = $nrk;
+            }
+        }
+
+        if (! $this->isEmpty($row['tempat_lahir'] ?? null)) {
+            $optional['tempat_lahir'] = trim((string) $row['tempat_lahir']) ?: '-';
+        }
+
+        $tanggalLahir = $this->parseDate($row['tanggal_lahir'] ?? null);
+        if ($tanggalLahir !== null) {
+            $optional['tanggal_lahir'] = $tanggalLahir;
+        }
+
+        if (! $this->isEmpty($row['skpd'] ?? null)) {
+            $optional['skpd'] = trim((string) $row['skpd']) ?: '-';
+        }
+
+        if (! $this->isEmpty($row['ukpd'] ?? null)) {
+            $optional['ukpd'] = trim((string) $row['ukpd']) ?: '-';
+        }
+
+        if (! $this->isEmpty($row['no_telp'] ?? null)) {
+            $optional['no_telp'] = $this->normalizePhone($row['no_telp']);
+        }
+
+        if (array_key_exists('email', $row) && ! $this->isEmpty($row['email'])) {
+            $optional['email'] = trim((string) $row['email']);
+        }
+
+        if (! $this->isEmpty($row['status_pegawai'] ?? null)) {
+            $optional['status_pegawai'] = $this->normalizeStatusPegawai($row['status_pegawai']);
+        }
+
+        if (! $this->isEmpty($row['status_mcu'] ?? null)) {
+            $optional['status_mcu'] = $this->normalizeStatusMcu($row['status_mcu']);
+        }
+
+        $tanggalMcu = $this->parseDate($row['tanggal_mcu_terakhir'] ?? null);
+        if ($tanggalMcu !== null) {
+            $optional['tanggal_mcu_terakhir'] = $tanggalMcu;
+        }
+
+        if (array_key_exists('catatan', $row) && ! $this->isEmpty($row['catatan'])) {
+            $optional['catatan'] = trim((string) $row['catatan']);
+        }
+
+        return $optional;
+    }
+
+    private function resolveNrk(array $row, string $nik): string
+    {
+        $nrk = $this->normalizeString($row['nrk_pegawai'] ?? null);
+
+        return $nrk !== '' ? $nrk : 'NRK-' . $nik;
+    }
+
+    private function findExisting(string $nik, string $nrk): ?Participant
+    {
+        $byNik = Participant::query()->where('nik_ktp', $nik)->first();
+
+        if ($byNik !== null) {
+            return $byNik;
+        }
+
+        if ($nrk !== '' && ! str_starts_with($nrk, 'NRK-')) {
+            return Participant::query()->where('nrk_pegawai', $nrk)->first();
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array{nik_ktp: string, nama_lengkap: string, jenis_kelamin: string}  $mandatory
+     */
+    private function applyUpdate(Participant $existing, array $row, array $mandatory): void
+    {
+        $data = array_merge($mandatory, $this->optionalFieldsFromRow($row, $mandatory['nik_ktp']));
+
+        if (array_key_exists('nrk_pegawai', $data)) {
+            $data['nrk_pegawai'] = $this->resolveSafeNrk($existing, (string) $data['nrk_pegawai']);
+        }
+
+        if ($data['nik_ktp'] !== $existing->nik_ktp) {
+            $nikTaken = Participant::query()
+                ->where('nik_ktp', $data['nik_ktp'])
+                ->where('id', '!=', $existing->id)
+                ->exists();
+
+            if ($nikTaken) {
+                $data['nik_ktp'] = $existing->nik_ktp;
+            }
+        }
+
+        $existing->fill($data);
+        $existing->save();
+    }
+
+    private function resolveSafeNrk(Participant $existing, string $nrk): string
+    {
+        if ($nrk === '' || $nrk === $existing->nrk_pegawai) {
+            return $existing->nrk_pegawai;
+        }
+
+        $taken = Participant::query()
+            ->where('nrk_pegawai', $nrk)
+            ->where('id', '!=', $existing->id)
+            ->exists();
+
+        return $taken ? $existing->nrk_pegawai : $nrk;
     }
 
     public function rules(): array
@@ -53,7 +218,6 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Wit
             'nik_ktp' => 'required',
             'nama_lengkap' => 'required',
             'jenis_kelamin' => 'required',
-            'no_telp' => 'required',
         ];
     }
 
@@ -63,7 +227,6 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Wit
             'nik_ktp.required' => 'NIK wajib diisi.',
             'nama_lengkap.required' => 'Nama wajib diisi.',
             'jenis_kelamin.required' => 'Jenis kelamin wajib diisi (L atau P).',
-            'no_telp.required' => 'No telp wajib diisi.',
         ];
     }
 
@@ -147,15 +310,11 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Wit
         return trim((string) $value);
     }
 
-    private function normalizePhone(mixed $value, bool $required = false): string
+    private function normalizePhone(mixed $value): string
     {
         $phone = $this->normalizeString($value);
 
         if ($phone === '') {
-            if ($required) {
-                throw new \InvalidArgumentException('No telp wajib diisi.');
-            }
-
             return '-';
         }
 

@@ -130,8 +130,14 @@ class ParticipantController extends Controller
         try {
             $stored = $file->storeAs('imports', 'participants_' . now()->format('Ymd_His') . '.' . $extension, 'public');
             $fullPath = Storage::disk('public')->path($stored);
-            Excel::import(new ParticipantsImport, $fullPath);
-            return redirect()->route('admin.participants.index')->with('success', 'Import peserta berhasil.');
+            $import = new ParticipantsImport;
+            Excel::import($import, $fullPath);
+
+            return redirect()->route('admin.participants.index')->with('success', sprintf(
+                'Import peserta selesai: %d data baru, %d data diperbarui.',
+                $import->createdCount,
+                $import->updatedCount,
+            ));
         } catch (\Throwable $e) {
             return redirect()->route('admin.participants.index')
                 ->with('error', 'Import gagal: ' . $e->getMessage());
