@@ -84,10 +84,16 @@
                                         type="password"
                                         id="field_{{ $fieldKey }}"
                                         name="{{ $fieldKey }}"
+                                        value="{{ old($fieldKey) }}"
                                         class="form-control @error($fieldKey) is-invalid @enderror"
-                                        placeholder="••••••••"
-                                        autocomplete="new-password"
+                                        placeholder="{{ !empty($secretConfigured[$fieldKey] ?? false) ? 'Kosongkan jika tidak diubah' : '••••••••' }}"
+                                        autocomplete="off"
                                     >
+                                    @if(!empty($secretConfigured[$fieldKey] ?? false))
+                                        <div class="form-text text-success">
+                                            <i class="bx bx-check-circle"></i> Sudah tersimpan di database. Isi ulang hanya jika ingin mengganti.
+                                        </div>
+                                    @endif
                                 @else
                                     <input
                                         type="{{ $fieldType === 'number' ? 'number' : ($fieldType === 'email' ? 'email' : 'text') }}"

@@ -53,12 +53,18 @@ class EmailService
     private function configureMailSettings(): void
     {
         $smtpSettings = Setting::getGroup('smtp');
-        
+
+        $encryption = $smtpSettings['smtp_encryption'] ?? env('MAIL_ENCRYPTION', 'tls');
+        if ($encryption === 'none') {
+            $encryption = null;
+        }
+
+        Config::set('mail.default', 'smtp');
         Config::set('mail.mailers.smtp.host', $smtpSettings['smtp_host'] ?? env('MAIL_HOST', 'smtp.gmail.com'));
         Config::set('mail.mailers.smtp.port', $smtpSettings['smtp_port'] ?? env('MAIL_PORT', 587));
         Config::set('mail.mailers.smtp.username', $smtpSettings['smtp_username'] ?? env('MAIL_USERNAME', ''));
         Config::set('mail.mailers.smtp.password', $smtpSettings['smtp_password'] ?? env('MAIL_PASSWORD', ''));
-        Config::set('mail.mailers.smtp.encryption', $smtpSettings['smtp_encryption'] ?? env('MAIL_ENCRYPTION', 'tls'));
+        Config::set('mail.mailers.smtp.encryption', $encryption);
         Config::set('mail.from.address', $smtpSettings['smtp_from_address'] ?? env('MAIL_FROM_ADDRESS', 'noreply@mcu.local'));
         Config::set('mail.from.name', $smtpSettings['smtp_from_name'] ?? env('MAIL_FROM_NAME', 'Sistem MCU'));
     }

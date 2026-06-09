@@ -18,9 +18,15 @@ class SettingController extends Controller
         }
 
         $values = [];
+        $secretConfigured = [];
         foreach ($sections as $section) {
             foreach ($section['fields'] as $key => $field) {
-                $values[$key] = Setting::getValue($key, $field['default'] ?? '');
+                if (($field['type'] ?? '') === 'password') {
+                    $secretConfigured[$key] = filled(Setting::getValue($key));
+                    $values[$key] = '';
+                } else {
+                    $values[$key] = Setting::getValue($key, $field['default'] ?? '');
+                }
             }
         }
 
@@ -29,7 +35,7 @@ class SettingController extends Controller
             ->values()
             ->all();
 
-        return view('admin.settings.index', compact('sections', 'values', 'activeTab', 'links'));
+        return view('admin.settings.index', compact('sections', 'values', 'activeTab', 'links', 'secretConfigured'));
     }
 
     public function updateSection(Request $request, string $section)
@@ -49,10 +55,14 @@ class SettingController extends Controller
         $validated = $request->validate($rules);
 
         foreach ($fields as $key => $field) {
-            $value = $validated[$key] ?? '';
+            if (($field['type'] ?? '') === 'password') {
+                if (! $request->filled($key)) {
+                    continue;
+                }
 
-            if (($field['type'] ?? '') === 'password' && $value === '') {
-                continue;
+                $value = (string) $request->input($key);
+            } else {
+                $value = $validated[$key] ?? '';
             }
 
             Setting::setValue(
