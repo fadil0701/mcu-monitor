@@ -1,11 +1,19 @@
 # Override untuk production — gunakan:
 # docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
+x-container-dns: &container-dns
+  # Docker daemon sering memakai 8.8.8.8 yang diblokir di jaringan kantor.
+  # Samakan dengan nameserver VM: grep nameserver /etc/resolv.conf
+  dns:
+    - ${DOCKER_DNS_1:-10.15.3.29}
+    - ${DOCKER_DNS_2:-10.15.32.59}
+
 services:
   mysql:
     ports: !reset []
 
   app:
+    <<: *container-dns
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
@@ -15,12 +23,14 @@ services:
       - no-new-privileges:true
 
   queue:
+    <<: *container-dns
     extra_hosts:
       - "host.docker.internal:host-gateway"
     security_opt:
       - no-new-privileges:true
 
   scheduler:
+    <<: *container-dns
     extra_hosts:
       - "host.docker.internal:host-gateway"
     security_opt:
