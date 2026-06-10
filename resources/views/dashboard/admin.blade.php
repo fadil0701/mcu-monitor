@@ -41,8 +41,9 @@
                 <div class="avatar flex-shrink-0 mb-2">
                     <span class="avatar-initial rounded bg-label-success"><i class="bx bx-check-circle bx-sm"></i></span>
                 </div>
-                <span class="d-block mb-1">MCU Selesai</span>
-                <h3 class="card-title mb-0">{{ $stats->completed_mcu ?? 0 }}</h3>
+                <span class="d-block mb-1">Sudah MCU</span>
+                <h3 class="card-title mb-0">{{ $stats->sudah_mcu_status ?? $stats->completed_mcu ?? 0 }}</h3>
+                <small class="text-muted">Sesuai status di Data Peserta</small>
             </div>
         </div>
     </div>
@@ -52,8 +53,48 @@
                 <div class="avatar flex-shrink-0 mb-2">
                     <span class="avatar-initial rounded bg-label-info"><i class="bx bx-time-five bx-sm"></i></span>
                 </div>
-                <span class="d-block mb-1">MCU Pending</span>
-                <h3 class="card-title mb-0">{{ $stats->pending_mcu ?? 0 }}</h3>
+                <span class="d-block mb-1">Belum MCU</span>
+                <h3 class="card-title mb-0">{{ $stats->belum_mcu_status ?? $stats->pending_mcu ?? 0 }}</h3>
+                <small class="text-muted">Sesuai status di Data Peserta</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Status MCU berdasarkan interval 3 tahun (tanggal_mcu_terakhir) --}}
+@php
+    $intervalYears = $stats->interval_years ?? config('mcu.interval_years', 3);
+    $intervalCutoff = isset($stats->interval_cutoff)
+        ? \Carbon\Carbon::parse($stats->interval_cutoff)->format('d/m/Y')
+        : now()->subYears($intervalYears)->format('d/m/Y');
+    $mcuSudahInterval = $stats->mcu_sudah_interval ?? 0;
+    $mcuBelumInterval = $stats->mcu_belum_interval ?? 0;
+@endphp
+<div class="card mb-4">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h5 class="mb-0">Status MCU ({{ $intervalYears }} Tahun Terakhir)</h5>
+        <small class="text-muted">MCU terakhir sejak {{ $intervalCutoff }}</small>
+    </div>
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <span class="avatar"><span class="avatar-initial rounded bg-label-success"><i class="bx bx-check-shield"></i></span></span>
+                    <div>
+                        <h4 class="mb-0">{{ $mcuSudahInterval }}</h4>
+                        <small class="text-muted">Sudah MCU dalam {{ $intervalYears }} tahun</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="avatar"><span class="avatar-initial rounded bg-label-warning"><i class="bx bx-time"></i></span></span>
+                    <div>
+                        <h4 class="mb-0">{{ $mcuBelumInterval }}</h4>
+                        <small class="text-muted">Belum / perlu MCU (lebih dari {{ $intervalYears }} tahun atau belum pernah)</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div style="height: 220px;"><canvas id="mcuIntervalChart"></canvas></div>
             </div>
         </div>
     </div>
@@ -250,6 +291,26 @@
     const chartLabels = @json($chartLabels);
     const participantsData = @json($participantsByMonth);
     const mcuResultsData = @json($mcuResultsByMonth);
+    const mcuSudahInterval = {{ (int) $mcuSudahInterval }};
+    const mcuBelumInterval = {{ (int) $mcuBelumInterval }};
+    const intervalYears = {{ (int) $intervalYears }};
+
+    new Chart(document.getElementById('mcuIntervalChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Sudah MCU (' + intervalYears + ' th)', 'Belum / perlu MCU'],
+            datasets: [{
+                data: [mcuSudahInterval, mcuBelumInterval],
+                backgroundColor: ['#71dd37', '#ffab00'],
+                borderWidth: 0,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+        },
+    });
 
     new Chart(document.getElementById('mcuChart'), {
         type: 'line',

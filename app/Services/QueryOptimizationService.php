@@ -15,26 +15,44 @@ class QueryOptimizationService
     {
         return Cache::remember('optimized_dashboard_stats', 900, function () {
             $startTime = microtime(true);
-            
-            // Single optimized query for all dashboard stats
-            $stats = DB::select("
-                SELECT 
-                    COUNT(DISTINCT p.id) as total_participants,
-                    COUNT(DISTINCT CASE WHEN s.status = 'Terjadwal' THEN s.id END) as scheduled_participants,
-                    COUNT(DISTINCT mr.id) as completed_mcu,
-                    COUNT(DISTINCT CASE WHEN s.status = 'Terjadwal' AND s.tanggal_pemeriksaan >= CURDATE() THEN s.id END) as pending_mcu,
-                    COUNT(DISTINCT CASE WHEN s.status = 'Selesai' THEN s.id END) as completed_schedules,
-                    COUNT(DISTINCT CASE WHEN s.status = 'Batal' THEN s.id END) as cancelled_schedules,
-                    COUNT(DISTINCT CASE WHEN s.status = 'Ditolak' THEN s.id END) as rejected_schedules
-                FROM participants p
-                LEFT JOIN schedules s ON p.id = s.participant_id
-                LEFT JOIN mcu_results mr ON p.id = mr.participant_id
-            ");
-            
+            $intervalYears = (int) config('mcu.interval_years', 3);
+            $cutoffDate = now()->subYears($intervalYears)->toDateString();
+
+            // Subquery terpisah agar selaras dengan halaman Data Peserta (status_mcu)
+            // dan tidak terdistorsi oleh JOIN schedules + mcu_results.
+            $stats = DB::selectOne('
+                SELECT
+                    (SELECT COUNT(*) FROM participants) as total_participants,
+                    (SELECT COUNT(DISTINCT participant_id) FROM schedules WHERE status = ? AND tanggal_pemeriksaan >= CURDATE()) as scheduled_participants,
+                    (SELECT COUNT(*) FROM participants WHERE status_mcu = ?) as sudah_mcu_status,
+                    (SELECT COUNT(*) FROM participants WHERE status_mcu = ?) as belum_mcu_status,
+                    (SELECT COUNT(*) FROM participants WHERE status_mcu = ?) as ditolak_mcu_status,
+                    (SELECT COUNT(*) FROM participants WHERE tanggal_mcu_terakhir IS NOT NULL AND tanggal_mcu_terakhir >= ?) as mcu_sudah_interval,
+                    (SELECT COUNT(*) FROM participants WHERE tanggal_mcu_terakhir IS NULL OR tanggal_mcu_terakhir < ?) as mcu_belum_interval,
+                    (SELECT COUNT(*) FROM schedules WHERE status = ?) as completed_schedules,
+                    (SELECT COUNT(*) FROM schedules WHERE status = ?) as cancelled_schedules,
+                    (SELECT COUNT(*) FROM schedules WHERE status = ?) as rejected_schedules
+            ', [
+                'Terjadwal',
+                'Sudah MCU',
+                'Belum MCU',
+                'Ditolak',
+                $cutoffDate,
+                $cutoffDate,
+                'Selesai',
+                'Batal',
+                'Ditolak',
+            ]);
+
+            $stats->interval_years = $intervalYears;
+            $stats->interval_cutoff = $cutoffDate;
+            $stats->completed_mcu = $stats->sudah_mcu_status;
+            $stats->pending_mcu = $stats->belum_mcu_status;
+
             $executionTime = round((microtime(true) - $startTime) * 1000, 2);
             Log::info("Dashboard stats query executed in {$executionTime}ms");
-            
-            return $stats[0];
+
+            return $stats;
         });
     }
 
@@ -95,11 +113,11 @@ class QueryOptimizationService
                 UNION ALL
                 
                 SELECT 
-                    DATE_FORMAT(created_at, '%Y-%m') as month,
+                    DATE_FORMAT(COALESCE(tanggal_pemeriksaan, created_at), '%Y-%m') as month,
                     'mcu_results' as type,
                     COUNT(*) as count
                 FROM mcu_results 
-                WHERE created_at BETWEEN ? AND ?
+                WHERE COALESCE(tanggal_pemeriksaan, created_at) BETWEEN ? AND ?
                 GROUP BY month
                 
                 ORDER BY month

@@ -129,15 +129,11 @@ class Participant extends Model
     protected static function booted(): void
     {
         static::saved(function () {
-            cache()->forget('dashboard_stats');
-            cache()->forget('skpd_stats');
-            cache()->forget('mcu_chart_data');
+            \App\Services\QueryOptimizationService::clearQueryCaches();
         });
 
         static::deleted(function () {
-            cache()->forget('dashboard_stats');
-            cache()->forget('skpd_stats');
-            cache()->forget('mcu_chart_data');
+            \App\Services\QueryOptimizationService::clearQueryCaches();
         });
     }
 }

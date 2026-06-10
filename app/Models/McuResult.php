@@ -124,17 +124,11 @@ class McuResult extends Model
     protected static function booted(): void
     {
         static::saved(function () {
-            cache()->forget('dashboard_stats');
-            cache()->forget('mcu_chart_data');
-            cache()->forget('health_status_chart');
-            cache()->forget('skpd_stats');
+            \App\Services\QueryOptimizationService::clearQueryCaches();
         });
 
         static::deleted(function () {
-            cache()->forget('dashboard_stats');
-            cache()->forget('mcu_chart_data');
-            cache()->forget('health_status_chart');
-            cache()->forget('skpd_stats');
+            \App\Services\QueryOptimizationService::clearQueryCaches();
         });
     }
 }
