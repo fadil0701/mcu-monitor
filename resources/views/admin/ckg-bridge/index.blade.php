@@ -4,13 +4,6 @@
 @section('pageTitle', 'Integrasi Portal CKG')
 
 @section('content')
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
-    </div>
-@endif
-
 @if($urlUsesHttps ?? false)
     <div class="alert alert-danger" role="alert">
         URL saat ini memakai <strong>https://</strong>. Portal CKG di VM hanya menerima <strong>http://</strong>
@@ -21,17 +14,6 @@
 <div class="alert alert-info" role="alert">
     Jika form simpan ditolak, atur bridge lewat CLI — panduan di <code>docs/DEPLOY.md</code> (bagian Bridge CKG).
 </div>
-
-@if($errors->any())
-    <div class="alert alert-danger alert-dismissible" role="alert">
-        <ul class="mb-0">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
-    </div>
-@endif
 
 <div class="row g-4">
     <div class="col-lg-4">

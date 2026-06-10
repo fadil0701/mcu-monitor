@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 /**
  * Daftar SKPD / instansi Pemprov DKI Jakarta (sinkron ke tabel instansi_pemprov_dkis).
@@ -71,7 +71,7 @@ return [
         'Kota Administrasi Jakarta Timur',
         'Kabupaten Administrasi Kepulauan Seribu',
 
-        // Kecamatan â€” Jakarta Pusat
+        // Kecamatan — Jakarta Pusat
         'Kecamatan Gambir, Jakarta Pusat',
         'Kecamatan Sawah Besar, Jakarta Pusat',
         'Kecamatan Kemayoran, Jakarta Pusat',
@@ -81,7 +81,7 @@ return [
         'Kecamatan Tanah Abang, Jakarta Pusat',
         'Kecamatan Johar Baru, Jakarta Pusat',
 
-        // Kecamatan â€” Jakarta Utara
+        // Kecamatan — Jakarta Utara
         'Kecamatan Penjaringan, Jakarta Utara',
         'Kecamatan Pademangan, Jakarta Utara',
         'Kecamatan Tanjung Priok, Jakarta Utara',
@@ -89,7 +89,7 @@ return [
         'Kecamatan Kelapa Gading, Jakarta Utara',
         'Kecamatan Cilincing, Jakarta Utara',
 
-        // Kecamatan â€” Jakarta Barat
+        // Kecamatan — Jakarta Barat
         'Kecamatan Cengkareng, Jakarta Barat',
         'Kecamatan Grogol Petamburan, Jakarta Barat',
         'Kecamatan Taman Sari, Jakarta Barat',
@@ -99,7 +99,7 @@ return [
         'Kecamatan Palmerah, Jakarta Barat',
         'Kecamatan Kembangan, Jakarta Barat',
 
-        // Kecamatan â€” Jakarta Selatan
+        // Kecamatan — Jakarta Selatan
         'Kecamatan Tebet, Jakarta Selatan',
         'Kecamatan Setiabudi, Jakarta Selatan',
         'Kecamatan Mampang Prapatan, Jakarta Selatan',
@@ -111,7 +111,7 @@ return [
         'Kecamatan Pancoran, Jakarta Selatan',
         'Kecamatan Jagakarsa, Jakarta Selatan',
 
-        // Kecamatan â€” Jakarta Timur
+        // Kecamatan — Jakarta Timur
         'Kecamatan Matraman, Jakarta Timur',
         'Kecamatan Pulo Gadung, Jakarta Timur',
         'Kecamatan Jatinegara, Jakarta Timur',
@@ -123,10 +123,9 @@ return [
         'Kecamatan Ciracas, Jakarta Timur',
         'Kecamatan Cipayung, Jakarta Timur',
 
-        // Kecamatan â€” Kepulauan Seribu
+        // Kecamatan — Kepulauan Seribu
         'Kecamatan Kepulauan Seribu Utara, Kepulauan Seribu',
         'Kecamatan Kepulauan Seribu Selatan, Kepulauan Seribu',
-    
+
     ],
 ];
-

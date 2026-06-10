@@ -5,11 +5,6 @@
 @section('pageTitle', 'Edit Jadwal MCU')
 
 @section('content')
-
-@if(session('success'))
-    <div class="alert alert-success mb-4">{{ session('success') }}</div>
-@endif
-
 <x-common.component-card title="Form Jadwal MCU">
     <form method="POST" action="{{ route('admin.schedules.update', $schedule) }}">
         @csrf

@@ -4,10 +4,6 @@
 @section('pageTitle', 'Dokter Spesialis')
 
 @section('content')
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
 <x-common.component-card title="Daftar Dokter Spesialis">
     <div class="page-toolbar mb-4">
         <div class="filter-toolbar">

@@ -4,10 +4,6 @@
 @section('pageTitle', 'PDF Templates')
 
 @section('content')
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
 <x-common.component-card title="Daftar PDF Template">
     <div class="page-toolbar mb-4">
         <div class="filter-toolbar">

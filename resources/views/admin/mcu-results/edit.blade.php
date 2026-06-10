@@ -5,14 +5,6 @@
 @section('pageTitle', 'Edit Hasil MCU')
 
 @section('content')
-
-@if(session('success'))
-    <div class="alert alert-success mb-4">{{ session('success') }}</div>
-@endif
-@if($errors->any())
-    <div class="alert alert-danger mb-4">{{ $errors->first() }}</div>
-@endif
-
 <x-common.component-card title="Form Hasil MCU">
     <form method="POST" action="{{ route('admin.mcu-results.update-post', $mcuResult) }}" enctype="multipart/form-data">
         @csrf

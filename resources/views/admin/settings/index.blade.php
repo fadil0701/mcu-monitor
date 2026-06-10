@@ -4,19 +4,6 @@
 @section('pageTitle', 'Pengaturan')
 
 @section('content')
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
-    </div>
-@endif
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible" role="alert">
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button>
-    </div>
-@endif
-
 <div class="card mb-4">
     <div class="card-body pb-0">
         <p class="text-muted mb-3">Kelola konfigurasi sistem monitoring MCU. Pilih kategori di bawah, ubah nilainya, lalu klik Simpan.</p>

@@ -4,13 +4,6 @@
 @section('pageTitle', 'Hasil MCU')
 
 @section('content')
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-@if($errors->any())
-    <div class="alert alert-danger">{{ $errors->first() }}</div>
-@endif
-
 <x-common.component-card title="Daftar Hasil MCU">
     <div class="page-toolbar mb-4">
         <div class="filter-toolbar">

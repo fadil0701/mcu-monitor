@@ -5,10 +5,6 @@
 @section('pageTitle', 'Notifikasi Saya')
 
 @section('content')
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
 <x-common.component-card title="Daftar Notifikasi">
     @php $user = auth()->user(); @endphp
     @if($user->unreadNotifications->count() > 0)

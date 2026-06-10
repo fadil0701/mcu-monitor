@@ -4,10 +4,6 @@
 @section('pageTitle', 'Email Templates')
 
 @section('content')
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
 <x-common.component-card title="Daftar Email Template">
     <div class="page-toolbar mb-4">
         <div class="filter-toolbar">
