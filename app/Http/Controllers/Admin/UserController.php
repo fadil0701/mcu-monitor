@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\SqlFilter;
+use App\Support\SqlLike;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,13 +16,17 @@ class UserController extends Controller
     {
         $query = User::query()->orderBy('name');
         if ($request->filled('search')) {
-            $q = $request->search;
-            $query->where(function ($qry) use ($q) {
-                $qry->where('name', 'like', "%{$q}%")->orWhere('email', 'like', "%{$q}%");
+            $pattern = SqlLike::contains((string) $request->search);
+            $query->where(function ($qry) use ($pattern) {
+                $qry->where('name', 'like', $pattern)->orWhere('email', 'like', $pattern);
             });
         }
-        if ($request->filled('role')) {
-            $query->where('role', $request->role);
+        $role = SqlFilter::enum(
+            $request->filled('role') ? (string) $request->role : null,
+            ['super_admin', 'admin', 'user'],
+        );
+        if ($role !== null) {
+            $query->where('role', $role);
         }
         $users = $query->paginate(15)->withQueryString();
         return view('admin.users.index', compact('users'));

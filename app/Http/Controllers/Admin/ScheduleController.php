@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\SqlFilter;
+use App\Support\SqlLike;
 use App\Models\Schedule;
 use App\Models\Participant;
 use App\Services\EmailService;
@@ -16,15 +18,20 @@ class ScheduleController extends Controller
     {
         $query = Schedule::query()->with('participant')->orderBy('tanggal_pemeriksaan', 'desc');
         if ($request->filled('search')) {
-            $q = $request->search;
-            $query->where(function ($qry) use ($q) {
-                $qry->where('nama_lengkap', 'like', "%{$q}%")
-                    ->orWhere('nik_ktp', 'like', "%{$q}%")
-                    ->orWhere('lokasi_pemeriksaan', 'like', "%{$q}%");
+            $q = (string) $request->search;
+            $pattern = SqlLike::contains($q);
+            $query->where(function ($qry) use ($pattern) {
+                $qry->where('nama_lengkap', 'like', $pattern)
+                    ->orWhere('nik_ktp', 'like', $pattern)
+                    ->orWhere('lokasi_pemeriksaan', 'like', $pattern);
             });
         }
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        $status = SqlFilter::enum(
+            $request->filled('status') ? (string) $request->status : null,
+            ['Terjadwal', 'Selesai', 'Batal', 'Ditolak'],
+        );
+        if ($status !== null) {
+            $query->where('status', $status);
         }
         if ($request->filled('date')) {
             $query->whereDate('tanggal_pemeriksaan', $request->date);

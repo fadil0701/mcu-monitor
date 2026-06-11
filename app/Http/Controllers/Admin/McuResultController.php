@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\SqlLike;
 use App\Models\McuResult;
 use App\Services\EmailService;
 use App\Services\WhatsAppService;
@@ -16,8 +17,9 @@ class McuResultController extends Controller
         $query = McuResult::query()->with(['participant', 'schedule'])->orderBy('tanggal_pemeriksaan', 'desc');
         if ($request->filled('search')) {
             $q = $request->search;
-            $query->whereHas('participant', function ($qry) use ($q) {
-                $qry->where('nama_lengkap', 'like', "%{$q}%")->orWhere('nik_ktp', 'like', "%{$q}%");
+            $pattern = SqlLike::contains((string) $q);
+            $query->whereHas('participant', function ($qry) use ($pattern) {
+                $qry->where('nama_lengkap', 'like', $pattern)->orWhere('nik_ktp', 'like', $pattern);
             });
         }
         $results = $query->paginate(15)->withQueryString();

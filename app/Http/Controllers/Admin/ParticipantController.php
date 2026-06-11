@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\SqlFilter;
+use App\Support\SqlLike;
 use App\Imports\ParticipantsImport;
 use App\Models\Participant;
 use App\Support\ParticipantEducation;
@@ -17,16 +19,21 @@ class ParticipantController extends Controller
     {
         $query = Participant::query()->orderBy('nama_lengkap');
         if ($request->filled('search')) {
-            $q = $request->search;
-            $query->where(function ($qry) use ($q) {
-                $qry->where('nama_lengkap', 'like', "%{$q}%")
-                    ->orWhere('nik_ktp', 'like', "%{$q}%")
-                    ->orWhere('nrk_pegawai', 'like', "%{$q}%")
-                    ->orWhere('skpd', 'like', "%{$q}%");
+            $q = (string) $request->search;
+            $pattern = SqlLike::contains($q);
+            $query->where(function ($qry) use ($pattern) {
+                $qry->where('nama_lengkap', 'like', $pattern)
+                    ->orWhere('nik_ktp', 'like', $pattern)
+                    ->orWhere('nrk_pegawai', 'like', $pattern)
+                    ->orWhere('skpd', 'like', $pattern);
             });
         }
-        if ($request->filled('status_mcu')) {
-            $query->where('status_mcu', $request->status_mcu);
+        $statusMcu = SqlFilter::enum(
+            $request->filled('status_mcu') ? (string) $request->status_mcu : null,
+            ['Belum MCU', 'Sudah MCU', 'Ditolak'],
+        );
+        if ($statusMcu !== null) {
+            $query->where('status_mcu', $statusMcu);
         }
         $participants = $query->paginate(15)->withQueryString();
         return view('admin.participants.index', compact('participants'));

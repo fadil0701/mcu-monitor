@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\SqlFilter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -167,13 +168,16 @@ class QueryOptimizationService
                 ->orderBy('schedules.jam_pemeriksaan')
                 ->limit(50);
 
-            // Apply filters
-            if (isset($filters['status'])) {
-                $query->where('schedules.status', $filters['status']);
+            $status = SqlFilter::enum(
+                isset($filters['status']) ? (string) $filters['status'] : null,
+                ['Terjadwal', 'Selesai', 'Batal', 'Ditolak'],
+            );
+            if ($status !== null) {
+                $query->where('schedules.status', $status);
             }
-            
-            if (isset($filters['skpd'])) {
-                $query->where('participants.skpd', $filters['skpd']);
+
+            if (isset($filters['skpd']) && is_string($filters['skpd']) && $filters['skpd'] !== '') {
+                $query->where('participants.skpd', mb_substr($filters['skpd'], 0, 255));
             }
 
             $results = $query->get();
