@@ -7,6 +7,7 @@ use App\Support\SqlFilter;
 use App\Support\SqlLike;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -81,7 +82,7 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        if ($user->id === auth()->id()) {
+        if ($user->id === Auth::id()) {
             return redirect()->route('admin.users.index')->with('error', 'Tidak dapat menghapus akun sendiri.');
         }
         $user->delete();

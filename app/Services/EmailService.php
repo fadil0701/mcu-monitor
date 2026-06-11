@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\McuResult;
 use App\Models\Setting;
 use App\Models\Schedule;
 use Illuminate\Support\Facades\Mail;
@@ -144,5 +145,71 @@ class EmailService
     {
         // Use the same invitation method
         return $this->sendMcuInvitation($schedule);
+    }
+
+    public function sendMcuResult(McuResult $result): bool
+    {
+        $result->loadMissing('participant');
+        $participant = $result->participant;
+
+        if ($participant === null || blank($participant->email)) {
+            Log::warning('MCU result email skipped: participant email missing', [
+                'mcu_result_id' => $result->id,
+            ]);
+
+            return false;
+        }
+
+        try {
+            $mailer = $this->configuredMailer();
+
+            $defaultSubject = 'Hasil MCU Anda Tersedia';
+            $defaultBody = "Kepada {participant_name},\n\nHasil MCU Anda untuk pemeriksaan tanggal {tanggal_pemeriksaan} telah tersedia.\n\nSilakan login ke {hasil_url} untuk melihat dan mendownload hasil lengkap.\n\nTerima kasih.";
+
+            $subject = Setting::getValue('email_result_subject', $defaultSubject) ?: $defaultSubject;
+            $template = Setting::getValue('email_result_template', $defaultBody) ?: $defaultBody;
+
+            $templateData = $this->prepareMcuResultTemplateData($result);
+            $renderedSubject = $this->renderTemplate($subject, $templateData);
+            $renderedBody = $this->renderTemplate($template, $templateData);
+
+            $mailer->raw($renderedBody, function ($message) use ($participant, $renderedSubject): void {
+                $message->to($participant->email)
+                    ->subject($renderedSubject);
+            });
+
+            Log::info("MCU result email sent successfully to {$participant->email}", [
+                'mcu_result_id' => $result->id,
+            ]);
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('Failed to send MCU result email: '.$e->getMessage(), [
+                'mcu_result_id' => $result->id,
+                'recipient' => $participant->email,
+                'exception' => $e::class,
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function prepareMcuResultTemplateData(McuResult $result): array
+    {
+        $participant = $result->participant;
+
+        return [
+            'participant_name' => (string) ($participant?->nama_lengkap ?? '-'),
+            'participant_email' => (string) ($participant?->email ?? '-'),
+            'participant_phone' => (string) ($participant?->no_telp ?? '-'),
+            'tanggal_pemeriksaan' => $result->tanggal_pemeriksaan?->format('d/m/Y') ?? '-',
+            'rekomendasi' => (string) ($result->rekomendasi ?? '-'),
+            'hasil_url' => route('client.results'),
+            'app_name' => (string) config('app.name', 'MCU Monitor'),
+            'nama_lengkap' => (string) ($participant?->nama_lengkap ?? '-'),
+        ];
     }
 }

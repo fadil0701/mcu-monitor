@@ -9,9 +9,15 @@ use App\Services\EmailService;
 use App\Services\WhatsAppService;
 use App\Models\Participant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class McuResultController extends Controller
 {
+    public function __construct(
+        private readonly EmailService $emailService,
+        private readonly WhatsAppService $whatsappService,
+    ) {}
+
     public function index(Request $request)
     {
         $query = McuResult::query()->with(['participant', 'schedule'])->orderBy('tanggal_pemeriksaan', 'desc');
@@ -44,7 +50,7 @@ class McuResultController extends Controller
             'is_published' => 'nullable|boolean',
         ]);
         $valid['is_published'] = (bool) ($valid['is_published'] ?? false);
-        $valid['uploaded_by'] = auth()->id();
+        $valid['uploaded_by'] = Auth::id();
         $valid['schedule_id'] = $valid['schedule_id'] ?? null;
         $valid['hasil_pemeriksaan'] = '';
         $valid['rekomendasi'] = null;
@@ -109,8 +115,7 @@ class McuResultController extends Controller
         if (!$participant || empty($participant->email)) {
             return redirect()->back()->withErrors(['send' => 'Email peserta tidak tersedia.']);
         }
-        $emailService = new EmailService();
-        if ($emailService->sendMcuResult($mcu_result)) {
+        if ($this->emailService->sendMcuResult($mcu_result)) {
             return redirect()->back()->with('success', 'Email hasil MCU berhasil dikirim ke ' . $participant->email . '.');
         }
         return redirect()->back()->withErrors(['send' => 'Gagal mengirim email. Periksa pengaturan SMTP.']);
@@ -122,8 +127,7 @@ class McuResultController extends Controller
         if (!$participant || empty($participant->no_telp)) {
             return redirect()->back()->withErrors(['send' => 'Nomor telepon peserta tidak tersedia.']);
         }
-        $whatsappService = new WhatsAppService();
-        if ($whatsappService->sendMcuResult($mcu_result)) {
+        if ($this->whatsappService->sendMcuResult($mcu_result)) {
             return redirect()->back()->with('success', 'WhatsApp hasil MCU berhasil dikirim ke ' . $participant->nama_lengkap . '.');
         }
         return redirect()->back()->withErrors(['send' => 'Gagal mengirim WhatsApp. Periksa pengaturan di Settings.']);
