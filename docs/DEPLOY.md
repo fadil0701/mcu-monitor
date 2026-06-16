@@ -298,7 +298,7 @@ Baris dengan NIK yang sudah ada akan **diperbarui**, bukan diduplikasi.
 
 | Commit | Ringkasan |
 |--------|-----------|
-| *(pending)* | Fix import: hanya baca sheet Data Peserta (bukan Referensi) |
+| `3b1c5b6` | Fix import: hanya baca sheet Data Peserta (bukan Referensi) |
 | `79a323a` | Template import: sheet Referensi, warna kolom wajib, Tanggal Lahir wajib |
 | `87e624d` | Perbaiki template import peserta + kolom pendidikan terakhir |
 | `941cf20` | Update riwayat perubahan sidebar logo |
