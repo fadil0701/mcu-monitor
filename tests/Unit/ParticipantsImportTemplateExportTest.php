@@ -22,7 +22,7 @@ class ParticipantsImportTemplateExportTest extends TestCase
         $this->assertNotNull($referensiSheet);
         $this->assertNotNull($guideSheet);
         $this->assertSame('NIK *', $dataSheet->getCell('A1')->getValue());
-        $this->assertSame('Tanggal Lahir *', $dataSheet->getCell('F1')->getValue());
+        $this->assertSame('Tanggal Lahir', $dataSheet->getCell('F1')->getValue());
         $this->assertSame('3173012345678901', $dataSheet->getCell('A2')->getValue());
         $this->assertSame('Jenis Kelamin', $referensiSheet->getCell('A1')->getValue());
         $this->assertSame('SKPD / Instansi Pemprov DKI', $referensiSheet->getCell('E1')->getValue());

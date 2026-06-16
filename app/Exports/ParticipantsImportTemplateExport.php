@@ -23,13 +23,13 @@ final class ParticipantsImportTemplateExport
     /** @return list<string> */
     public static function mandatoryHeadings(): array
     {
-        return ['NIK *', 'Nama *', 'Jenis Kelamin *', 'Tanggal Lahir *'];
+        return ['NIK *', 'Nama *'];
     }
 
     /** @return list<int> indeks kolom 1-based yang wajib */
     public static function mandatoryColumnIndexes(): array
     {
-        return [1, 2, 3, 6];
+        return [1, 2];
     }
 
     /** @return list<string> */
@@ -38,10 +38,10 @@ final class ParticipantsImportTemplateExport
         return [
             'NIK *',
             'Nama *',
-            'Jenis Kelamin *',
+            'Jenis Kelamin',
             'NRK',
             'Tempat Lahir',
-            'Tanggal Lahir *',
+            'Tanggal Lahir',
             'SKPD',
             'UKPD',
             'No Telp',
@@ -171,10 +171,10 @@ final class ParticipantsImportTemplateExport
             [
                 '3174012345678902',
                 'Siti Aminah',
-                'P',
                 '',
                 '',
-                '1985-06-20',
+                '',
+                '',
                 '',
                 '',
                 '',
@@ -249,8 +249,8 @@ final class ParticipantsImportTemplateExport
             ['Kolom wajib'],
             ['NIK *', '16 digit angka. Format kolom sebagai Teks di Excel.'],
             ['Nama *', 'Nama lengkap peserta.'],
-            ['Jenis Kelamin *', 'L atau P — pilih dari dropdown (lihat sheet Referensi).'],
-            ['Tanggal Lahir *', 'Format YYYY-MM-DD (contoh: 1990-01-15).'],
+            ['Jenis Kelamin', 'Opsional. L atau P — pilih dari dropdown (lihat sheet Referensi).'],
+            ['Tanggal Lahir', 'Opsional. Format YYYY-MM-DD (contoh: 1990-01-15).'],
             [],
             ['Kolom opsional'],
             ['NRK', 'Kosongkan → sistem isi NRK-{NIK}.'],

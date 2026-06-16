@@ -37,7 +37,13 @@ class ParticipantController extends Controller
         if ($statusMcu !== null) {
             $query->where('status_mcu', $statusMcu);
         }
-        $participants = $query->paginate(15)->withQueryString();
+
+        $perPage = (int) $request->input('per_page', 15);
+        if (! in_array($perPage, [15, 50, 100], true)) {
+            $perPage = 15;
+        }
+
+        $participants = $query->paginate($perPage)->withQueryString();
         return view('admin.participants.index', compact('participants'));
     }
 
@@ -155,9 +161,10 @@ class ParticipantController extends Controller
             Excel::import($import, $fullPath);
 
             return redirect()->route('admin.participants.index')->with('success', sprintf(
-                'Import peserta selesai: %d data baru, %d data diperbarui.',
+                'Import peserta selesai: %d data baru, %d data diperbarui, %d data dilewati (sudah ada).',
                 $import->createdCount,
                 $import->updatedCount,
+                $import->skippedCount,
             ));
         } catch (ValidationException $e) {
             $details = collect($e->failures())

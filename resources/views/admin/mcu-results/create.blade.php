@@ -25,7 +25,7 @@
             </div>
             <div class="col-md-6">
                 <label for="tanggal_pemeriksaan" class="form-label">Tanggal Pemeriksaan *</label>
-                <input type="date" id="tanggal_pemeriksaan" name="tanggal_pemeriksaan" value="{{ old('tanggal_pemeriksaan', now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required class="form-control @error('tanggal_pemeriksaan') is-invalid @enderror">
+                <input type="date" id="tanggal_pemeriksaan" name="tanggal_pemeriksaan" value="{{ old('tanggal_pemeriksaan', $tanggalPemeriksaan ?? now()->format('Y-m-d')) }}" max="{{ now()->format('Y-m-d') }}" required class="form-control @error('tanggal_pemeriksaan') is-invalid @enderror">
                 @error('tanggal_pemeriksaan')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-12">

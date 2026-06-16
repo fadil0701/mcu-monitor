@@ -32,9 +32,9 @@
                 <i class="bx bx-download me-1"></i> Download Template
             </a>
             <span class="text-muted small align-self-center d-none d-xl-inline" title="Kolom wajib saat import">
-                Wajib: NIK, Nama, Jenis Kelamin, Tanggal Lahir
+                Wajib: NIK, Nama
             </span>
-            <form action="{{ route('admin.participants.import') }}" method="POST" enctype="multipart/form-data" class="page-toolbar-import">
+            <form id="participants-import-form" action="{{ route('admin.participants.import') }}" method="POST" enctype="multipart/form-data" class="page-toolbar-import">
                 @csrf
                 <input type="file" name="file" accept=".xlsx,.xls,.csv" required class="form-control form-control-sm">
                 <button type="submit" class="btn btn-success btn-sm"><i class="bx bx-import me-1"></i> Import</button>
@@ -108,7 +108,22 @@
         </table>
     </div>
     @if($participants->hasPages())
-        <div class="mt-3">{{ $participants->links() }}</div>
+        <div class="mt-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <form method="GET" action="{{ route('admin.participants.index') }}" class="d-flex align-items-center gap-2">
+                <input type="hidden" name="search" value="{{ request('search') }}">
+                <input type="hidden" name="status_mcu" value="{{ request('status_mcu') }}">
+                <label class="form-label mb-0 small">Tampilkan</label>
+                <select name="per_page" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="15" @selected((int) request('per_page', 15) === 15)>15</option>
+                    <option value="50" @selected((int) request('per_page', 15) === 50)>50</option>
+                    <option value="100" @selected((int) request('per_page', 15) === 100)>100</option>
+                </select>
+            </form>
+
+            <div class="ms-auto">
+                {{ $participants->links() }}
+            </div>
+        </div>
     @endif
 
     <form id="bulk-delete-form" method="POST" action="{{ route('admin.participants.bulk-destroy') }}" class="d-none">
@@ -116,6 +131,26 @@
         <input type="hidden" name="search" value="{{ request('search') }}">
         <input type="hidden" name="status_mcu" value="{{ request('status_mcu') }}">
     </form>
+
+    <div class="modal fade" id="participants-importing-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sedang memproses import...</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup" disabled></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="spinner-border text-primary" role="status" aria-label="Loading"></div>
+                        <div>
+                            Mohon tunggu sampai proses selesai.
+                            <div class="small text-muted mt-1">Jangan tutup halaman atau refresh.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </x-common.component-card>
 @endsection
 
@@ -145,6 +180,21 @@
     });
 
     checkboxes.forEach(cb => cb.addEventListener('change', updateUI));
+
+    const importForm = document.getElementById('participants-import-form');
+    importForm?.addEventListener('submit', function() {
+        const modalEl = document.getElementById('participants-importing-modal');
+        if (modalEl && window.bootstrap && bootstrap.Modal) {
+            const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+            modal.show();
+        }
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Memproses...';
+        }
+    });
 
     bulkDeleteBtn?.addEventListener('click', function() {
         if (this.disabled) return;

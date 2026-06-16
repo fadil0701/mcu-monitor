@@ -19,7 +19,7 @@ class ParticipantsImport implements WithMultipleSheets
 
     public function __get(string $name): mixed
     {
-        if (in_array($name, ['createdCount', 'updatedCount'], true)) {
+        if (in_array($name, ['createdCount', 'updatedCount', 'skippedCount'], true)) {
             return $this->rows->$name;
         }
 

@@ -11,7 +11,7 @@ class ParticipantsImportTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_import_updates_existing_participant_with_same_nrk(): void
+    public function test_import_skips_existing_participant_with_same_nrk(): void
     {
         Participant::query()->create([
             'nik_ktp' => '3175095701960003',
@@ -45,18 +45,16 @@ class ParticipantsImportTest extends TestCase
         ];
 
         $model = $import->model($row);
-        if ($model !== null) {
-            $model->save();
-        }
 
         $this->assertNull($model);
         $this->assertSame(0, $import->createdCount);
-        $this->assertSame(1, $import->updatedCount);
+        $this->assertSame(0, $import->updatedCount);
+        $this->assertSame(1, $import->skippedCount);
         $this->assertSame(1, Participant::query()->count());
         $this->assertDatabaseHas('participants', [
             'nrk_pegawai' => '220747',
-            'nama_lengkap' => 'SRI CHERLY ASIH SITORUS',
-            'skpd' => 'Dinas Kesehatan',
+            'nama_lengkap' => 'Nama Lama',
+            'skpd' => '-',
         ]);
     }
 
@@ -79,6 +77,7 @@ class ParticipantsImportTest extends TestCase
 
         $this->assertSame(1, $import->createdCount);
         $this->assertSame(0, $import->updatedCount);
+        $this->assertSame(0, $import->skippedCount);
         $this->assertDatabaseHas('participants', [
             'nrk_pegawai' => '220748',
             'nama_lengkap' => 'Peserta Baru',
@@ -91,8 +90,6 @@ class ParticipantsImportTest extends TestCase
         $row = [
             'nik_ktp' => '3175095701960005',
             'nama_lengkap' => 'Peserta Minimal',
-            'jenis_kelamin' => 'P',
-            'tanggal_lahir' => '1996-01-17',
         ];
 
         $model = $import->model($row);
@@ -102,14 +99,14 @@ class ParticipantsImportTest extends TestCase
         $this->assertDatabaseHas('participants', [
             'nik_ktp' => '3175095701960005',
             'nama_lengkap' => 'Peserta Minimal',
-            'jenis_kelamin' => 'P',
+            'jenis_kelamin' => 'L',
             'nrk_pegawai' => 'NRK-3175095701960005',
             'no_telp' => '-',
             'skpd' => '-',
         ]);
     }
 
-    public function test_import_update_keeps_existing_optional_fields_when_not_provided(): void
+    public function test_import_skips_existing_when_only_mandatory_fields_provided(): void
     {
         Participant::query()->create([
             'nik_ktp' => '3175095701960006',
@@ -136,11 +133,12 @@ class ParticipantsImportTest extends TestCase
 
         $this->assertDatabaseHas('participants', [
             'nik_ktp' => '3175095701960006',
-            'nama_lengkap' => 'Nama Baru',
+            'nama_lengkap' => 'Nama Lama',
             'skpd' => 'Dinas Kesehatan',
             'no_telp' => '081111111111',
             'email' => 'lama@example.com',
         ]);
+        $this->assertSame(1, $import->skippedCount);
     }
 
     public function test_import_accepts_pendidikan_terakhir(): void

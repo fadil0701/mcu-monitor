@@ -286,18 +286,21 @@ Menu: **Admin → Data Peserta → Download Template**
 | Route download | `GET /admin/participants/template/download` |
 | Import handler | `app/Imports/ParticipantsImport.php` |
 
-**Kolom wajib:** NIK (16 digit, format Teks), Nama, Jenis Kelamin (`L` / `P`), Tanggal Lahir (`YYYY-MM-DD`). Header kolom wajib berwarna **merah muda** (bertanda `*`).
+**Kolom wajib:** NIK (16 digit, format Teks), Nama. Header kolom wajib berwarna **merah muda** (bertanda `*`).
 
-**Kolom opsional:** NRK, Tempat Lahir, SKPD, UKPD, No Telp, Email, Status Pegawai, Pendidikan Terakhir, Status MCU, Tanggal MCU Terakhir, Catatan. Header **biru muda**; beberapa kolom punya dropdown ke sheet **Referensi**.
+**Kolom opsional:** Jenis Kelamin (`L`/`P`), Tanggal Lahir (`YYYY-MM-DD`), NRK, Tempat Lahir, SKPD, UKPD, No Telp, Email, Status Pegawai, Pendidikan Terakhir, Status MCU, Tanggal MCU Terakhir, Catatan. Header **biru muda**; beberapa kolom punya dropdown ke sheet **Referensi**.
 
 Template berisi 3 sheet: **Data Peserta** (isi import di sini), **Referensi**, **Petunjuk**. Sistem hanya membaca sheet **Data Peserta**.
 
-Baris dengan NIK yang sudah ada akan **diperbarui**, bukan diduplikasi.
+Baris dengan NIK/NRK yang sudah ada akan **dilewati** (skip), tidak diperbarui dan tidak diduplikasi.
 
 ## Riwayat perubahan
 
 | Commit | Ringkasan |
 |--------|-----------|
+| *(pending)* | UI: modal proses import peserta tampil saat upload |
+| *(pending)* | UI: pagination per page 15/50/100 di Data Peserta |
+| *(pending)* | Admin: Hasil MCU default tampil bulan berjalan; filter periodik untuk bulan/tahun lain atau Semua |
 | `3b1c5b6` | Fix import: hanya baca sheet Data Peserta (bukan Referensi) |
 | `79a323a` | Template import: sheet Referensi, warna kolom wajib, Tanggal Lahir wajib |
 | `87e624d` | Perbaiki template import peserta + kolom pendidikan terakhir |

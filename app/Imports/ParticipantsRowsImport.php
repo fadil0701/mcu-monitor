@@ -17,6 +17,8 @@ class ParticipantsRowsImport implements ToModel, WithHeadingRow, SkipsEmptyRows,
 
     public int $updatedCount = 0;
 
+    public int $skippedCount = 0;
+
     public function prepareForValidation($row, $index)
     {
         return $this->normalizeRowKeys($row);
@@ -32,8 +34,7 @@ class ParticipantsRowsImport implements ToModel, WithHeadingRow, SkipsEmptyRows,
         );
 
         if ($existing !== null) {
-            $this->applyUpdate($existing, $row, $mandatory);
-            $this->updatedCount++;
+            $this->skippedCount++;
 
             return null;
         }
@@ -44,27 +45,20 @@ class ParticipantsRowsImport implements ToModel, WithHeadingRow, SkipsEmptyRows,
     }
 
     /**
-     * @return array{nik_ktp: string, nama_lengkap: string, jenis_kelamin: string, tanggal_lahir: string}
+     * @return array{nik_ktp: string, nama_lengkap: string}
      */
     private function mandatoryFields(array $row): array
     {
         $nik = $this->normalizeNik($row['nik_ktp'] ?? null);
-        $tanggalLahir = $this->parseDate($row['tanggal_lahir'] ?? null);
-
-        if ($tanggalLahir === null) {
-            throw new \InvalidArgumentException('Tanggal lahir wajib diisi (format YYYY-MM-DD).');
-        }
 
         return [
             'nik_ktp' => $nik,
             'nama_lengkap' => trim((string) ($row['nama_lengkap'] ?? '')),
-            'jenis_kelamin' => $this->normalizeGender($row['jenis_kelamin'] ?? null, required: true),
-            'tanggal_lahir' => $tanggalLahir,
         ];
     }
 
     /**
-     * @param  array{nik_ktp: string, nama_lengkap: string, jenis_kelamin: string, tanggal_lahir: string}  $mandatory
+     * @param  array{nik_ktp: string, nama_lengkap: string}  $mandatory
      * @return array<string, mixed>
      */
     private function buildParticipantDataForCreate(array $row, array $mandatory): array
@@ -87,6 +81,7 @@ class ParticipantsRowsImport implements ToModel, WithHeadingRow, SkipsEmptyRows,
             'nrk_pegawai' => 'NRK-' . $nik,
             'tempat_lahir' => '-',
             'tanggal_lahir' => $this->birthDateFromNik($nik) ?? '1990-01-01',
+            'jenis_kelamin' => 'L',
             'skpd' => '-',
             'ukpd' => '-',
             'no_telp' => '-',
@@ -114,6 +109,10 @@ class ParticipantsRowsImport implements ToModel, WithHeadingRow, SkipsEmptyRows,
 
         if (! $this->isEmpty($row['tempat_lahir'] ?? null)) {
             $optional['tempat_lahir'] = trim((string) $row['tempat_lahir']) ?: '-';
+        }
+
+        if (! $this->isEmpty($row['jenis_kelamin'] ?? null)) {
+            $optional['jenis_kelamin'] = $this->normalizeGender($row['jenis_kelamin'] ?? null, required: true);
         }
 
         $tanggalLahir = $this->parseDate($row['tanggal_lahir'] ?? null);
@@ -184,53 +183,11 @@ class ParticipantsRowsImport implements ToModel, WithHeadingRow, SkipsEmptyRows,
         return null;
     }
 
-    /**
-     * @param  array{nik_ktp: string, nama_lengkap: string, jenis_kelamin: string, tanggal_lahir: string}  $mandatory
-     */
-    private function applyUpdate(Participant $existing, array $row, array $mandatory): void
-    {
-        $data = array_merge($mandatory, $this->optionalFieldsFromRow($row, $mandatory['nik_ktp']));
-
-        if (array_key_exists('nrk_pegawai', $data)) {
-            $data['nrk_pegawai'] = $this->resolveSafeNrk($existing, (string) $data['nrk_pegawai']);
-        }
-
-        if ($data['nik_ktp'] !== $existing->nik_ktp) {
-            $nikTaken = Participant::query()
-                ->where('nik_ktp', $data['nik_ktp'])
-                ->where('id', '!=', $existing->id)
-                ->exists();
-
-            if ($nikTaken) {
-                $data['nik_ktp'] = $existing->nik_ktp;
-            }
-        }
-
-        $existing->fill($data);
-        $existing->save();
-    }
-
-    private function resolveSafeNrk(Participant $existing, string $nrk): string
-    {
-        if ($nrk === '' || $nrk === $existing->nrk_pegawai) {
-            return $existing->nrk_pegawai;
-        }
-
-        $taken = Participant::query()
-            ->where('nrk_pegawai', $nrk)
-            ->where('id', '!=', $existing->id)
-            ->exists();
-
-        return $taken ? $existing->nrk_pegawai : $nrk;
-    }
-
     public function rules(): array
     {
         return [
             'nik_ktp' => 'required',
             'nama_lengkap' => 'required',
-            'jenis_kelamin' => 'required',
-            'tanggal_lahir' => 'required',
         ];
     }
 
@@ -239,14 +196,9 @@ class ParticipantsRowsImport implements ToModel, WithHeadingRow, SkipsEmptyRows,
         return [
             'nik_ktp.required' => 'NIK wajib diisi.',
             'nama_lengkap.required' => 'Nama wajib diisi.',
-            'jenis_kelamin.required' => 'Jenis kelamin wajib diisi (L atau P).',
-            'tanggal_lahir.required' => 'Tanggal lahir wajib diisi (format YYYY-MM-DD).',
         ];
     }
 
-    /**
-     * Samakan nama kolom Excel (NIK, Nama, dll.) ke key internal.
-     */
     private function normalizeRowKeys(array $row): array
     {
         $aliases = [
@@ -293,9 +245,6 @@ class ParticipantsRowsImport implements ToModel, WithHeadingRow, SkipsEmptyRows,
         return $value === null || trim((string) $value) === '';
     }
 
-    /**
-     * Normalisasi NIK dari Excel (angka, notasi ilmiah, desimal .0).
-     */
     private function normalizeNik(mixed $value): string
     {
         $digits = $this->digitsOnly($value);
@@ -380,9 +329,6 @@ class ParticipantsRowsImport implements ToModel, WithHeadingRow, SkipsEmptyRows,
         }
     }
 
-    /**
-     * Ambil tanggal lahir dari digit NIK (posisi 7–12: DDMMYY).
-     */
     private function birthDateFromNik(string $nik): ?string
     {
         if (strlen($nik) !== 16) {
