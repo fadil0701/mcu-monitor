@@ -250,6 +250,7 @@ curl -fsS https://puspelkes.jakarta.go.id/mcuppkp/up
 
 | Gejala | Tindakan |
 |--------|----------|
+| Import gagal "NIK wajib diisi" padahal sudah diisi | Pastikan data di sheet **Data Peserta**, unduh ulang template; jangan import sheet Referensi |
 | `APP_KEY` / `vendor` saat install | `bash deploy/install.sh` |
 | Form/view/logo tidak berubah setelah `git pull` | `bash deploy/update-production.sh` (rebuild image), lalu hard refresh browser |
 | Link login ke `http://<IP>:9003` bukan domain | `bash deploy/set-domain-env.sh`, `config:cache`; jangan pakai `set-lan-env.sh` di produksi |
@@ -289,7 +290,7 @@ Menu: **Admin → Data Peserta → Download Template**
 
 **Kolom opsional:** NRK, Tempat Lahir, SKPD, UKPD, No Telp, Email, Status Pegawai, Pendidikan Terakhir, Status MCU, Tanggal MCU Terakhir, Catatan. Header **biru muda**; beberapa kolom punya dropdown ke sheet **Referensi**.
 
-Template berisi 3 sheet: **Referensi** (daftar SKPD, Pendidikan, Status Pegawai, Status MCU, Jenis Kelamin), **Data Peserta**, **Petunjuk**.
+Template berisi 3 sheet: **Data Peserta** (isi import di sini), **Referensi**, **Petunjuk**. Sistem hanya membaca sheet **Data Peserta**.
 
 Baris dengan NIK yang sudah ada akan **diperbarui**, bukan diduplikasi.
 
@@ -297,6 +298,7 @@ Baris dengan NIK yang sudah ada akan **diperbarui**, bukan diduplikasi.
 
 | Commit | Ringkasan |
 |--------|-----------|
+| *(pending)* | Fix import: hanya baca sheet Data Peserta (bukan Referensi) |
 | `79a323a` | Template import: sheet Referensi, warna kolom wajib, Tanggal Lahir wajib |
 | `87e624d` | Perbaiki template import peserta + kolom pendidikan terakhir |
 | `941cf20` | Update riwayat perubahan sidebar logo |

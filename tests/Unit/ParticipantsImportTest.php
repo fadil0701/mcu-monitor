@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Imports\ParticipantsImport;
+use App\Imports\ParticipantsRowsImport;
 use App\Models\Participant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -28,7 +28,7 @@ class ParticipantsImportTest extends TestCase
             'status_mcu' => 'Belum MCU',
         ]);
 
-        $import = new ParticipantsImport;
+        $import = new ParticipantsRowsImport;
         $row = [
             'nik_ktp' => '3175095701960003',
             'nrk_pegawai' => '220747',
@@ -62,7 +62,7 @@ class ParticipantsImportTest extends TestCase
 
     public function test_import_creates_new_participant_when_nrk_is_unique(): void
     {
-        $import = new ParticipantsImport;
+        $import = new ParticipantsRowsImport;
         $row = [
             'nik_ktp' => '3175095701960004',
             'nrk_pegawai' => '220748',
@@ -87,7 +87,7 @@ class ParticipantsImportTest extends TestCase
 
     public function test_import_accepts_only_mandatory_fields_for_new_participant(): void
     {
-        $import = new ParticipantsImport;
+        $import = new ParticipantsRowsImport;
         $row = [
             'nik_ktp' => '3175095701960005',
             'nama_lengkap' => 'Peserta Minimal',
@@ -126,7 +126,7 @@ class ParticipantsImportTest extends TestCase
             'status_mcu' => 'Belum MCU',
         ]);
 
-        $import = new ParticipantsImport;
+        $import = new ParticipantsRowsImport;
         $import->model([
             'nik_ktp' => '3175095701960006',
             'nama_lengkap' => 'Nama Baru',
@@ -145,7 +145,7 @@ class ParticipantsImportTest extends TestCase
 
     public function test_import_accepts_pendidikan_terakhir(): void
     {
-        $import = new ParticipantsImport;
+        $import = new ParticipantsRowsImport;
         $row = [
             'nik_ktp' => '3175095701960007',
             'nama_lengkap' => 'Peserta Pendidikan',

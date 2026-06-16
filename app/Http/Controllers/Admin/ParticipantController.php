@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
 
 class ParticipantController extends Controller
 {
@@ -158,9 +159,22 @@ class ParticipantController extends Controller
                 $import->createdCount,
                 $import->updatedCount,
             ));
-        } catch (\Throwable $e) {
+        } catch (ValidationException $e) {
+            $details = collect($e->failures())
+                ->take(5)
+                ->map(fn ($failure) => 'Baris '.$failure->row().': '.implode(' ', $failure->errors()))
+                ->implode(' | ');
+
             return redirect()->route('admin.participants.index')
-                ->with('error', 'Import gagal: ' . $e->getMessage());
+                ->with('error', 'Import gagal validasi. Pastikan mengisi sheet Data Peserta (bukan Referensi/Petunjuk). '.$details);
+        } catch (\Throwable $e) {
+            $message = $e->getMessage();
+            if (str_contains($message, 'Sheet') && str_contains($message, 'not found')) {
+                $message = 'Sheet "Data Peserta" tidak ditemukan. Unduh ulang template dan isi data di sheet tersebut.';
+            }
+
+            return redirect()->route('admin.participants.index')
+                ->with('error', 'Import gagal: '.$message);
         }
     }
 }

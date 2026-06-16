@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Exports\ParticipantsImportTemplateExport;
 use App\Models\Participant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class ParticipantAdminTest extends TestCase
@@ -100,6 +102,30 @@ class ParticipantAdminTest extends TestCase
                 'content-type',
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             );
+    }
+
+    public function test_import_reads_data_peserta_sheet_from_template_workbook(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $path = tempnam(sys_get_temp_dir(), 'tpl_import_').'.xlsx';
+        ParticipantsImportTemplateExport::saveTo($path);
+
+        $this->actingAs($admin)
+            ->post(route('admin.participants.import'), [
+                'file' => new UploadedFile(
+                    $path,
+                    'template_import_peserta.xlsx',
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    null,
+                    true,
+                ),
+            ])
+            ->assertRedirect(route('admin.participants.index'))
+            ->assertSessionHas('success');
+
+        $this->assertSame(2, Participant::query()->count());
+
+        @unlink($path);
     }
 
     /**

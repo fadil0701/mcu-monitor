@@ -57,19 +57,21 @@ final class ParticipantsImportTemplateExport
     public static function saveTo(string $path): void
     {
         $spreadsheet = new Spreadsheet;
-        $referensi = $spreadsheet->getActiveSheet();
+
+        $dataSheet = $spreadsheet->getActiveSheet();
+        $dataSheet->setTitle('Data Peserta');
+
+        $referensi = $spreadsheet->createSheet();
         $referensi->setTitle('Referensi');
         $ranges = self::fillReferensiSheet($referensi);
 
-        $dataSheet = $spreadsheet->createSheet();
-        $dataSheet->setTitle('Data Peserta');
         self::fillDataSheet($dataSheet, $ranges);
 
         $guide = $spreadsheet->createSheet();
         $guide->setTitle('Petunjuk');
         self::fillGuideSheet($guide);
 
-        $spreadsheet->setActiveSheetIndex(1);
+        $spreadsheet->setActiveSheetIndex(0);
 
         (new Xlsx($spreadsheet))->save($path);
     }
@@ -267,6 +269,7 @@ final class ParticipantsImportTemplateExport
             ['Berisi daftar nilai yang boleh dipilih untuk SKPD, Pendidikan, Status Pegawai, Status MCU, dan Jenis Kelamin.'],
             [],
             ['Catatan umum'],
+            ['• Isi data hanya di sheet Data Peserta (bukan sheet Referensi/Petunjuk).'],
             ['• Baris dengan NIK yang sudah ada akan diperbarui (update), bukan dibuat duplikat.'],
             ['• File didukung: XLSX, XLS, CSV.'],
         ];
