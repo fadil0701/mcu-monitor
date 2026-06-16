@@ -297,7 +297,7 @@ Baris dengan NIK yang sudah ada akan **diperbarui**, bukan diduplikasi.
 
 | Commit | Ringkasan |
 |--------|-----------|
-| *(pending)* | Perbaiki template import peserta + kolom pendidikan terakhir |
+| `87e624d` | Perbaiki template import peserta + kolom pendidikan terakhir |
 | `941cf20` | Update riwayat perubahan sidebar logo |
 | `804974d` | Sidebar admin: ganti ke `icon-ppkp.png` (logo horizontal terpotong) |
 | `df7c728` | Kebijakan dokumentasi wajib + riwayat perubahan di DEPLOY.md |
