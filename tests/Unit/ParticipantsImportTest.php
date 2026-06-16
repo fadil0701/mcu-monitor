@@ -68,6 +68,7 @@ class ParticipantsImportTest extends TestCase
             'nrk_pegawai' => '220748',
             'nama_lengkap' => 'Peserta Baru',
             'jenis_kelamin' => 'L',
+            'tanggal_lahir' => '1992-08-12',
             'no_telp' => '081234567891',
             'status_pegawai' => 'PNS',
         ];
@@ -91,6 +92,7 @@ class ParticipantsImportTest extends TestCase
             'nik_ktp' => '3175095701960005',
             'nama_lengkap' => 'Peserta Minimal',
             'jenis_kelamin' => 'P',
+            'tanggal_lahir' => '1996-01-17',
         ];
 
         $model = $import->model($row);
@@ -129,6 +131,7 @@ class ParticipantsImportTest extends TestCase
             'nik_ktp' => '3175095701960006',
             'nama_lengkap' => 'Nama Baru',
             'jenis_kelamin' => 'L',
+            'tanggal_lahir' => '1990-05-05',
         ]);
 
         $this->assertDatabaseHas('participants', [
@@ -147,6 +150,7 @@ class ParticipantsImportTest extends TestCase
             'nik_ktp' => '3175095701960007',
             'nama_lengkap' => 'Peserta Pendidikan',
             'jenis_kelamin' => 'L',
+            'tanggal_lahir' => '1990-03-10',
             'pendidikan_terakhir' => 'Sarjana',
         ];
 

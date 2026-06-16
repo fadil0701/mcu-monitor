@@ -285,11 +285,11 @@ Menu: **Admin → Data Peserta → Download Template**
 | Route download | `GET /admin/participants/template/download` |
 | Import handler | `app/Imports/ParticipantsImport.php` |
 
-**Kolom wajib:** NIK (16 digit, format Teks), Nama, Jenis Kelamin (`L` / `P`).
+**Kolom wajib:** NIK (16 digit, format Teks), Nama, Jenis Kelamin (`L` / `P`), Tanggal Lahir (`YYYY-MM-DD`). Header kolom wajib berwarna **merah muda** (bertanda `*`).
 
-**Kolom opsional:** NRK, Tempat Lahir, Tanggal Lahir, SKPD, UKPD, No Telp, Email, Status Pegawai (`CPNS`/`PNS`/`PPPK`), Pendidikan Terakhir, Status MCU, Tanggal MCU Terakhir, Catatan.
+**Kolom opsional:** NRK, Tempat Lahir, SKPD, UKPD, No Telp, Email, Status Pegawai, Pendidikan Terakhir, Status MCU, Tanggal MCU Terakhir, Catatan. Header **biru muda**; beberapa kolom punya dropdown ke sheet **Referensi**.
 
-Template berisi 2 sheet: **Data Peserta** (contoh lengkap + minimal) dan **Petunjuk**.
+Template berisi 3 sheet: **Referensi** (daftar SKPD, Pendidikan, Status Pegawai, Status MCU, Jenis Kelamin), **Data Peserta**, **Petunjuk**.
 
 Baris dengan NIK yang sudah ada akan **diperbarui**, bukan diduplikasi.
 

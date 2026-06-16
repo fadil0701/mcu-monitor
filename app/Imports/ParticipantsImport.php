@@ -44,21 +44,27 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Wit
     }
 
     /**
-     * @return array{nik_ktp: string, nama_lengkap: string, jenis_kelamin: string}
+     * @return array{nik_ktp: string, nama_lengkap: string, jenis_kelamin: string, tanggal_lahir: string}
      */
     private function mandatoryFields(array $row): array
     {
         $nik = $this->normalizeNik($row['nik_ktp'] ?? null);
+        $tanggalLahir = $this->parseDate($row['tanggal_lahir'] ?? null);
+
+        if ($tanggalLahir === null) {
+            throw new \InvalidArgumentException('Tanggal lahir wajib diisi (format YYYY-MM-DD).');
+        }
 
         return [
             'nik_ktp' => $nik,
             'nama_lengkap' => trim((string) ($row['nama_lengkap'] ?? '')),
             'jenis_kelamin' => $this->normalizeGender($row['jenis_kelamin'] ?? null, required: true),
+            'tanggal_lahir' => $tanggalLahir,
         ];
     }
 
     /**
-     * @param  array{nik_ktp: string, nama_lengkap: string, jenis_kelamin: string}  $mandatory
+     * @param  array{nik_ktp: string, nama_lengkap: string, jenis_kelamin: string, tanggal_lahir: string}  $mandatory
      * @return array<string, mixed>
      */
     private function buildParticipantDataForCreate(array $row, array $mandatory): array
@@ -179,7 +185,7 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Wit
     }
 
     /**
-     * @param  array{nik_ktp: string, nama_lengkap: string, jenis_kelamin: string}  $mandatory
+     * @param  array{nik_ktp: string, nama_lengkap: string, jenis_kelamin: string, tanggal_lahir: string}  $mandatory
      */
     private function applyUpdate(Participant $existing, array $row, array $mandatory): void
     {
@@ -224,6 +230,7 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Wit
             'nik_ktp' => 'required',
             'nama_lengkap' => 'required',
             'jenis_kelamin' => 'required',
+            'tanggal_lahir' => 'required',
         ];
     }
 
@@ -233,6 +240,7 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Wit
             'nik_ktp.required' => 'NIK wajib diisi.',
             'nama_lengkap.required' => 'Nama wajib diisi.',
             'jenis_kelamin.required' => 'Jenis kelamin wajib diisi (L atau P).',
+            'tanggal_lahir.required' => 'Tanggal lahir wajib diisi (format YYYY-MM-DD).',
         ];
     }
 
