@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Participant;
+use App\Support\ParticipantEducation;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
@@ -134,6 +135,11 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Wit
             $optional['status_pegawai'] = $this->normalizeStatusPegawai($row['status_pegawai']);
         }
 
+        $pendidikan = $this->normalizePendidikan($row['pendidikan_terakhir'] ?? null);
+        if ($pendidikan !== null) {
+            $optional['pendidikan_terakhir'] = $pendidikan;
+        }
+
         if (! $this->isEmpty($row['status_mcu'] ?? null)) {
             $optional['status_mcu'] = $this->normalizeStatusMcu($row['status_mcu']);
         }
@@ -253,6 +259,8 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Wit
             'ukpd' => 'ukpd',
             'email' => 'email',
             'status_pegawai' => 'status_pegawai',
+            'pendidikan_terakhir' => 'pendidikan_terakhir',
+            'pendidikan' => 'pendidikan_terakhir',
             'status_mcu' => 'status_mcu',
             'tanggal_mcu_terakhir' => 'tanggal_mcu_terakhir',
             'catatan' => 'catatan',
@@ -419,6 +427,23 @@ class ParticipantsImport implements ToModel, WithHeadingRow, SkipsEmptyRows, Wit
         $status = strtoupper(trim((string) ($value ?? '')));
 
         return in_array($status, ['CPNS', 'PNS', 'PPPK'], true) ? $status : 'PNS';
+    }
+
+    private function normalizePendidikan(mixed $value): ?string
+    {
+        if ($this->isEmpty($value)) {
+            return null;
+        }
+
+        $input = trim((string) $value);
+
+        foreach (ParticipantEducation::levels() as $level) {
+            if (strcasecmp($input, $level) === 0) {
+                return $level;
+            }
+        }
+
+        return null;
     }
 
     private function normalizeStatusMcu(mixed $value): string

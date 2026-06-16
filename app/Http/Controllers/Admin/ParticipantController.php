@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Support\SqlFilter;
 use App\Support\SqlLike;
+use App\Exports\ParticipantsImportTemplateExport;
 use App\Imports\ParticipantsImport;
 use App\Models\Participant;
 use App\Support\ParticipantEducation;
@@ -118,6 +119,18 @@ class ParticipantController extends Controller
         $count = Participant::whereIn('id', $request->ids)->delete();
         return redirect()->route('admin.participants.index', $request->only(['search', 'status_mcu']))
             ->with('success', "{$count} peserta berhasil dihapus.");
+    }
+
+    public function downloadTemplate()
+    {
+        $headers = [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ];
+
+        $tmp = tempnam(sys_get_temp_dir(), 'participants_tpl_').'.xlsx';
+        ParticipantsImportTemplateExport::saveTo($tmp);
+
+        return response()->download($tmp, 'template_import_peserta.xlsx', $headers)->deleteFileAfterSend(true);
     }
 
     public function import(Request $request)

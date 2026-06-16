@@ -274,10 +274,30 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml down
 
 Spesifikasi API bridge: `dashboard-skrining/docs/BRIDGE-CKG-MCU.md`.
 
+## Import data peserta (admin)
+
+Menu: **Admin → Data Peserta → Download Template**
+
+| Item | Nilai |
+|------|--------|
+| File template | `template_import_peserta.xlsx` |
+| Generator | `app/Exports/ParticipantsImportTemplateExport.php` |
+| Route download | `GET /admin/participants/template/download` |
+| Import handler | `app/Imports/ParticipantsImport.php` |
+
+**Kolom wajib:** NIK (16 digit, format Teks), Nama, Jenis Kelamin (`L` / `P`).
+
+**Kolom opsional:** NRK, Tempat Lahir, Tanggal Lahir, SKPD, UKPD, No Telp, Email, Status Pegawai (`CPNS`/`PNS`/`PPPK`), Pendidikan Terakhir, Status MCU, Tanggal MCU Terakhir, Catatan.
+
+Template berisi 2 sheet: **Data Peserta** (contoh lengkap + minimal) dan **Petunjuk**.
+
+Baris dengan NIK yang sudah ada akan **diperbarui**, bukan diduplikasi.
+
 ## Riwayat perubahan
 
 | Commit | Ringkasan |
 |--------|-----------|
+| *(pending)* | Perbaiki template import peserta + kolom pendidikan terakhir |
 | `941cf20` | Update riwayat perubahan sidebar logo |
 | `804974d` | Sidebar admin: ganti ke `icon-ppkp.png` (logo horizontal terpotong) |
 | `df7c728` | Kebijakan dokumentasi wajib + riwayat perubahan di DEPLOY.md |

@@ -39,7 +39,7 @@ class ParticipantsExport implements FromCollection, WithHeadings, WithMapping, S
     public function headings(): array
     {
         return [
-            'NIK', 'NRK', 'Nama', 'Tempat Lahir', 'Tanggal Lahir', 'JK', 'SKPD', 'UKPD', 'No Telp', 'Email', 'Status Pegawai', 'Status MCU', 'Tanggal MCU Terakhir', 'Catatan',
+            'NIK', 'NRK', 'Nama', 'Tempat Lahir', 'Tanggal Lahir', 'JK', 'SKPD', 'UKPD', 'No Telp', 'Email', 'Status Pegawai', 'Pendidikan Terakhir', 'Status MCU', 'Tanggal MCU Terakhir', 'Catatan',
         ];
     }
 
@@ -58,6 +58,7 @@ class ParticipantsExport implements FromCollection, WithHeadings, WithMapping, S
             $row->no_telp,
             $row->email,
             $row->status_pegawai,
+            $row->pendidikan_terakhir,
             $row->status_mcu,
             optional($row->tanggal_mcu_terakhir)->format('Y-m-d'),
             $row->catatan,

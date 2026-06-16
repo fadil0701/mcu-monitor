@@ -139,4 +139,23 @@ class ParticipantsImportTest extends TestCase
             'email' => 'lama@example.com',
         ]);
     }
+
+    public function test_import_accepts_pendidikan_terakhir(): void
+    {
+        $import = new ParticipantsImport;
+        $row = [
+            'nik_ktp' => '3175095701960007',
+            'nama_lengkap' => 'Peserta Pendidikan',
+            'jenis_kelamin' => 'L',
+            'pendidikan_terakhir' => 'Sarjana',
+        ];
+
+        $model = $import->model($row);
+        $model?->save();
+
+        $this->assertDatabaseHas('participants', [
+            'nik_ktp' => '3175095701960007',
+            'pendidikan_terakhir' => 'Sarjana',
+        ]);
+    }
 }

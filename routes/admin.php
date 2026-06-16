@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth'])->get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('participants/template/download', [ParticipantController::class, 'downloadTemplate'])->name('participants.template');
     Route::post('participants/import', [ParticipantController::class, 'import'])->name('participants.import');
     Route::post('participants/bulk-destroy', [ParticipantController::class, 'bulkDestroy'])->name('participants.bulk-destroy');
     Route::delete('participants/bulk-destroy', function () {

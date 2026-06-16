@@ -89,6 +89,19 @@ class ParticipantAdminTest extends TestCase
         $this->assertStringNotContainsString('is-invalid', $matches[0]);
     }
 
+    public function test_admin_can_download_import_template(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.participants.template'))
+            ->assertOk()
+            ->assertHeader(
+                'content-type',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            );
+    }
+
     /**
      * @param  array<string, mixed>  $overrides
      */

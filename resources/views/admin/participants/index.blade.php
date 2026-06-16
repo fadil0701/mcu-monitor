@@ -28,11 +28,11 @@
         </div>
 
         <div class="page-toolbar-actions">
-            <a href="{{ route('participants.template') }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+            <a href="{{ route('admin.participants.template') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="bx bx-download me-1"></i> Download Template
             </a>
             <span class="text-muted small align-self-center d-none d-xl-inline" title="Kolom wajib saat import">
-                Import wajib: NIK, Nama, Jenis Kelamin
+                Import wajib: NIK, Nama, Jenis Kelamin (L/P)
             </span>
             <form action="{{ route('admin.participants.import') }}" method="POST" enctype="multipart/form-data" class="page-toolbar-import">
                 @csrf
