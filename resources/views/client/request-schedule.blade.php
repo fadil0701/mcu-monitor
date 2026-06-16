@@ -14,13 +14,30 @@
                 </div>
             @endunless
 
-            <form method="POST" action="{{ route('client.schedule.request.store') }}">
+            @if($eligible && $dailyQuota > 0)
+                <div class="alert alert-info py-2">
+                    <i class="bx bx-info-circle me-1"></i>
+                    Kuota pemeriksaan MCU: maksimal <strong>{{ number_format($dailyQuota, 0, ',', '.') }}</strong> peserta per hari di {{ config('mcu.default_location') }}.
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('client.schedule.request.store') }}" id="schedule-request-form">
                 @csrf
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Tanggal Pemeriksaan *</label>
-                        <input type="date" name="tanggal_pemeriksaan" class="form-control @error('tanggal_pemeriksaan') is-invalid @enderror" value="{{ old('tanggal_pemeriksaan') }}" {{ $eligible ? '' : 'disabled' }} required>
-                        @error('tanggal_pemeriksaan')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <input
+                            type="date"
+                            name="tanggal_pemeriksaan"
+                            id="tanggal_pemeriksaan"
+                            class="form-control @error('tanggal_pemeriksaan') is-invalid @enderror"
+                            value="{{ old('tanggal_pemeriksaan') }}"
+                            min="{{ now()->format('Y-m-d') }}"
+                            {{ $eligible ? '' : 'disabled' }}
+                            required
+                        >
+                        <div id="quota-info" class="form-text mt-1"></div>
+                        @error('tanggal_pemeriksaan')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Jam Pemeriksaan *</label>
@@ -56,7 +73,7 @@
                     </div>
                 </div>
                 <div class="mt-4">
-                    <button type="submit" class="btn btn-primary" {{ $eligible ? '' : 'disabled' }}>
+                    <button type="submit" class="btn btn-primary" id="schedule-submit-btn" {{ $eligible ? '' : 'disabled' }}>
                         <i class="bx bx-send me-1"></i> Ajukan Jadwal
                     </button>
                     <a href="{{ route('client.schedules') }}" class="btn btn-outline-secondary ms-2">Kembali</a>
@@ -74,8 +91,18 @@
                 <dd class="col-sm-7">{{ $participant->nik_ktp }}</dd>
                 <dt class="col-sm-5">SKPD</dt>
                 <dd class="col-sm-7">{{ $participant->skpd }}</dd>
+                <dt class="col-sm-5">Skrining CKG</dt>
+                <dd class="col-sm-7">
+                    <span class="badge bg-label-{{ $hasCkgScreening ? 'success' : 'danger' }}">
+                        {{ $hasCkgScreening ? 'Sudah' : 'Belum' }}
+                    </span>
+                </dd>
                 <dt class="col-sm-5">MCU Terakhir</dt>
                 <dd class="col-sm-7">{{ $participant->tanggal_mcu_terakhir_formatted }}</dd>
+                @if($dailyQuota > 0)
+                    <dt class="col-sm-5">Kuota / hari</dt>
+                    <dd class="col-sm-7">Maks. {{ number_format($dailyQuota, 0, ',', '.') }} peserta</dd>
+                @endif
                 <dt class="col-sm-5">Kelayakan</dt>
                 <dd class="col-sm-7">
                     <span class="badge bg-label-{{ $eligible ? 'success' : 'warning' }}">
@@ -87,3 +114,78 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const dateInput = document.getElementById('tanggal_pemeriksaan');
+    const quotaInfo = document.getElementById('quota-info');
+    const submitBtn = document.getElementById('schedule-submit-btn');
+    const quotaUrl = @json(route('client.schedule.quota'));
+    const dailyQuota = @json((int) $dailyQuota);
+    const formEnabled = @json($eligible);
+
+    if (!dateInput || !quotaInfo || !formEnabled) {
+        return;
+    }
+
+    async function refreshQuota() {
+        const date = dateInput.value;
+        if (!date) {
+            quotaInfo.textContent = dailyQuota > 0
+                ? `Pilih tanggal untuk melihat sisa kuota (maks. ${dailyQuota} peserta/hari).`
+                : '';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+            }
+            return;
+        }
+
+        quotaInfo.textContent = 'Memuat informasi kuota...';
+
+        try {
+            const response = await fetch(`${quotaUrl}?date=${encodeURIComponent(date)}`, {
+                headers: { 'Accept': 'application/json' },
+            });
+
+            if (!response.ok) {
+                throw new Error('Gagal memuat kuota');
+            }
+
+            const data = await response.json();
+
+            if (data.unlimited) {
+                quotaInfo.textContent = 'Kuota harian tidak dibatasi.';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                }
+                return;
+            }
+
+            if (data.available) {
+                quotaInfo.innerHTML = `Sisa kuota tanggal ini: <strong>${data.remaining}</strong> dari <strong>${data.limit}</strong> peserta (${data.booked} terisi).`;
+                quotaInfo.classList.remove('text-danger');
+                quotaInfo.classList.add('text-success');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                }
+            } else {
+                quotaInfo.innerHTML = `Kuota tanggal ini sudah penuh (<strong>${data.booked}/${data.limit}</strong>). Pilih tanggal lain.`;
+                quotaInfo.classList.remove('text-success');
+                quotaInfo.classList.add('text-danger');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                }
+            }
+        } catch (error) {
+            quotaInfo.textContent = 'Tidak dapat memuat informasi kuota. Coba lagi.';
+            quotaInfo.classList.remove('text-success');
+            quotaInfo.classList.add('text-danger');
+        }
+    }
+
+    dateInput.addEventListener('change', refreshQuota);
+    refreshQuota();
+})();
+</script>
+@endpush

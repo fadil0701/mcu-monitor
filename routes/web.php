@@ -27,6 +27,7 @@ Route::prefix('client')->middleware(['auth'])->group(function () {
     Route::post('/notifications/mark-all-read', [ClientNotificationsController::class, 'markAllAsRead'])->name('client.notifications.mark-all-read');
 
     Route::get('/schedule/request', [ClientController::class, 'requestScheduleForm'])->name('client.schedule.request');
+    Route::get('/schedule/quota', [ClientController::class, 'scheduleQuota'])->name('client.schedule.quota');
     Route::post('/schedule/request', [ClientController::class, 'storeScheduleRequest'])->name('client.schedule.request.store');
 
     Route::post('/schedule/{id}/confirm', [ClientController::class, 'confirmAttendance'])->name('client.schedule.confirm');

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\InstansiPemprovDki;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Daftar instansi SKPD dari config/instansi_pemprov_dki.php (baca file langsung, bukan config cache).
@@ -31,6 +32,10 @@ class InstansiPemprovDkiCatalog
      */
     public static function optionsForForms(): array
     {
+        if (! Schema::hasTable('instansi_pemprov_dkis')) {
+            return self::defaultNames();
+        }
+
         $fromDb = InstansiPemprovDki::query()
             ->active()
             ->orderBy('sort_order')
@@ -46,6 +51,10 @@ class InstansiPemprovDkiCatalog
      */
     public static function syncToDatabase(): array
     {
+        if (! Schema::hasTable('instansi_pemprov_dkis')) {
+            return ['synced' => 0, 'deactivated' => 0];
+        }
+
         $names = self::defaultNames();
         $order = 10;
 

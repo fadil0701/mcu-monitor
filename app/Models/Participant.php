@@ -48,6 +48,11 @@ class Participant extends Model
         return $this->hasMany(McuResult::class);
     }
 
+    public function hasCompletedCkgScreening(): bool
+    {
+        return $this->ckg_peserta_id !== null || filled($this->ckg_registration_code);
+    }
+
     public function getUmurAttribute(): int
     {
         return Carbon::parse($this->tanggal_lahir)->age;

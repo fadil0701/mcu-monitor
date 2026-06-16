@@ -17,6 +17,8 @@ use App\Models\User;
 use App\Notifications\NewScheduleRequest;
 use App\Support\ScheduleExaminationTime;
 use App\Support\ScheduleParticipantNotifier;
+use App\Support\McuDailyQuota;
+use App\Support\ParticipantMcuScheduleEligibility;
 use App\Notifications\NewRegistrationNotification;
 use App\Support\ParticipantEducation;
 use Illuminate\Validation\Rule;
@@ -313,16 +315,31 @@ class ClientController extends Controller
 			abort(404);
 		}
 
-		$eligible = true;
-		$reason = null;
-		if ($participant->tanggal_mcu_terakhir) {
-			$eligible = Carbon::parse($participant->tanggal_mcu_terakhir)->lte(Carbon::now()->subYears(config('mcu.interval_years', 3)));
-			if (!$eligible) {
-				$reason = 'Anda belum memenuhi syarat pendaftaran ulang (belum ' . config('mcu.interval_years', 3) . ' tahun). Silakan hubungi admin jika ada kondisi khusus.';
-			}
-		}
+		$eligibility = new ParticipantMcuScheduleEligibility($participant);
+		$eligible = $eligibility->canRequest();
+		$reason = $eligibility->blockingReason();
+		$hasCkgScreening = $eligibility->hasCkgScreening();
+		$dailyQuota = McuDailyQuota::limit();
 
-		return view('client.request-schedule', compact('participant', 'eligible', 'reason'));
+		return view('client.request-schedule', compact(
+			'participant',
+			'eligible',
+			'reason',
+			'hasCkgScreening',
+			'dailyQuota',
+		));
+	}
+
+	public function scheduleQuota(Request $request)
+	{
+		$user = Auth::user();
+		Participant::where('nik_ktp', $user->nik_ktp)->firstOrFail();
+
+		$valid = $request->validate([
+			'date' => ['required', 'date', 'after_or_equal:'.now()->startOfDay()->toDateString()],
+		]);
+
+		return response()->json(McuDailyQuota::snapshot($valid['date']));
 	}
 
 	public function storeScheduleRequest(Request $request)
@@ -330,9 +347,9 @@ class ClientController extends Controller
 		$user = Auth::user();
 		$participant = Participant::where('nik_ktp', $user->nik_ktp)->firstOrFail();
 
-		// Eligibility check: must be >= N years since last MCU unless admin overrides (not here)
-		if ($participant->tanggal_mcu_terakhir && Carbon::parse($participant->tanggal_mcu_terakhir)->gt(Carbon::now()->subYears(config('mcu.interval_years', 3)))) {
-			return back()->withErrors(['request' => 'Anda belum memenuhi syarat pendaftaran ulang. Hubungi admin untuk pengecualian.']);
+		$eligibility = new ParticipantMcuScheduleEligibility($participant);
+		if (! $eligibility->canRequest()) {
+			return back()->withErrors(['request' => $eligibility->blockingReason()]);
 		}
 
         $request->validate([
@@ -350,6 +367,16 @@ class ClientController extends Controller
 		]);
 
         $lokasiPemeriksaan = ScheduleExaminationTime::defaultLocation();
+
+		if (! McuDailyQuota::isAvailable($request->tanggal_pemeriksaan, $lokasiPemeriksaan)) {
+			$limit = McuDailyQuota::limit();
+
+			return back()
+				->withInput()
+				->withErrors([
+					'tanggal_pemeriksaan' => 'Kuota pemeriksaan pada tanggal tersebut sudah penuh (maksimal '.$limit.' peserta per hari). Pilih tanggal lain.',
+				]);
+		}
 
 		$schedule = Schedule::create([
 			'participant_id' => $participant->id,
@@ -370,8 +397,12 @@ class ClientController extends Controller
 		]);
 
         // Assign queue number for the date
-        $max = Schedule::whereDate('tanggal_pemeriksaan', $schedule->tanggal_pemeriksaan)->max('queue_number');
-        $schedule->update(['queue_number' => ((int) $max) + 1]);
+        $schedule->update([
+            'queue_number' => Schedule::getNextQueueNumber(
+                $schedule->tanggal_pemeriksaan->format('Y-m-d'),
+                $lokasiPemeriksaan,
+            ),
+        ]);
 
         ScheduleParticipantNotifier::notify($schedule->fresh(), 'schedule_confirmed');
 

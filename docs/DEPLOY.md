@@ -253,6 +253,7 @@ curl -fsS https://puspelkes.jakarta.go.id/mcuppkp/up
 | Import gagal "NIK wajib diisi" padahal sudah diisi | Pastikan data di sheet **Data Peserta**, unduh ulang template; jangan import sheet Referensi |
 | `APP_KEY` / `vendor` saat install | `bash deploy/install.sh` |
 | Form/view/logo tidak berubah setelah `git pull` | `bash deploy/update-production.sh` (rebuild image), lalu hard refresh browser |
+| `instansi_pemprov_dkis` tidak ada / error laporan & form SKPD | `php artisan migrate --force` lalu `php artisan db:seed --class=InstansiPemprovDkiSeeder --force` |
 | Link login ke `http://<IP>:9003` bukan domain | `bash deploy/set-domain-env.sh`, `config:cache`; jangan pakai `set-lan-env.sh` di produksi |
 | Logo form auth membesar / terpotong | Pastikan commit branding terbaru ter-deploy; cek `height:48px` di `brand.blade.php` di dalam container |
 | Logo sidebar garis warna / terpotong | Sidebar harus pakai `icon-ppkp.png`, bukan `logo-ppkp.png`; rebuild image |
@@ -294,13 +295,26 @@ Template berisi 3 sheet: **Data Peserta** (isi import di sini), **Referensi**, *
 
 Baris dengan NIK/NRK yang sudah ada akan **dilewati** (skip), tidak diperbarui dan tidak diduplikasi.
 
+## Pengajuan jadwal MCU (portal peserta)
+
+Menu: **Portal Peserta → Pendaftaran Ulang MCU**
+
+| Item | Nilai |
+|------|--------|
+| Kuota harian | `MCU_DAILY_QUOTA` di `.env` (default `100`; `0` = tidak dibatasi) |
+| Syarat CKG | Peserta wajib punya data skrining dari bridge CKG (`ckg_peserta_id` atau `ckg_registration_code`) |
+| Info kuota | Form menampilkan sisa kuota per tanggal (`GET /client/schedule/quota?date=YYYY-MM-DD`) |
+| Validasi server | Kuota penuh ditolak saat submit; interval MCU terakhir tetap berlaku |
+
+Peserta yang belum tercatat di CKG PPKP tidak dapat mengajukan jadwal MCU sampai data skrining tersinkron (bridge CKG aktif).
+
 ## Riwayat perubahan
 
 | Commit | Ringkasan |
 |--------|-----------|
 | *(pending)* | UI: modal proses import peserta tampil saat upload |
 | *(pending)* | UI: pagination per page 15/50/100 di Data Peserta |
-| *(pending)* | Admin: Hasil MCU default tampil bulan berjalan; filter periodik untuk bulan/tahun lain atau Semua |
+| *(pending)* | Portal peserta: kuota harian MCU + syarat CKG sebelum ajukan jadwal |
 | `3b1c5b6` | Fix import: hanya baca sheet Data Peserta (bukan Referensi) |
 | `79a323a` | Template import: sheet Referensi, warna kolom wajib, Tanggal Lahir wajib |
 | `87e624d` | Perbaiki template import peserta + kolom pendidikan terakhir |
