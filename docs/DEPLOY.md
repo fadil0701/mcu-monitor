@@ -253,6 +253,7 @@ curl -fsS https://puspelkes.jakarta.go.id/mcuppkp/up
 | Import gagal "NIK wajib diisi" padahal sudah diisi | Pastikan data di sheet **Data Peserta**, unduh ulang template; jangan import sheet Referensi |
 | `APP_KEY` / `vendor` saat install | `bash deploy/install.sh` |
 | Form/view/logo tidak berubah setelah `git pull` | `bash deploy/update-production.sh` (rebuild image), lalu hard refresh browser |
+| CSS/UI admin masih tampilan lama setelah update | Lihat [CSS tidak ter-update](#css-tidak-ter-update-setelah-deploy) di bawah |
 | `instansi_pemprov_dkis` tidak ada / error laporan & form SKPD | `php artisan migrate --force` lalu `php artisan db:seed --class=InstansiPemprovDkiSeeder --force` |
 | Link login ke `http://<IP>:9003` bukan domain | `bash deploy/set-domain-env.sh`, `config:cache`; jangan pakai `set-lan-env.sh` di produksi |
 | Logo form auth membesar / terpotong | Pastikan commit branding terbaru ter-deploy; cek `height:48px` di `brand.blade.php` di dalam container |
@@ -263,6 +264,35 @@ curl -fsS https://puspelkes.jakarta.go.id/mcuppkp/up
 | `npm ci` gagal di image | Build Vite via `deploy/build-frontend.sh` di host |
 | CKG timeout / DNS dari container | Pakai gateway compose + `NO_PROXY` + UFW port 9006 |
 | Bridge gagal setelah update | `php artisan ckg-bridge:verify`, perbaiki dengan `ckg-bridge:configure` |
+
+### CSS tidak ter-update setelah deploy
+
+`mcu-admin.css` dan aset Sneat lain di `public/assets/` **dibungkus ke image Docker** saat `docker compose build`. Hanya `git pull` atau `docker compose restart` **tidak** mengganti file di dalam container.
+
+**Penyebab umum:**
+
+1. **Tidak rebuild image** — wajib `bash deploy/update-production.sh` (bukan hanya pull/restart).
+2. **Cache browser** — URL CSS sama setiap deploy; browser menyimpan file lama. Setelah deploy terbaru, layout memakai `versioned_asset()` (`?v=<timestamp file>`) agar browser memuat ulang.
+3. **Docker layer cache** — jarang, tetapi jika ukuran CSS di container ≠ host, jalankan:
+   ```bash
+   DOCKER_BUILD_NO_CACHE=1 bash deploy/update-production.sh
+   ```
+
+**Verifikasi di server:**
+
+```bash
+# Ukuran file di host (setelah git pull)
+stat -c%s public/assets/css/mcu-admin.css
+
+# Ukuran file di dalam container (harus sama)
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app \
+  stat -c%s /var/www/html/public/assets/css/mcu-admin.css
+
+# Cek URL CSS di HTML (harus ada ?v=...)
+curl -s http://127.0.0.1:9003/login | grep mcu-admin
+```
+
+Script `update-production.sh` membandingkan ukuran host vs container dan memperingatkan jika berbeda.
 
 ## Perintah berguna
 
