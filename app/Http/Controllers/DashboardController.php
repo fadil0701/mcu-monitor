@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Schedule;
 use App\Services\QueryOptimizationService;
+use App\Support\McuDailyQuota;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
 
@@ -31,6 +32,20 @@ class DashboardController extends Controller
         $stats = QueryOptimizationService::getDashboardStats();
         $topSkpds = QueryOptimizationService::getSkpdStats(5);
         $chartData = QueryOptimizationService::getChartData(6);
+        $mcuResultSummary = QueryOptimizationService::getMcuResultSummary();
+        $ckgSummary = QueryOptimizationService::getCkgSummary();
+        $todayOperational = QueryOptimizationService::getTodayOperationalStats();
+        $monthStats = QueryOptimizationService::getThisMonthStats();
+        $healthDistribution = QueryOptimizationService::getHealthStatusDistribution();
+        $quotaToday = McuDailyQuota::snapshot(now()->toDateString());
+
+        $totalParticipants = max(1, (int) ($stats->total_participants ?? 0));
+        $percentages = (object) [
+            'sudah_mcu' => round(((int) ($stats->sudah_mcu_status ?? 0) / $totalParticipants) * 100, 1),
+            'belum_mcu' => round(((int) ($stats->belum_mcu_status ?? 0) / $totalParticipants) * 100, 1),
+            'ditolak' => round(((int) ($stats->ditolak_mcu_status ?? 0) / $totalParticipants) * 100, 1),
+            'ckg' => round(((int) ($ckgSummary->completed ?? 0) / $totalParticipants) * 100, 1),
+        ];
         // Data untuk line chart (6 bulan)
         $months = collect();
         $participantsData = $chartData['participantsData'];
@@ -106,6 +121,13 @@ class DashboardController extends Controller
             'pendingRescheduleToday' => $pendingRescheduleToday,
             'todayQueue' => $todayQueue,
             'dailyQueueData' => $dailyQueueData,
+            'mcuResultSummary' => $mcuResultSummary,
+            'ckgSummary' => $ckgSummary,
+            'todayOperational' => $todayOperational,
+            'monthStats' => $monthStats,
+            'healthDistribution' => $healthDistribution,
+            'quotaToday' => $quotaToday,
+            'percentages' => $percentages,
         ]);
     }
 

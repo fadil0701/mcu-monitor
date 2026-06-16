@@ -4,143 +4,326 @@
 @section('pageTitle', 'Dashboard')
 
 @section('content')
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
-    <p class="text-muted mb-0">Selamat datang, <span class="fw-semibold text-body">{{ Auth::user()->name }}</span></p>
-    <small class="text-muted">Terakhir diperbarui: {{ now()->format('d/m/Y H:i') }}</small>
-</div>
-
-{{-- KPI Cards --}}
-<div class="row mb-4">
-    <div class="col-sm-6 col-xl-3 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                        <span class="avatar-initial rounded bg-label-primary"><i class="bx bx-group bx-sm"></i></span>
-                    </div>
-                </div>
-                <span class="d-block mb-1">Total Peserta</span>
-                <h3 class="card-title mb-0">{{ $stats->total_participants ?? 0 }}</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="avatar flex-shrink-0 mb-2">
-                    <span class="avatar-initial rounded bg-label-warning"><i class="bx bx-calendar bx-sm"></i></span>
-                </div>
-                <span class="d-block mb-1">Peserta Terjadwal</span>
-                <h3 class="card-title mb-0">{{ $stats->scheduled_participants ?? 0 }}</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="avatar flex-shrink-0 mb-2">
-                    <span class="avatar-initial rounded bg-label-success"><i class="bx bx-check-circle bx-sm"></i></span>
-                </div>
-                <span class="d-block mb-1">Sudah MCU</span>
-                <h3 class="card-title mb-0">{{ $stats->sudah_mcu_status ?? $stats->completed_mcu ?? 0 }}</h3>
-                <small class="text-muted">Sesuai status di Data Peserta</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="avatar flex-shrink-0 mb-2">
-                    <span class="avatar-initial rounded bg-label-info"><i class="bx bx-time-five bx-sm"></i></span>
-                </div>
-                <span class="d-block mb-1">Belum MCU</span>
-                <h3 class="card-title mb-0">{{ $stats->belum_mcu_status ?? $stats->pending_mcu ?? 0 }}</h3>
-                <small class="text-muted">Sesuai status di Data Peserta</small>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Status MCU berdasarkan interval 3 tahun (tanggal_mcu_terakhir) --}}
 @php
     $intervalYears = $stats->interval_years ?? config('mcu.interval_years', 3);
     $intervalCutoff = isset($stats->interval_cutoff)
         ? \Carbon\Carbon::parse($stats->interval_cutoff)->format('d/m/Y')
         : now()->subYears($intervalYears)->format('d/m/Y');
-    $mcuSudahInterval = $stats->mcu_sudah_interval ?? 0;
-    $mcuBelumInterval = $stats->mcu_belum_interval ?? 0;
+    $mcuSudahInterval = (int) ($stats->mcu_sudah_interval ?? 0);
+    $mcuBelumInterval = (int) ($stats->mcu_belum_interval ?? 0);
+    $intervalTotal = max(1, $mcuSudahInterval + $mcuBelumInterval);
+    $intervalPercentSudah = round(($mcuSudahInterval / $intervalTotal) * 100, 1);
+    $canReschedule = Auth::user()->hasRole('super_admin');
+    $todayLabel = now()->translatedFormat('l, d F Y');
+    $quotaBooked = (int) ($quotaToday['booked'] ?? 0);
+    $quotaLimit = (int) ($quotaToday['limit'] ?? 0);
+    $quotaRemaining = $quotaToday['remaining'] ?? null;
+    $quotaPercent = (!$quotaToday['unlimited'] && $quotaLimit > 0)
+        ? min(100, round(($quotaBooked / $quotaLimit) * 100, 1))
+        : 0;
 @endphp
+
+{{-- Ringkasan cepat --}}
+<div class="card dashboard-hero mb-4">
+    <div class="card-body">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+                <h5 class="mb-1">Selamat datang, {{ Auth::user()->name }}</h5>
+                <p class="text-muted mb-2">{{ $todayLabel }}</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="dashboard-stat-pill">
+                        <i class="bx bx-group me-1"></i>{{ number_format($stats->total_participants ?? 0) }} peserta terdaftar
+                    </span>
+                    <span class="dashboard-stat-pill dashboard-stat-pill--primary">
+                        <i class="bx bx-calendar-event me-1"></i>{{ $todayOperational->total ?? 0 }} jadwal hari ini
+                    </span>
+                    <span class="dashboard-stat-pill dashboard-stat-pill--success">
+                        <i class="bx bx-check-circle me-1"></i>{{ $todayOperational->selesai ?? 0 }} selesai hari ini
+                    </span>
+                    @if(!$quotaToday['unlimited'])
+                        <span class="dashboard-stat-pill dashboard-stat-pill--warning">
+                            <i class="bx bx-bar-chart-alt-2 me-1"></i>Kuota: {{ $quotaBooked }}/{{ $quotaLimit }}
+                            @if($quotaRemaining !== null)
+                                (sisa {{ $quotaRemaining }})
+                            @endif
+                        </span>
+                    @endif
+                </div>
+            </div>
+            <div class="text-md-end">
+                <small class="text-muted d-block mb-2">Diperbarui {{ now()->format('H:i') }} WIB</small>
+                <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+                    <a href="{{ route('admin.participants.index') }}" class="btn btn-sm btn-outline-primary"><i class="bx bx-group me-1"></i>Data Peserta</a>
+                    <a href="{{ route('admin.schedules.index', ['date' => now()->format('Y-m-d')]) }}" class="btn btn-sm btn-outline-primary"><i class="bx bx-calendar me-1"></i>Jadwal Hari Ini</a>
+                    <a href="{{ route('admin.mcu-results.index') }}" class="btn btn-sm btn-outline-primary"><i class="bx bx-file me-1"></i>Hasil MCU</a>
+                    <a href="{{ route('admin.reports.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bx bx-download me-1"></i>Laporan</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- KPI utama --}}
+<div class="row dashboard-kpi mb-4">
+    <div class="col-sm-6 col-xl-3 mb-4">
+        <div class="card h-100 dashboard-kpi-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="avatar avatar-sm"><span class="avatar-initial rounded bg-label-primary"><i class="bx bx-group"></i></span></span>
+                    <span class="badge bg-label-primary">+{{ $monthStats->new_participants ?? 0 }} bulan ini</span>
+                </div>
+                <span class="dashboard-kpi-label">Total Peserta</span>
+                <h3 class="dashboard-kpi-value mb-2">{{ number_format($stats->total_participants ?? 0) }}</h3>
+                <small class="text-muted">Seluruh data peserta aktif di sistem</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3 mb-4">
+        <div class="card h-100 dashboard-kpi-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="avatar avatar-sm"><span class="avatar-initial rounded bg-label-warning"><i class="bx bx-calendar"></i></span></span>
+                    <span class="badge bg-label-warning">{{ $todayOperational->upcoming_week ?? 0 }} 7 hari</span>
+                </div>
+                <span class="dashboard-kpi-label">Peserta Terjadwal</span>
+                <h3 class="dashboard-kpi-value mb-2">{{ number_format($stats->scheduled_participants ?? 0) }}</h3>
+                <small class="text-muted">Jadwal aktif mulai hari ini ke depan</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3 mb-4">
+        <div class="card h-100 dashboard-kpi-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="avatar avatar-sm"><span class="avatar-initial rounded bg-label-success"><i class="bx bx-check-circle"></i></span></span>
+                    <span class="badge bg-label-success">{{ $percentages->sudah_mcu }}%</span>
+                </div>
+                <span class="dashboard-kpi-label">Sudah MCU</span>
+                <h3 class="dashboard-kpi-value mb-1">{{ number_format($stats->sudah_mcu_status ?? 0) }}</h3>
+                <div class="progress dashboard-progress-mini mb-1">
+                    <div class="progress-bar bg-success" style="width: {{ $percentages->sudah_mcu }}%"></div>
+                </div>
+                <small class="text-muted">{{ $monthStats->mcu_results ?? 0 }} hasil diupload bulan ini</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3 mb-4">
+        <div class="card h-100 dashboard-kpi-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="avatar avatar-sm"><span class="avatar-initial rounded bg-label-info"><i class="bx bx-time-five"></i></span></span>
+                    <span class="badge bg-label-info">{{ $percentages->belum_mcu }}%</span>
+                </div>
+                <span class="dashboard-kpi-label">Belum MCU</span>
+                <h3 class="dashboard-kpi-value mb-1">{{ number_format($stats->belum_mcu_status ?? 0) }}</h3>
+                <div class="progress dashboard-progress-mini mb-1">
+                    <div class="progress-bar bg-info" style="width: {{ $percentages->belum_mcu }}%"></div>
+                </div>
+                <small class="text-muted">{{ $stats->ditolak_mcu_status ?? 0 }} ditolak · {{ $mcuResultSummary->belum_upload ?? 0 }} belum upload hasil</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Operasional hari ini --}}
 <div class="card mb-4">
     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <h5 class="mb-0">Status MCU ({{ $intervalYears }} Tahun Terakhir)</h5>
-        <small class="text-muted">MCU terakhir sejak {{ $intervalCutoff }}</small>
+        <h5 class="mb-0"><i class="bx bx-pulse me-1"></i>Operasional Hari Ini</h5>
+        <a href="{{ route('admin.schedules.index', ['date' => now()->format('Y-m-d')]) }}" class="btn btn-sm btn-outline-primary">Kelola jadwal</a>
     </div>
     <div class="card-body">
-        <div class="row align-items-center">
-            <div class="col-md-4 mb-3 mb-md-0">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <span class="avatar"><span class="avatar-initial rounded bg-label-success"><i class="bx bx-check-shield"></i></span></span>
-                    <div>
-                        <h4 class="mb-0">{{ $mcuSudahInterval }}</h4>
-                        <small class="text-muted">Sudah MCU dalam {{ $intervalYears }} tahun</small>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <span class="avatar"><span class="avatar-initial rounded bg-label-warning"><i class="bx bx-time"></i></span></span>
-                    <div>
-                        <h4 class="mb-0">{{ $mcuBelumInterval }}</h4>
-                        <small class="text-muted">Belum / perlu MCU (lebih dari {{ $intervalYears }} tahun atau belum pernah)</small>
-                    </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-4 col-lg-3">
+                <div class="dashboard-mini-stat h-100">
+                    <span class="dashboard-mini-stat__label">Kuota MCU</span>
+                    @if($quotaToday['unlimited'])
+                        <h4 class="mb-1">Tidak terbatas</h4>
+                        <small class="text-muted">{{ $quotaBooked }} terjadwal/selesai hari ini</small>
+                    @else
+                        <h4 class="mb-1">{{ $quotaBooked }} <span class="fs-6 text-muted">/ {{ $quotaLimit }}</span></h4>
+                        <div class="progress dashboard-progress-mini mb-1">
+                            <div class="progress-bar {{ $quotaPercent >= 90 ? 'bg-danger' : ($quotaPercent >= 70 ? 'bg-warning' : 'bg-primary') }}" style="width: {{ $quotaPercent }}%"></div>
+                        </div>
+                        <small class="text-muted">Sisa {{ $quotaRemaining ?? 0 }} slot · {{ $quotaPercent }}% terpakai</small>
+                    @endif
                 </div>
             </div>
-            <div class="col-md-8">
-                <div style="height: 220px;"><canvas id="mcuIntervalChart"></canvas></div>
+            <div class="col-md-8 col-lg-9">
+                <div class="row g-2">
+                    @foreach([
+                        ['label' => 'Terjadwal', 'value' => $todayOperational->terjadwal ?? 0, 'class' => 'warning', 'icon' => 'bx-time'],
+                        ['label' => 'Selesai', 'value' => $todayOperational->selesai ?? 0, 'class' => 'success', 'icon' => 'bx-check'],
+                        ['label' => 'Konfirmasi Hadir', 'value' => $todayOperational->confirmed ?? 0, 'class' => 'primary', 'icon' => 'bx-user-check'],
+                        ['label' => 'Belum Konfirmasi', 'value' => $todayOperational->belum_konfirmasi ?? 0, 'class' => 'secondary', 'icon' => 'bx-user-x'],
+                        ['label' => 'Batal', 'value' => $todayOperational->batal ?? 0, 'class' => 'danger', 'icon' => 'bx-x'],
+                        ['label' => 'Ditolak', 'value' => $todayOperational->ditolak ?? 0, 'class' => 'dark', 'icon' => 'bx-block'],
+                    ] as $item)
+                        <div class="col-6 col-md-4 col-xl-2">
+                            <div class="dashboard-status-chip dashboard-status-chip--{{ $item['class'] }}">
+                                <i class="bx {{ $item['icon'] }}"></i>
+                                <div>
+                                    <strong>{{ $item['value'] }}</strong>
+                                    <span>{{ $item['label'] }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <a href="#antrian-hari-ini" class="dashboard-link-card text-body text-decoration-none">
+                    <i class="bx bx-list-ul text-primary"></i>
+                    <div>
+                        <strong>{{ $todayQueue->count() }}</strong>
+                        <span>Antrian ditampilkan</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="#konfirmasi-hadir" class="dashboard-link-card text-body text-decoration-none">
+                    <i class="bx bx-user-check text-success"></i>
+                    <div>
+                        <strong>{{ $confirmedTodayCount ?? 0 }}</strong>
+                        <span>Siap diselesaikan</span>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ $canReschedule ? route('admin.reschedule-center.index') : '#' }}" class="dashboard-link-card text-body text-decoration-none {{ $canReschedule ? '' : 'pe-none opacity-75' }}">
+                    <i class="bx bx-calendar-edit text-warning"></i>
+                    <div>
+                        <strong>{{ $todayOperational->reschedule_pending ?? $pendingRescheduleToday ?? 0 }}</strong>
+                        <span>Permintaan reschedule</span>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
 </div>
 
-{{-- Statistik Hari Ini --}}
-@php $canReschedule = Auth::user()->hasRole('super_admin'); @endphp
+{{-- Hasil MCU, CKG, interval --}}
 <div class="row mb-4">
-    <div class="col-md-6 mb-4">
-        <a href="#antrian-hari-ini" class="card h-100 text-body text-decoration-none">
-            <div class="card-body d-flex align-items-center gap-3">
-                <span class="avatar"><span class="avatar-initial rounded bg-label-success"><i class="bx bx-user-check"></i></span></span>
-                <div>
-                    <h4 class="mb-0">{{ $confirmedTodayCount ?? 0 }}</h4>
-                    <small class="text-muted">Konfirmasi Hadir (Hari Ini)</small>
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0">Hasil MCU</h5></div>
+            <div class="card-body">
+                <div class="dashboard-metric-row">
+                    <span>Total diupload</span>
+                    <strong>{{ number_format($mcuResultSummary->total_results ?? 0) }}</strong>
                 </div>
+                <div class="dashboard-metric-row">
+                    <span>Sudah dipublikasi</span>
+                    <strong class="text-success">{{ number_format($mcuResultSummary->published_count ?? 0) }}</strong>
+                </div>
+                <div class="dashboard-metric-row">
+                    <span>Belum dipublikasi</span>
+                    <strong class="text-warning">{{ number_format($mcuResultSummary->unpublished_count ?? 0) }}</strong>
+                </div>
+                <div class="dashboard-metric-row border-0 pb-0">
+                    <span>Belum upload (Sudah MCU)</span>
+                    <strong class="text-danger">{{ number_format($mcuResultSummary->belum_upload ?? 0) }}</strong>
+                </div>
+                <a href="{{ route('admin.mcu-results.index') }}" class="btn btn-sm btn-outline-primary w-100 mt-3">Kelola hasil MCU</a>
             </div>
-        </a>
+        </div>
     </div>
-    <div class="col-md-6 mb-4">
-        <a href="{{ $canReschedule ? route('admin.reschedule-center.index') : '#' }}" class="card h-100 text-body text-decoration-none {{ $canReschedule ? '' : 'pe-none opacity-75' }}">
-            <div class="card-body d-flex align-items-center gap-3">
-                <span class="avatar"><span class="avatar-initial rounded bg-label-warning"><i class="bx bx-calendar-edit"></i></span></span>
-                <div>
-                    <h4 class="mb-0">{{ $pendingRescheduleToday ?? 0 }}</h4>
-                    <small class="text-muted">{{ $canReschedule ? 'Permintaan Reschedule →' : 'Permintaan Reschedule (Hari Ini)' }}</small>
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0">Skrining CKG</h5></div>
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div style="width: 120px; height: 120px; flex-shrink: 0;"><canvas id="ckgChart"></canvas></div>
+                    <div>
+                        <h4 class="mb-1">{{ $percentages->ckg }}%</h4>
+                        <p class="text-muted mb-2 small">Peserta sudah skrining CKG di PPKP</p>
+                        <div class="dashboard-metric-row py-1 border-0">
+                            <span>Sudah</span><strong class="text-success">{{ number_format($ckgSummary->completed ?? 0) }}</strong>
+                        </div>
+                        <div class="dashboard-metric-row py-1 border-0">
+                            <span>Belum</span><strong class="text-warning">{{ number_format($ckgSummary->belum ?? 0) }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <small class="text-muted">Syarat wajib sebelum mengajukan jadwal MCU di portal peserta.</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <h5 class="mb-0">MCU {{ $intervalYears }} Tahun</h5>
+                <small class="text-muted">sejak {{ $intervalCutoff }}</small>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-5">
+                        <div style="height: 140px;"><canvas id="mcuIntervalChart"></canvas></div>
+                    </div>
+                    <div class="col-7">
+                        <div class="dashboard-metric-row">
+                            <span>Sudah MCU</span>
+                            <strong class="text-success">{{ number_format($mcuSudahInterval) }}</strong>
+                        </div>
+                        <div class="dashboard-metric-row">
+                            <span>Perlu MCU</span>
+                            <strong class="text-warning">{{ number_format($mcuBelumInterval) }}</strong>
+                        </div>
+                        <div class="dashboard-metric-row border-0 pb-0">
+                            <span>Persentase patuh</span>
+                            <strong>{{ $intervalPercentSudah }}%</strong>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </a>
+        </div>
     </div>
 </div>
 
-{{-- Charts --}}
+{{-- Grafik tren --}}
 <div class="row mb-4">
-    <div class="col-12 mb-4">
+    <div class="col-xl-8 mb-4">
         <div class="card h-100">
-            <div class="card-header"><h5 class="mb-0">Statistik MCU (6 Bulan)</h5></div>
+            <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <h5 class="mb-0">Tren 6 Bulan Terakhir</h5>
+                <small class="text-muted">Peserta baru vs hasil MCU diupload</small>
+            </div>
             <div class="card-body">
-                <div style="height: 320px;"><canvas id="mcuChart"></canvas></div>
+                <div style="height: 300px;"><canvas id="mcuChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0">Status Kesehatan (Hasil MCU)</h5></div>
+            <div class="card-body">
+                @if(count($healthDistribution) > 0)
+                    <div style="height: 220px;"><canvas id="healthChart"></canvas></div>
+                    <ul class="list-unstyled mb-0 mt-3 small">
+                        @foreach($healthDistribution as $row)
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span>{{ $row->status_kesehatan ?: 'Tidak diisi' }}</span>
+                                <span><strong>{{ $row->count }}</strong> <span class="text-muted">({{ $row->percentage }}%)</span></span>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <div class="empty-state py-4">
+                        <i class="bx bx-health d-block mb-2"></i>
+                        <p class="mb-0">Belum ada data status kesehatan dari hasil MCU.</p>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 </div>
 
 <div class="card mb-4">
-    <div class="card-header"><h5 class="mb-0">Grafik Antrian Hari Ini (per Jam)</h5></div>
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h5 class="mb-0">Grafik Antrian Hari Ini (per Jam)</h5>
+        <small class="text-muted">Distribusi jadwal berdasarkan jam pemeriksaan</small>
+    </div>
     <div class="card-body">
         <div style="height: 260px;"><canvas id="dailyQueueChart"></canvas></div>
     </div>
@@ -148,15 +331,28 @@
 
 {{-- Top SKPD --}}
 <div class="card mb-4">
-    <div class="card-header"><h5 class="mb-0">Statistik per SKPD (Top 5)</h5></div>
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h5 class="mb-0">Statistik per SKPD (Top 5)</h5>
+        <small class="text-muted">Berdasarkan jumlah peserta terdaftar</small>
+    </div>
     <div class="card-body">
         <div class="row">
             @forelse($topSkpds as $skpd)
+                @php
+                    $rate = (float) ($skpd->completion_rate ?? 0);
+                    $scheduled = (int) ($skpd->scheduled_count ?? 0);
+                    $completed = (int) ($skpd->completed_count ?? 0);
+                    $results = (int) ($skpd->mcu_results_count ?? 0);
+                @endphp
                 <div class="col-sm-6 col-lg-4 col-xl mb-3">
-                    <div class="border rounded p-3 h-100">
-                        <p class="fw-medium mb-1 text-truncate" title="{{ $skpd->skpd }}">{{ $skpd->skpd }}</p>
-                        <h4 class="text-primary mb-1">{{ $skpd->total_participants }}</h4>
-                        <small class="text-muted">Terjadwal: {{ $skpd->scheduled_count }} | Selesai: {{ $skpd->completed_count }}</small>
+                    <div class="border rounded p-3 h-100 dashboard-skpd-card">
+                        <p class="fw-medium mb-2 text-truncate" title="{{ $skpd->skpd }}">{{ $skpd->skpd }}</p>
+                        <h4 class="text-primary mb-2">{{ number_format($skpd->total_participants) }}</h4>
+                        <div class="progress dashboard-progress-mini mb-2">
+                            <div class="progress-bar bg-success" style="width: {{ min(100, $rate) }}%"></div>
+                        </div>
+                        <small class="text-muted d-block mb-1">Tingkat selesai jadwal: {{ $rate }}%</small>
+                        <small class="text-muted">Terjadwal: {{ $scheduled }} · Selesai: {{ $completed }} · Hasil: {{ $results }}</small>
                     </div>
                 </div>
             @empty
@@ -206,6 +402,9 @@
                                         };
                                     @endphp
                                     <span class="badge {{ $badge }}">{{ $s->status }}</span>
+                                    @if($s->participant_confirmed)
+                                        <span class="badge bg-label-primary ms-1">Hadir</span>
+                                    @endif
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex flex-wrap justify-content-center gap-1">
@@ -245,8 +444,8 @@
 </div>
 
 {{-- Konfirmasi Hadir --}}
-<div class="card mb-4">
-    <div class="card-header"><h5 class="mb-0">Konfirmasi Hadir - Siap Diselesaikan (Hari Ini)</h5></div>
+<div class="card mb-4" id="konfirmasi-hadir">
+    <div class="card-header"><h5 class="mb-0">Konfirmasi Hadir — Siap Diselesaikan (Hari Ini)</h5></div>
     <div class="card-body">
         @if($confirmedToday->count() > 0)
             <div class="table-responsive">
@@ -291,25 +490,43 @@
     const chartLabels = @json($chartLabels);
     const participantsData = @json($participantsByMonth);
     const mcuResultsData = @json($mcuResultsByMonth);
-    const mcuSudahInterval = {{ (int) $mcuSudahInterval }};
-    const mcuBelumInterval = {{ (int) $mcuBelumInterval }};
+    const mcuSudahInterval = {{ $mcuSudahInterval }};
+    const mcuBelumInterval = {{ $mcuBelumInterval }};
     const intervalYears = {{ (int) $intervalYears }};
+    const ckgCompleted = {{ (int) ($ckgSummary->completed ?? 0) }};
+    const ckgBelum = {{ (int) ($ckgSummary->belum ?? 0) }};
+    const healthData = @json($healthDistribution);
+
+    const doughnutDefaults = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+    };
 
     new Chart(document.getElementById('mcuIntervalChart'), {
         type: 'doughnut',
         data: {
-            labels: ['Sudah MCU (' + intervalYears + ' th)', 'Belum / perlu MCU'],
+            labels: ['Sudah MCU (' + intervalYears + ' th)', 'Perlu MCU'],
             datasets: [{
                 data: [mcuSudahInterval, mcuBelumInterval],
                 backgroundColor: ['#71dd37', '#ffab00'],
                 borderWidth: 0,
             }],
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom' } },
+        options: doughnutDefaults,
+    });
+
+    new Chart(document.getElementById('ckgChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Sudah CKG', 'Belum CKG'],
+            datasets: [{
+                data: [ckgCompleted, ckgBelum],
+                backgroundColor: ['#696cff', '#ffab00'],
+                borderWidth: 0,
+            }],
         },
+        options: { ...doughnutDefaults, plugins: { legend: { display: false } } },
     });
 
     new Chart(document.getElementById('mcuChart'), {
@@ -325,9 +542,25 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: { position: 'bottom' } },
-            scales: { y: { beginAtZero: true } }
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
         }
     });
+
+    if (healthData.length) {
+        const healthColors = ['#71dd37', '#ffab00', '#ff3e1d', '#696cff', '#8592a3', '#03c3ec'];
+        new Chart(document.getElementById('healthChart'), {
+            type: 'doughnut',
+            data: {
+                labels: healthData.map(r => r.status_kesehatan || 'Tidak diisi'),
+                datasets: [{
+                    data: healthData.map(r => r.count),
+                    backgroundColor: healthData.map((_, i) => healthColors[i % healthColors.length]),
+                    borderWidth: 0,
+                }],
+            },
+            options: doughnutDefaults,
+        });
+    }
 
     @php
         $dailyQueueDataJs = $dailyQueueData ?? ['labels' => [], 'terjadwal' => [], 'selesai' => [], 'batal' => [], 'ditolak' => []];
@@ -349,7 +582,7 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { position: 'bottom' } },
-                scales: { y: { beginAtZero: true } }
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
             }
         });
     }

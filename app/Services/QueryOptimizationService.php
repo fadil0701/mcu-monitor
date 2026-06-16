@@ -58,6 +58,98 @@ class QueryOptimizationService
     }
 
     /**
+     * Ringkasan hasil MCU (upload & publikasi).
+     */
+    public static function getMcuResultSummary(): object
+    {
+        return Cache::remember('mcu_result_summary', 900, function () {
+            return DB::selectOne('
+                SELECT
+                    (SELECT COUNT(*) FROM mcu_results) as total_results,
+                    (SELECT COUNT(*) FROM mcu_results WHERE is_published = 1) as published_count,
+                    (SELECT COUNT(*) FROM mcu_results WHERE is_published = 0 OR is_published IS NULL) as unpublished_count,
+                    (SELECT COUNT(*) FROM participants p
+                        WHERE p.status_mcu = ?
+                        AND NOT EXISTS (SELECT 1 FROM mcu_results mr WHERE mr.participant_id = p.id)
+                    ) as belum_upload
+            ', ['Sudah MCU']);
+        });
+    }
+
+    /**
+     * Ringkasan skrining CKG peserta.
+     */
+    public static function getCkgSummary(): object
+    {
+        return Cache::remember('ckg_summary', 900, function () {
+            return DB::selectOne('
+                SELECT
+                    (SELECT COUNT(*) FROM participants
+                        WHERE ckg_peserta_id IS NOT NULL
+                           OR (ckg_registration_code IS NOT NULL AND ckg_registration_code != \'\')
+                    ) as completed,
+                    (SELECT COUNT(*) FROM participants
+                        WHERE ckg_peserta_id IS NULL
+                          AND (ckg_registration_code IS NULL OR ckg_registration_code = \'\')
+                    ) as belum
+            ');
+        });
+    }
+
+    /**
+     * Statistik operasional jadwal hari ini.
+     */
+    public static function getTodayOperationalStats(): object
+    {
+        $today = now()->toDateString();
+
+        return Cache::remember('today_operational_stats_' . $today, 120, function () use ($today) {
+            return DB::selectOne('
+                SELECT
+                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ?) as total,
+                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND status = ?) as terjadwal,
+                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND status = ?) as selesai,
+                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND status = ?) as batal,
+                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND status = ?) as ditolak,
+                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND participant_confirmed = 1) as confirmed,
+                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND status = ? AND (participant_confirmed = 0 OR participant_confirmed IS NULL)) as belum_konfirmasi,
+                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND reschedule_requested = 1) as reschedule_pending,
+                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) >= ? AND DATE(tanggal_pemeriksaan) <= ? AND status = ?) as upcoming_week
+            ', [
+                $today,
+                $today, 'Terjadwal',
+                $today, 'Selesai',
+                $today, 'Batal',
+                $today, 'Ditolak',
+                $today,
+                $today, 'Terjadwal',
+                $today,
+                $today, now()->addDays(7)->toDateString(), 'Terjadwal',
+            ]);
+        });
+    }
+
+    /**
+     * Statistik bulan berjalan (peserta baru, hasil MCU, jadwal selesai).
+     */
+    public static function getThisMonthStats(): object
+    {
+        $monthKey = now()->format('Y-m');
+
+        return Cache::remember('this_month_stats_' . $monthKey, 900, function () {
+            $start = now()->startOfMonth()->toDateTimeString();
+            $end = now()->endOfMonth()->toDateTimeString();
+
+            return DB::selectOne('
+                SELECT
+                    (SELECT COUNT(*) FROM participants WHERE created_at BETWEEN ? AND ?) as new_participants,
+                    (SELECT COUNT(*) FROM mcu_results WHERE COALESCE(tanggal_pemeriksaan, created_at) BETWEEN ? AND ?) as mcu_results,
+                    (SELECT COUNT(*) FROM schedules WHERE status = ? AND updated_at BETWEEN ? AND ?) as schedules_completed
+            ', [$start, $end, $start, $end, 'Selesai', $start, $end]);
+        });
+    }
+
+    /**
      * Get optimized SKPD statistics with pagination
      */
     public static function getSkpdStats(int $limit = 5): array
@@ -288,7 +380,9 @@ class QueryOptimizationService
             'optimized_dashboard_stats',
             'chart_data_6',
             'health_status_distribution',
-            'database_metrics'
+            'database_metrics',
+            'mcu_result_summary',
+            'ckg_summary',
         ];
         
         foreach ($cacheKeys as $key) {
