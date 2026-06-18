@@ -4,23 +4,44 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Rules\MetaWhatsAppTemplateBody;
+use App\Support\WhatsAppTemplateDefaults;
 use Illuminate\Http\Request;
 
 class WhatsAppTemplatesController extends Controller
 {
     public function index()
     {
-        $invitation_template = Setting::getValue('whatsapp_invitation_template', '');
-        $resultDefault = "Halo {participant_name},\n\nHasil MCU Anda untuk pemeriksaan tanggal {tanggal_pemeriksaan} telah tersedia.\n\nSilakan login ke {hasil_url} untuk melihat dan mendownload hasil lengkap.\n\nTerima kasih.";
-        $result_template = Setting::getValue('whatsapp_result_template', $resultDefault) ?: $resultDefault;
-        return view('admin.whatsapp-templates.index', compact('invitation_template', 'result_template'));
+        $useMetaFormat = WhatsAppTemplateDefaults::usesMetaFormat();
+        $defaultInvitation = $useMetaFormat
+            ? WhatsAppTemplateDefaults::INVITATION_META
+            : WhatsAppTemplateDefaults::INVITATION_LEGACY;
+        $defaultResult = $useMetaFormat
+            ? WhatsAppTemplateDefaults::RESULT_META
+            : WhatsAppTemplateDefaults::RESULT_LEGACY;
+
+        $invitation_template = Setting::getValue('whatsapp_invitation_template', $defaultInvitation) ?: $defaultInvitation;
+        $result_template = Setting::getValue('whatsapp_result_template', $defaultResult) ?: $defaultResult;
+
+        return view('admin.whatsapp-templates.index', [
+            'invitation_template' => $invitation_template,
+            'result_template' => $result_template,
+            'useMetaFormat' => $useMetaFormat,
+            'invitationLegend' => WhatsAppTemplateDefaults::invitationVariableLegend(),
+            'resultLegend' => WhatsAppTemplateDefaults::resultVariableLegend(),
+        ]);
     }
 
     public function update(Request $request)
     {
-        $request->validate([
-            'invitation_template' => 'required|string',
-        ]);
+        $rules = ['invitation_template' => 'required|string'];
+
+        if (WhatsAppTemplateDefaults::usesMetaFormat()) {
+            $rules['invitation_template'] = ['required', 'string', new MetaWhatsAppTemplateBody];
+        }
+
+        $request->validate($rules);
+
         try {
             Setting::setValue(
                 'whatsapp_invitation_template',
@@ -29,17 +50,23 @@ class WhatsAppTemplatesController extends Controller
                 'whatsapp_template',
                 'Template WhatsApp Undangan'
             );
+
             return redirect()->route('admin.whatsapp-templates.index')->with('success', 'Template undangan berhasil disimpan.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal menyimpan: ' . $e->getMessage())->withInput();
+            return redirect()->back()->with('error', 'Gagal menyimpan: '.$e->getMessage())->withInput();
         }
     }
 
     public function updateResult(Request $request)
     {
-        $request->validate([
-            'result_template' => 'required|string',
-        ]);
+        $rules = ['result_template' => 'required|string'];
+
+        if (WhatsAppTemplateDefaults::usesMetaFormat()) {
+            $rules['result_template'] = ['required', 'string', new MetaWhatsAppTemplateBody];
+        }
+
+        $request->validate($rules);
+
         try {
             Setting::setValue(
                 'whatsapp_result_template',
@@ -48,23 +75,32 @@ class WhatsAppTemplatesController extends Controller
                 'whatsapp_template',
                 'Template WhatsApp Hasil MCU'
             );
+
             return redirect()->route('admin.whatsapp-templates.index')->with('success', 'Template hasil MCU berhasil disimpan.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal menyimpan: ' . $e->getMessage())->withInput();
+            return redirect()->back()->with('error', 'Gagal menyimpan: '.$e->getMessage())->withInput();
         }
     }
 
     public function reset()
     {
-        $default = "Halo {nama_lengkap},\n\nAnda diundang untuk mengikuti Medical Check Up pada:\n📅 Tanggal: {tanggal_pemeriksaan}\n🕐 Jam: {jam_pemeriksaan}\n📍 Lokasi: {lokasi_pemeriksaan}\n🎫 Nomor Antrian: {queue_number}\n\n*Catatan Penting:*\n• Hadir 15 menit lebih awal\n• Bawa KTP/kartu identitas\n• Puasa 8 jam sebelumnya\n\nMohon hadir tepat waktu.\n\nTerima kasih.";
+        $default = WhatsAppTemplateDefaults::usesMetaFormat()
+            ? WhatsAppTemplateDefaults::INVITATION_META
+            : WhatsAppTemplateDefaults::INVITATION_LEGACY;
+
         Setting::setValue('whatsapp_invitation_template', $default, 'text', 'whatsapp_template', 'Template WhatsApp Undangan');
+
         return redirect()->route('admin.whatsapp-templates.index')->with('success', 'Template undangan direset ke default.');
     }
 
     public function resetResult()
     {
-        $default = "Halo {participant_name},\n\nHasil MCU Anda untuk pemeriksaan tanggal {tanggal_pemeriksaan} telah tersedia.\n\nSilakan login ke {hasil_url} untuk melihat dan mendownload hasil lengkap.\n\nTerima kasih.";
+        $default = WhatsAppTemplateDefaults::usesMetaFormat()
+            ? WhatsAppTemplateDefaults::RESULT_META
+            : WhatsAppTemplateDefaults::RESULT_LEGACY;
+
         Setting::setValue('whatsapp_result_template', $default, 'text', 'whatsapp_template', 'Template WhatsApp Hasil MCU');
+
         return redirect()->route('admin.whatsapp-templates.index')->with('success', 'Template hasil MCU direset ke default.');
     }
 }

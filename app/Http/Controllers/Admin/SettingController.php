@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Rules\MetaWhatsAppTemplateBody;
+use App\Support\WhatsAppTemplateDefaults;
 use Illuminate\Http\Request;
 
 class SettingController extends Controller
@@ -53,6 +55,13 @@ class SettingController extends Controller
         }
 
         $validated = $request->validate($rules);
+
+        if ($section === 'invitation' && WhatsAppTemplateDefaults::usesMetaFormat()) {
+            $request->validate([
+                'whatsapp_invitation_template' => ['required', 'string', new MetaWhatsAppTemplateBody],
+            ]);
+            $validated['whatsapp_invitation_template'] = $request->input('whatsapp_invitation_template');
+        }
 
         foreach ($fields as $key => $field) {
             if (($field['type'] ?? '') === 'password') {

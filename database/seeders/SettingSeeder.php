@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Support\WhatsAppTemplateDefaults;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Setting;
@@ -25,9 +26,9 @@ class SettingSeeder extends Seeder
         $this->setValueIfNotExists('smtp_from_name', 'Sistem Monitoring MCU PPKP', 'string', 'smtp', 'SMTP From Name');
 
         // WhatsApp Settings
-        $this->setValueIfNotExists('whatsapp_provider', 'fonnte', 'string', 'whatsapp', 'WhatsApp Provider (fonnte, wablas, meta)');
-        $this->setValueIfNotExists('whatsapp_token', '', 'string', 'whatsapp', 'WhatsApp API Token');
-        $this->setValueIfNotExists('whatsapp_instance_id', '', 'string', 'whatsapp', 'WhatsApp Instance ID (untuk Meta)');
+        $this->setValueIfNotExists('whatsapp_provider', 'fonnte', 'string', 'whatsapp', 'WhatsApp Provider (fonnte, wablas, meta, apico)');
+        $this->setValueIfNotExists('whatsapp_token', '', 'string', 'whatsapp', 'WhatsApp API Token / API Key');
+        $this->setValueIfNotExists('whatsapp_instance_id', '', 'string', 'whatsapp', 'WhatsApp Phone Number ID (Api.co.id / Meta)');
         $this->setValueIfNotExists('whatsapp_phone_number', '', 'string', 'whatsapp', 'WhatsApp Phone Number');
 
         // Email Template (Undangan saja)
@@ -56,23 +57,8 @@ Terima kasih atas perhatian dan kerjasamanya.
 Hormat kami,
 Tim Medical Check Up', 'text', 'email_template', 'Template Email Undangan');
 
-        // WhatsApp Template (Undangan saja)
-        $this->setValueIfNotExists('whatsapp_invitation_template', 'Halo {nama_lengkap},
-
-Anda diundang untuk mengikuti Medical Check Up pada:
-📅 Tanggal: {tanggal_pemeriksaan}
-🕐 Jam: {jam_pemeriksaan}
-📍 Lokasi: {lokasi_pemeriksaan}
-🎫 Nomor Antrian: {queue_number}
-
-*Catatan Penting:*
-• Hadir 15 menit lebih awal
-• Bawa KTP/kartu identitas
-• Puasa 8 jam sebelumnya
-
-Mohon hadir tepat waktu.
-
-Terima kasih.', 'text', 'whatsapp_template', 'Template WhatsApp Undangan');
+        // WhatsApp Template (Undangan saja) — format Meta {{1}} untuk Api.co.id
+        $this->setValueIfNotExists('whatsapp_invitation_template', WhatsAppTemplateDefaults::INVITATION_META, 'text', 'whatsapp_template', 'Template WhatsApp Undangan');
 
         // General Settings
         $this->setValueIfNotExists('app_name', 'Sistem Monitoring MCU', 'string', 'general', 'Nama Aplikasi');

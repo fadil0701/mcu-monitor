@@ -5,12 +5,25 @@
 
 @section('content')
 <x-common.component-card title="Template Undangan MCU" class="mb-4">
-    <p class="text-muted mb-3">Variabel: <code class="bg-light px-1 rounded">{nama_lengkap}, {nik_ktp}, {tanggal_pemeriksaan}, {jam_pemeriksaan}, {lokasi_pemeriksaan}, {queue_number}, {skpd}, {ukpd}, {no_telp}, {email}</code></p>
+    @if($useMetaFormat)
+        <div class="alert alert-warning py-2 mb-3">
+            <strong>Format Meta / Api.co.id:</strong> gunakan <code>@{{1}}</code>, <code>@{{2}}</code>, dst. (dua kurung kurawal).
+            Meta akan <strong>menolak</strong> template jika masih memakai <code>{nama_lengkap}</code>.
+        </div>
+        <p class="text-muted mb-3">
+            Pemetaan variabel:
+            @foreach($invitationLegend as $num => $label)
+                <code class="bg-light px-1 rounded">{{ '{'.'{'. $num .'}'.'}' }}</code> = {{ $label }}@if(!$loop->last), @endif
+            @endforeach
+        </p>
+    @else
+        <p class="text-muted mb-3">Variabel: <code class="bg-light px-1 rounded">{nama_lengkap}, {nik_ktp}, {tanggal_pemeriksaan}, {jam_pemeriksaan}, {lokasi_pemeriksaan}, {queue_number}, {skpd}, {ukpd}, {no_telp}, {email}</code></p>
+    @endif
     <form method="POST" action="{{ route('admin.whatsapp-templates.update') }}">
         @csrf
         <div class="mb-3">
             <label class="form-label">Template Undangan WhatsApp <span class="text-danger">*</span></label>
-            <textarea name="invitation_template" rows="12" required class="form-control" placeholder="Contoh: Halo {nama_lengkap}, Anda diundang...">{{ old('invitation_template', $invitation_template) }}</textarea>
+            <textarea name="invitation_template" rows="12" required class="form-control" placeholder="Halo @{{1}}, Anda diundang...">{{ old('invitation_template', $invitation_template) }}</textarea>
             @error('invitation_template')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
         </div>
         <div class="d-flex flex-wrap gap-2">
@@ -24,12 +37,24 @@
 </x-common.component-card>
 
 <x-common.component-card title="Template Hasil MCU">
-    <p class="text-muted mb-3">Variabel: <code class="bg-light px-1 rounded">{participant_name}, {participant_email}, {participant_phone}, {tanggal_pemeriksaan}, {rekomendasi}, {hasil_url}, {app_name}</code></p>
+    @if($useMetaFormat)
+        <div class="alert alert-warning py-2 mb-3">
+            Gunakan format <code>@{{1}}</code>, <code>@{{2}}</code>, dst. untuk template hasil MCU di Meta.
+        </div>
+        <p class="text-muted mb-3">
+            Pemetaan variabel:
+            @foreach($resultLegend as $num => $label)
+                <code class="bg-light px-1 rounded">{{ '{'.'{'. $num .'}'.'}' }}</code> = {{ $label }}@if(!$loop->last), @endif
+            @endforeach
+        </p>
+    @else
+        <p class="text-muted mb-3">Variabel: <code class="bg-light px-1 rounded">{participant_name}, {participant_email}, {participant_phone}, {tanggal_pemeriksaan}, {rekomendasi}, {hasil_url}, {app_name}</code></p>
+    @endif
     <form method="POST" action="{{ route('admin.whatsapp-templates.update-result') }}">
         @csrf
         <div class="mb-3">
             <label class="form-label">Template Hasil MCU <span class="text-danger">*</span></label>
-            <textarea name="result_template" rows="10" required class="form-control" placeholder="Halo {participant_name}, Hasil MCU Anda...">{{ old('result_template', $result_template ?? '') }}</textarea>
+            <textarea name="result_template" rows="10" required class="form-control" placeholder="Halo @{{1}}, Hasil MCU...">{{ old('result_template', $result_template ?? '') }}</textarea>
             @error('result_template')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
         </div>
         <div class="d-flex flex-wrap gap-2">

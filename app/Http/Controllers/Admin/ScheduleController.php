@@ -203,6 +203,13 @@ class ScheduleController extends Controller
         if ($whatsappService->sendMcuInvitation($schedule)) {
             return redirect()->back()->with('success', 'WhatsApp undangan berhasil dikirim ke ' . $schedule->nama_lengkap . '.');
         }
-        return redirect()->back()->withErrors(['send' => 'Gagal mengirim WhatsApp. Periksa pengaturan di Settings.']);
+
+        $detail = $whatsappService->getLastError();
+
+        return redirect()->back()->withErrors([
+            'send' => $detail
+                ? 'Gagal mengirim WhatsApp: '.$detail
+                : 'Gagal mengirim WhatsApp. Periksa pengaturan di Settings.',
+        ]);
     }
 }

@@ -157,7 +157,14 @@ class McuResultController extends Controller
         if ($this->whatsappService->sendMcuResult($mcu_result)) {
             return redirect()->back()->with('success', 'WhatsApp hasil MCU berhasil dikirim ke ' . $participant->nama_lengkap . '.');
         }
-        return redirect()->back()->withErrors(['send' => 'Gagal mengirim WhatsApp. Periksa pengaturan di Settings.']);
+
+        $detail = $this->whatsappService->getLastError();
+
+        return redirect()->back()->withErrors([
+            'send' => $detail
+                ? 'Gagal mengirim WhatsApp: '.$detail
+                : 'Gagal mengirim WhatsApp. Periksa pengaturan di Settings.',
+        ]);
     }
 
     /**

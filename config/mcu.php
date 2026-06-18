@@ -38,6 +38,7 @@ return [
         'api_token' => env('WHATSAPP_API_TOKEN'),
         'instance_id' => env('WHATSAPP_INSTANCE_ID'),
         'phone_number' => env('WHATSAPP_PHONE_NUMBER'),
+        'api_base_url' => env('WHATSAPP_API_BASE_URL', 'https://chat.api.co.id'),
     ],
 
     // Pagination
