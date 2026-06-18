@@ -264,6 +264,7 @@ curl -fsS https://puspelkes.jakarta.go.id/mcuppkp/up
 | `npm ci` gagal di image | Build Vite via `deploy/build-frontend.sh` di host |
 | CKG timeout / DNS dari container | Pakai gateway compose + `NO_PROXY` + UFW port 9006 |
 | Bridge gagal setelah update | `php artisan ckg-bridge:verify`, perbaiki dengan `ckg-bridge:configure` |
+| WhatsApp template tidak berubah / pesan tidak sesuai | Lihat [`docs/API_WA.example.MD`](./API_WA.example.MD): provider `apico`, isi Nama Template WA, sync Meta |
 
 ### CSS tidak ter-update setelah deploy
 
@@ -337,6 +338,23 @@ Menu: **Portal Peserta → Pendaftaran Ulang MCU**
 | Validasi server | Kuota penuh ditolak saat submit; interval MCU terakhir tetap berlaku |
 
 Peserta yang belum tercatat di CKG PPKP tidak dapat mengajukan jadwal MCU sampai data skrining tersinkron (bridge CKG aktif).
+
+## WhatsApp (Api.co.id Chat Gateway)
+
+Integrasi WhatsApp produksi memakai **Api.co.id** — salin [`docs/API_WA.example.MD`](./API_WA.example.MD) ke `docs/API_WA.MD` (file ini **tidak** di-commit; berisi API Key) dan Postman [`docs/Api.co.id-Chat-Gateway.postman_collection.json`](./Api.co.id-Chat-Gateway.postman_collection.json).
+
+**Konfigurasi singkat (Admin → Pengaturan → WhatsApp):**
+
+| Field | Isi |
+|-------|-----|
+| Penyedia | Api.co.id Chat Gateway |
+| API Token | API Key dari dashboard Api.co.id |
+| Phone Number ID | `id` dari `GET /phone-numbers` (bukan User ID) |
+| Nama Template WA (Undangan / Hasil) | Nama template **APPROVED** di Meta |
+| Bahasa Template | `id` |
+| Variabel template | Urutan koma sesuai `{{1}}`, `{{2}}`, … di Meta |
+
+**Penting:** teks di **Admin → Template WhatsApp** tidak menggantikan template Meta jika **Nama Template WA** sudah diisi — edit template di Meta Business Manager, sync di Api.co.id, lalu pastikan nama & urutan variabel cocok.
 
 ## Riwayat perubahan
 

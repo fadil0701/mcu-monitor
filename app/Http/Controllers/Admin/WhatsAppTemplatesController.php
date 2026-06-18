@@ -22,6 +22,9 @@ class WhatsAppTemplatesController extends Controller
 
         $invitation_template = Setting::getValue('whatsapp_invitation_template', $defaultInvitation) ?: $defaultInvitation;
         $result_template = Setting::getValue('whatsapp_result_template', $defaultResult) ?: $defaultResult;
+        $whatsappProvider = (string) Setting::getValue('whatsapp_provider', 'fonnte');
+        $apicoInvitationTemplateName = trim((string) Setting::getValue('whatsapp_apico_template_name', ''));
+        $apicoResultTemplateName = trim((string) Setting::getValue('whatsapp_apico_result_template_name', ''));
 
         return view('admin.whatsapp-templates.index', [
             'invitation_template' => $invitation_template,
@@ -29,6 +32,9 @@ class WhatsAppTemplatesController extends Controller
             'useMetaFormat' => $useMetaFormat,
             'invitationLegend' => WhatsAppTemplateDefaults::invitationVariableLegend(),
             'resultLegend' => WhatsAppTemplateDefaults::resultVariableLegend(),
+            'whatsappProvider' => $whatsappProvider,
+            'apicoInvitationTemplateName' => $apicoInvitationTemplateName,
+            'apicoResultTemplateName' => $apicoResultTemplateName,
         ]);
     }
 

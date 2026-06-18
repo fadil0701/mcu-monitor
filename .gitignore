@@ -3,6 +3,7 @@
 .env
 .env.backup
 .env.production
+docs/API_WA.MD
 .phpactor.json
 .phpunit.result.cache
 /.fleet

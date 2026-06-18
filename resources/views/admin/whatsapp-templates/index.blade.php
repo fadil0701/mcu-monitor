@@ -4,6 +4,31 @@
 @section('pageTitle', 'Template WhatsApp')
 
 @section('content')
+@php
+    $providerLabels = [
+        'fonnte' => 'Fonnte',
+        'wablas' => 'Wablas',
+        'meta' => 'Meta',
+        'apico' => 'Api.co.id Chat Gateway',
+    ];
+    $providerLabel = $providerLabels[$whatsappProvider] ?? $whatsappProvider;
+@endphp
+
+<div class="alert alert-info py-2 mb-4">
+    <strong>Provider aktif:</strong> {{ $providerLabel }}.
+    @if($useMetaFormat)
+        Format variabel wajib <code>@{{1}}</code>, <code>@{{2}}</code>, …
+        @if($apicoInvitationTemplateName !== '' || $apicoResultTemplateName !== '')
+            <br><strong>Api.co.id:</strong> jika <em>Nama Template WA</em> sudah diisi di Pengaturan
+            @if($apicoInvitationTemplateName !== '') (<code>{{ $apicoInvitationTemplateName }}</code>)@endif,
+            pesan terkirim mengikuti template <strong>Meta yang APPROVED</strong>, bukan teks di bawah ini.
+        @endif
+    @else
+        Saat ini format lama <code>{nama_lengkap}</code>. Untuk Api.co.id, ubah dulu
+        <strong>Pengaturan → WhatsApp → Penyedia = Api.co.id</strong>, lalu <strong>Simpan</strong> dan muat ulang halaman ini.
+    @endif
+</div>
+
 <x-common.component-card title="Template Undangan MCU" class="mb-4">
     @if($useMetaFormat)
         <div class="alert alert-warning py-2 mb-3">

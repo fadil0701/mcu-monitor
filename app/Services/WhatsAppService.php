@@ -233,9 +233,28 @@ class WhatsAppService
             return true;
         }
 
+        $message = (string) ($response->json('error.message') ?? $response->body());
+
+        if ($this->isApiCoPhoneNumberOwnershipError($message, $errorCode)) {
+            return $this->setError(
+                'Api.co.id: Phone Number ID salah. Gunakan field **id** dari GET /phone-numbers (mis. cmqj83…), '
+                .'BUKAN field phone_number_id (angka Meta seperti 108105…). '
+                .'Detail: '.$message,
+            );
+        }
+
         return $this->setError(
-            'Api.co.id: gagal mendaftarkan customer — '.($response->json('error.message') ?? $response->body()),
+            'Api.co.id: gagal mendaftarkan customer — '.$message,
         );
+    }
+
+    private function isApiCoPhoneNumberOwnershipError(string $message, string $errorCode): bool
+    {
+        $haystack = strtolower($message.' '.$errorCode);
+
+        return str_contains($haystack, 'not found')
+            || str_contains($haystack, 'not owned')
+            || str_contains($haystack, 'whatsapp account');
     }
 
     /**

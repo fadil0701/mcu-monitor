@@ -134,7 +134,7 @@ return [
                     'group' => 'whatsapp',
                     'storage_type' => 'string',
                     'rules' => 'nullable|string|max:255',
-                    'help' => 'Diperlukan untuk Api.co.id (whatsapp_phone_number_id) atau Meta. Dapatkan dari dashboard Api.co.id → List Phone Numbers.',
+                    'help' => 'Api.co.id: salin field **id** (bukan phone_number_id) dari GET /phone-numbers. Contoh: cmqj83dp7ebifo8dyegp1b6ki. Bukan WABA ID Meta.',
                 ],
                 'whatsapp_phone_number' => [
                     'label' => 'Nomor WhatsApp Pengirim',

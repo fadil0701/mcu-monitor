@@ -1,0 +1,1851 @@
+{
+	"info": {
+		"_postman_id": "api-co-id-chat-gateway",
+		"name": "Api.co.id - Chat Gateway API",
+		"description": "Complete API collection for Api.co.id Chat Gateway.\n\n## Setup\n1. Set the `base_url` variable to your API server (e.g., `http://localhost:3005`)\n2. Set the `api_key` variable to your API key (get from Developers → API Keys)\n3. Run \"List Phone Numbers\" first to get your `whatsapp_phone_number_id`\n\n## Authentication\nAll requests use Bearer token authentication via the `{{api_key}}` variable.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{api_key}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://chat.api.co.id",
+			"type": "string"
+		},
+		{
+			"key": "api_key",
+			"value": "YOUR_API_KEY",
+			"type": "string"
+		},
+		{
+			"key": "whatsapp_phone_number_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "instagram_account_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "facebook_page_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "customer_phone",
+			"value": "628123456789",
+			"type": "string"
+		},
+		{
+			"key": "customer_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "message_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "template_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "note_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "broadcast_job_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Account",
+			"description": "Get connected accounts and phone numbers.",
+			"item": [
+				{
+					"name": "List Phone Numbers",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.length > 0) {",
+									"    const primary = res.data.find(p => p.is_primary) || res.data[0];",
+									"    pm.collectionVariables.set('whatsapp_phone_number_id', primary.id);",
+									"    console.log('Set whatsapp_phone_number_id:', primary.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/phone-numbers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"phone-numbers"
+							]
+						},
+						"description": "Retrieve all WhatsApp phone numbers connected to your account. The primary number's ID is automatically saved to `whatsapp_phone_number_id` variable."
+					}
+				},
+				{
+					"name": "List Instagram Accounts",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.length > 0) {",
+									"    pm.collectionVariables.set('instagram_account_id', res.data[0].id);",
+									"    console.log('Set instagram_account_id:', res.data[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/instagram-accounts",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"instagram-accounts"
+							]
+						},
+						"description": "Retrieve all Instagram accounts connected to your account. First account ID is saved to `instagram_account_id`."
+					}
+				},
+				{
+					"name": "List Facebook Pages",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.length > 0) {",
+									"    pm.collectionVariables.set('facebook_page_id', res.data[0].id);",
+									"    console.log('Set facebook_page_id:', res.data[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/facebook-pages",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"facebook-pages"
+							]
+						},
+						"description": "Retrieve all Facebook Pages (Messenger) connected to your account."
+					}
+				}
+			]
+		},
+		{
+			"name": "Messages - WhatsApp",
+			"description": "Send messages via WhatsApp channel.",
+			"item": [
+				{
+					"name": "Send Text Message",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data) {",
+									"    pm.collectionVariables.set('message_id', res.data.message_id);",
+									"    pm.collectionVariables.set('customer_id', res.data.customer_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"text\",\n    \"content\": \"Hello! This is a test message from Postman.\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "Send a text message via WhatsApp. Auto-saves `message_id` and `customer_id` from response."
+					}
+				},
+				{
+					"name": "Send Image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"image\",\n    \"media_url\": \"https://example.com/image.jpg\",\n    \"caption\": \"Check out this image!\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "Send an image with optional caption. Supported: JPEG, PNG (max 5MB)."
+					}
+				},
+				{
+					"name": "Send Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"document\",\n    \"media_url\": \"https://example.com/document.pdf\",\n    \"caption\": \"Here is your invoice\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "Send a document file. Supported: PDF, DOC, DOCX (max 100MB)."
+					}
+				},
+				{
+					"name": "Send Audio",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"audio\",\n    \"media_url\": \"https://example.com/audio.mp3\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "Send an audio file. Supported: MP3, OGG (max 16MB)."
+					}
+				},
+				{
+					"name": "Send Video",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"video\",\n    \"media_url\": \"https://example.com/video.mp4\",\n    \"caption\": \"Watch this!\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "Send a video file. Supported: MP4 (max 16MB)."
+					}
+				}
+			]
+		},
+		{
+			"name": "Templates",
+			"description": "List and view WhatsApp message templates.\n\n**Important:** Templates are created and managed via the dashboard UI (Templates page). Sync templates first via the dashboard to populate the list.\n\nTo send a template via API, use the Send Message endpoint with `message_type: \"template\"`.",
+			"item": [
+				{
+					"name": "List All Templates",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/templates?limit=100",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"templates"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100",
+									"description": "Max results (1-500, default 100)"
+								},
+								{
+									"key": "offset",
+									"value": "0",
+									"description": "Skip N results for pagination",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "APPROVED",
+									"description": "Filter: APPROVED, PENDING, REJECTED, PAUSED, DISABLED",
+									"disabled": true
+								},
+								{
+									"key": "category",
+									"value": "AUTHENTICATION",
+									"description": "Filter: MARKETING, UTILITY, AUTHENTICATION",
+									"disabled": true
+								},
+								{
+									"key": "whatsapp_phone_number_id",
+									"value": "{{whatsapp_phone_number_id}}",
+									"description": "Filter by phone number's WABA",
+									"disabled": true
+								}
+							]
+						},
+						"description": "List all synced WhatsApp templates.\n\n**Note:** If this returns empty, sync templates first via the dashboard (Templates → Sync button)."
+					}
+				},
+				{
+					"name": "List Approved Templates Only",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/templates?status=APPROVED",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"templates"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "APPROVED"
+								}
+							]
+						},
+						"description": "List only approved templates (ready to send)."
+					}
+				},
+				{
+					"name": "List Authentication Templates",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/templates?category=AUTHENTICATION&status=APPROVED",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"templates"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "AUTHENTICATION"
+								},
+								{
+									"key": "status",
+									"value": "APPROVED"
+								}
+							]
+						},
+						"description": "List approved authentication templates (OTP, verification codes)."
+					}
+				},
+				{
+					"name": "Get Template Detail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/templates/{{template_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"templates",
+								"{{template_id}}"
+							]
+						},
+						"description": "Get a specific template by ID. Use the `id` from the list response."
+					}
+				}
+			]
+		},
+		{
+			"name": "Send Templates",
+			"description": "Send pre-approved WhatsApp template messages.\n\n**How to use:**\n1. First, list templates via `GET /templates?status=APPROVED` to see available templates\n2. Use the `template_name` and `language` from the list\n3. Fill in `components` based on the template's variables (`{{1}}`, `{{2}}`, etc.)\n\n**Template must be APPROVED by Meta before sending.**",
+			"item": [
+				{
+					"name": "Send Template (Simple, No Variables)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"template\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\",\n    \"template\": {\n        \"name\": \"hello_world\",\n        \"language\": { \"code\": \"en_US\" }\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "**Simplest template** — no variables needed.\n\nJust provide:\n- `template.name` — exact name from Meta\n- `template.language.code` — language code (e.g., `en_US`, `id`)\n\n**Tip:** Every WABA has a default `hello_world` template."
+					}
+				},
+				{
+					"name": "Send Template (Body Variables)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"template\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\",\n    \"template\": {\n        \"name\": \"order_confirmation\",\n        \"language\": { \"code\": \"id\" },\n        \"components\": [\n            {\n                \"type\": \"body\",\n                \"parameters\": [\n                    { \"type\": \"text\", \"text\": \"John Doe\" },\n                    { \"type\": \"text\", \"text\": \"INV-12345\" }\n                ]\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "**Template with body variables** like `{{1}}`, `{{2}}`.\n\nIf your template body is:\n> \"Hi {{1}}, your order {{2}} is confirmed\"\n\nThen parameters are:\n- `parameters[0]` → replaces `{{1}}` (e.g., customer name)\n- `parameters[1]` → replaces `{{2}}` (e.g., order ID)"
+					}
+				},
+				{
+					"name": "Send Template (Header Image + Body)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"template\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\",\n    \"template\": {\n        \"name\": \"promo_with_image\",\n        \"language\": { \"code\": \"id\" },\n        \"components\": [\n            {\n                \"type\": \"header\",\n                \"parameters\": [\n                    {\n                        \"type\": \"image\",\n                        \"image\": { \"link\": \"https://example.com/promo.jpg\" }\n                    }\n                ]\n            },\n            {\n                \"type\": \"body\",\n                \"parameters\": [\n                    { \"type\": \"text\", \"text\": \"FLASH SALE\" },\n                    { \"type\": \"text\", \"text\": \"50%\" }\n                ]\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "**Template with image header + body variables.**\n\nHeader media types:\n- `image` → JPEG, PNG (max 5MB)\n- `video` → MP4 (max 16MB)\n- `document` → PDF, DOC (max 100MB)\n\nReplace `image` with `video` or `document` accordingly."
+					}
+				},
+				{
+					"name": "Send Template (OTP / Authentication)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"template\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\",\n    \"template\": {\n        \"name\": \"your_otp_template_name\",\n        \"language\": { \"code\": \"id\" },\n        \"components\": [\n            {\n                \"type\": \"body\",\n                \"parameters\": [\n                    { \"type\": \"text\", \"text\": \"123456\" }\n                ]\n            },\n            {\n                \"type\": \"button\",\n                \"sub_type\": \"url\",\n                \"index\": 0,\n                \"parameters\": [\n                    { \"type\": \"text\", \"text\": \"123456\" }\n                ]\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "**OTP / Authentication template.**\n\n**How to create OTP template in Meta:**\n1. Go to Meta Business Suite → WhatsApp Manager → Message Templates\n2. Click \"Create Template\"\n3. Category: **Authentication**\n4. Body: \"Your verification code is {{1}}\"\n5. Button: **Copy Code** or **URL** (auto-fill)\n6. Submit for approval (usually approved in minutes)\n\n**Important:**\n- Replace `your_otp_template_name` with your actual template name\n- Check `language.code` matches your template\n- Button type depends on your template setup:\n  - `sub_type: \"url\"` for URL button with OTP suffix\n  - `sub_type: \"copy_code\"` for copy-to-clipboard button\n\n**To find your template name:** Use `GET /templates?category=AUTHENTICATION&status=APPROVED`"
+					}
+				},
+				{
+					"name": "Send Template (Copy Code / Promo)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"template\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\",\n    \"template\": {\n        \"name\": \"promo_code\",\n        \"language\": { \"code\": \"id\" },\n        \"components\": [\n            {\n                \"type\": \"body\",\n                \"parameters\": [\n                    { \"type\": \"text\", \"text\": \"FLASH SALE\" }\n                ]\n            },\n            {\n                \"type\": \"button\",\n                \"sub_type\": \"copy_code\",\n                \"index\": 0,\n                \"parameters\": [\n                    { \"type\": \"coupon_code\", \"coupon_code\": \"SAVE20OFF\" }\n                ]\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "**Marketing template with coupon/promo code button.**\n\nThe `copy_code` button lets customers tap to copy the code."
+					}
+				},
+				{
+					"name": "Send Template (URL Button)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"template\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\",\n    \"template\": {\n        \"name\": \"order_tracking\",\n        \"language\": { \"code\": \"id\" },\n        \"components\": [\n            {\n                \"type\": \"body\",\n                \"parameters\": [\n                    { \"type\": \"text\", \"text\": \"INV-12345\" }\n                ]\n            },\n            {\n                \"type\": \"button\",\n                \"sub_type\": \"url\",\n                \"index\": 0,\n                \"parameters\": [\n                    { \"type\": \"text\", \"text\": \"tracking-abc123\" }\n                ]\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "**Template with dynamic URL button.**\n\nIf your template URL is `https://example.com/track/{{1}}`, the parameter fills the `{{1}}` suffix.\n\nThe `index: 0` refers to the first button in the template."
+					}
+				}
+			]
+		},
+		{
+			"name": "Messages - Interactive",
+			"description": "Send WhatsApp interactive messages (CTA URL, Reply Buttons, List Menu).",
+			"item": [
+				{
+					"name": "Send CTA URL Button",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"interactive\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\",\n    \"interactive\": {\n        \"type\": \"cta_url\",\n        \"body\": {\n            \"text\": \"Check out our latest products!\"\n        },\n        \"footer\": {\n            \"text\": \"Tap the button below\"\n        },\n        \"action\": {\n            \"name\": \"cta_url\",\n            \"parameters\": {\n                \"display_text\": \"Visit Store\",\n                \"url\": \"https://example.com/store\"\n            }\n        }\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "Send an interactive message with a clickable URL button."
+					}
+				},
+				{
+					"name": "Send Reply Buttons",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"interactive\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\",\n    \"interactive\": {\n        \"type\": \"button\",\n        \"body\": {\n            \"text\": \"How would you rate our service?\"\n        },\n        \"footer\": {\n            \"text\": \"Your feedback helps us improve\"\n        },\n        \"action\": {\n            \"buttons\": [\n                {\n                    \"type\": \"reply\",\n                    \"reply\": { \"id\": \"rating_good\", \"title\": \"Good\" }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": { \"id\": \"rating_ok\", \"title\": \"Okay\" }\n                },\n                {\n                    \"type\": \"reply\",\n                    \"reply\": { \"id\": \"rating_bad\", \"title\": \"Bad\" }\n                }\n            ]\n        }\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "Send a message with up to 3 quick reply buttons."
+					}
+				},
+				{
+					"name": "Send List Menu",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"channel\": \"whatsapp\",\n    \"message_type\": \"interactive\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\",\n    \"interactive\": {\n        \"type\": \"list\",\n        \"body\": {\n            \"text\": \"Please select a service from our menu\"\n        },\n        \"header\": {\n            \"type\": \"text\",\n            \"text\": \"Our Services\"\n        },\n        \"footer\": {\n            \"text\": \"Tap the button to see options\"\n        },\n        \"action\": {\n            \"button\": \"View Menu\",\n            \"sections\": [\n                {\n                    \"title\": \"Hair Services\",\n                    \"rows\": [\n                        {\n                            \"id\": \"haircut\",\n                            \"title\": \"Haircut\",\n                            \"description\": \"Basic haircut service\"\n                        },\n                        {\n                            \"id\": \"hair_coloring\",\n                            \"title\": \"Hair Coloring\",\n                            \"description\": \"Full hair coloring service\"\n                        }\n                    ]\n                },\n                {\n                    \"title\": \"Spa Services\",\n                    \"rows\": [\n                        {\n                            \"id\": \"massage\",\n                            \"title\": \"Massage\",\n                            \"description\": \"60-minute relaxing massage\"\n                        },\n                        {\n                            \"id\": \"facial\",\n                            \"title\": \"Facial Treatment\",\n                            \"description\": \"Deep cleansing facial\"\n                        }\n                    ]\n                }\n            ]\n        }\n    }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "Send a list menu with sections and selectable rows."
+					}
+				}
+			]
+		},
+		{
+			"name": "Messages - Instagram",
+			"description": "Send messages via Instagram channel.",
+			"item": [
+				{
+					"name": "Send Text (Instagram)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"instagram_username\": \"customer_username\",\n    \"channel\": \"instagram\",\n    \"message_type\": \"text\",\n    \"content\": \"Hello from Instagram!\",\n    \"instagram_account_id\": \"{{instagram_account_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "Send a text message via Instagram. Use `instagram_username` or `customer_id` to identify the recipient."
+					}
+				},
+				{
+					"name": "Send Image (Instagram)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"instagram_username\": \"customer_username\",\n    \"channel\": \"instagram\",\n    \"message_type\": \"image\",\n    \"media_url\": \"https://example.com/image.jpg\",\n    \"instagram_account_id\": \"{{instagram_account_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "Send an image via Instagram DM."
+					}
+				}
+			]
+		},
+		{
+			"name": "Messages - Messenger",
+			"description": "Send messages via Facebook Messenger channel.",
+			"item": [
+				{
+					"name": "Send Text (Messenger)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_id\": \"{{customer_id}}\",\n    \"channel\": \"messenger\",\n    \"message_type\": \"text\",\n    \"content\": \"Hello from Messenger!\",\n    \"facebook_page_id\": \"{{facebook_page_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "Send a text message via Facebook Messenger."
+					}
+				},
+				{
+					"name": "Send Image (Messenger)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_id\": \"{{customer_id}}\",\n    \"channel\": \"messenger\",\n    \"message_type\": \"image\",\n    \"media_url\": \"https://example.com/image.jpg\",\n    \"facebook_page_id\": \"{{facebook_page_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"send"
+							]
+						},
+						"description": "Send an image via Facebook Messenger."
+					}
+				}
+			]
+		},
+		{
+			"name": "Conversations",
+			"description": "List conversations, messages, and conversation-level actions.",
+			"item": [
+				{
+					"name": "List All Conversations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.length > 0) {",
+									"    pm.collectionVariables.set('customer_id', res.data[0].customer_id);",
+									"    console.log('Set customer_id:', res.data[0].customer_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/conversations?limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"conversations"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Number of conversations (1-200, default 50)"
+								},
+								{
+									"key": "cursor",
+									"value": "",
+									"description": "Cursor for pagination (customer ID from next_cursor)",
+									"disabled": true
+								},
+								{
+									"key": "channel",
+									"value": "whatsapp",
+									"description": "Filter by channel: whatsapp, instagram, messenger",
+									"disabled": true
+								}
+							]
+						},
+						"description": "List all conversations with last message, unread counts, and channel info. Auto-saves first `customer_id`.\n\nSupports filtering by channel and cursor-based pagination."
+					}
+				},
+				{
+					"name": "List Conversations (Instagram)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/conversations?channel=instagram&limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"conversations"
+							],
+							"query": [
+								{
+									"key": "channel",
+									"value": "instagram"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						},
+						"description": "List only Instagram conversations."
+					}
+				},
+				{
+					"name": "List Conversations (Messenger)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/conversations?channel=messenger&limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"conversations"
+							],
+							"query": [
+								{
+									"key": "channel",
+									"value": "messenger"
+								},
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						},
+						"description": "List only Messenger conversations."
+					}
+				},
+				{
+					"name": "Get Messages (by Customer ID)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/conversations/{{customer_id}}/messages?limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"conversations",
+								"{{customer_id}}",
+								"messages"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Number of messages (1-200, default 50)"
+								},
+								{
+									"key": "cursor",
+									"value": "",
+									"description": "ISO date cursor for pagination (from next_cursor)",
+									"disabled": true
+								},
+								{
+									"key": "direction",
+									"value": "inbound",
+									"description": "Filter: inbound or outbound",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all messages for a customer by their ID. Supports pagination and direction filtering."
+					}
+				},
+				{
+					"name": "Get Messages (by Phone Number)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/conversations/{{customer_phone}}/messages?limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"conversations",
+								"{{customer_phone}}",
+								"messages"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								}
+							]
+						},
+						"description": "Get all messages for a customer by their phone number."
+					}
+				},
+				{
+					"name": "Typing Indicator (WhatsApp)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"channel\": \"whatsapp\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/conversations/{{customer_phone}}/typing",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"conversations",
+								"{{customer_phone}}",
+								"typing"
+							]
+						},
+						"description": "Send typing indicator to a WhatsApp customer. Rate limit: 1 request per 3 seconds per customer."
+					}
+				},
+				{
+					"name": "Typing Indicator (Instagram)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"channel\": \"instagram\",\n    \"instagram_account_id\": \"{{instagram_account_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/conversations/ig_username/typing",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"conversations",
+								"ig_username",
+								"typing"
+							]
+						},
+						"description": "Send typing indicator to an Instagram customer. Replace `ig_username` with the actual username."
+					}
+				},
+				{
+					"name": "Mark Message as Read",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/messages/{{message_id}}/read",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"messages",
+								"{{message_id}}",
+								"read"
+							]
+						},
+						"description": "Mark an inbound message as read and send read receipt to the customer. Only works for inbound messages."
+					}
+				}
+			]
+		},
+		{
+			"name": "Customers",
+			"description": "Manage customer records, consent, blacklist status, and messaging window.",
+			"item": [
+				{
+					"name": "List Customers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/customers?limit=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"customers"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Number of customers to return (default 50)"
+								}
+							]
+						},
+						"description": "Retrieve a paginated list of all customers associated with your account."
+					}
+				},
+				{
+					"name": "Get Customer (by ID)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/customers/{{customer_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"customers",
+								"{{customer_id}}"
+							]
+						},
+						"description": "Retrieve a single customer by their CUID. Returns full customer profile including tags, consent, and blacklist status."
+					}
+				},
+				{
+					"name": "Get Customer (by Phone)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/customers/{{customer_phone}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"customers",
+								"{{customer_phone}}"
+							]
+						},
+						"description": "Retrieve a single customer by their phone number. The API auto-detects whether the identifier is a CUID or phone number."
+					}
+				},
+				{
+					"name": "Create Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.id) {",
+									"    pm.collectionVariables.set('customer_id', res.data.id);",
+									"    console.log('Set customer_id:', res.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phone_number\": \"{{customer_phone}}\",\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"tags\": [\"vip\"],\n    \"consent_status\": true,\n    \"consent_source\": \"api\",\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/customers",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"customers"
+							]
+						},
+						"description": "Create a new customer record. The newly created customer's ID is automatically saved to `customer_id` variable."
+					}
+				},
+				{
+					"name": "Update Customer",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Name\",\n    \"tags\": [\"vip\", \"loyal\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/customers/{{customer_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"customers",
+								"{{customer_id}}"
+							]
+						},
+						"description": "Update an existing customer's profile. Only provided fields are updated (partial update)."
+					}
+				},
+				{
+					"name": "Delete Customer",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/customers/{{customer_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"customers",
+								"{{customer_id}}"
+							]
+						},
+						"description": "Permanently delete a customer record. This action cannot be undone."
+					}
+				},
+				{
+					"name": "Log Consent",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"action\": \"OPT_IN\",\n    \"source\": \"website_form\",\n    \"purpose\": \"marketing\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/customers/{{customer_id}}/consent",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"customers",
+								"{{customer_id}}",
+								"consent"
+							]
+						},
+						"description": "Log a consent action for a customer. Actions: OPT_IN, OPT_OUT, UPDATE. Useful for GDPR/compliance tracking."
+					}
+				},
+				{
+					"name": "Toggle Blacklist",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"blacklisted\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/customers/{{customer_id}}/blacklist",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"customers",
+								"{{customer_id}}",
+								"blacklist"
+							]
+						},
+						"description": "Toggle a customer's blacklist status. Blacklisted customers will not receive outbound messages."
+					}
+				},
+				{
+					"name": "Check Window Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/customers/{{customer_id}}/window-status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"customers",
+								"{{customer_id}}",
+								"window-status"
+							]
+						},
+						"description": "Check if the 24-hour messaging window is currently active for a customer. Returns window expiry time if active."
+					}
+				}
+			]
+		},
+		{
+			"name": "Customer Notes",
+			"description": "Manage notes attached to customer records.",
+			"item": [
+				{
+					"name": "List Notes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/customers/{{customer_id}}/notes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"customers",
+								"{{customer_id}}",
+								"notes"
+							]
+						},
+						"description": "Retrieve all notes for a specific customer, ordered by most recent first."
+					}
+				},
+				{
+					"name": "Add Note",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.id) {",
+									"    pm.collectionVariables.set('note_id', res.data.id);",
+									"    console.log('Set note_id:', res.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\": \"Called customer, interested in premium plan\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/customers/{{customer_id}}/notes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"customers",
+								"{{customer_id}}",
+								"notes"
+							]
+						},
+						"description": "Add a new note to a customer record. The newly created note's ID is automatically saved to `note_id` variable."
+					}
+				},
+				{
+					"name": "Delete Note",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/customers/{{customer_id}}/notes/{{note_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"customers",
+								"{{customer_id}}",
+								"notes",
+								"{{note_id}}"
+							]
+						},
+						"description": "Delete a specific note from a customer record."
+					}
+				}
+			]
+		},
+		{
+			"name": "Broadcast",
+			"description": "Send bulk template messages to multiple recipients and manage broadcast jobs.",
+			"item": [
+				{
+					"name": "Send Broadcast",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.job_id) {",
+									"    pm.collectionVariables.set('broadcast_job_id', res.data.job_id);",
+									"    console.log('Set broadcast_job_id:', res.data.job_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"template_name\": \"promo_sale\",\n    \"language\": \"id\",\n    \"phone_numbers\": [\"628123456789\", \"628987654321\"],\n    \"whatsapp_phone_number_id\": \"{{whatsapp_phone_number_id}}\",\n    \"components\": [\n        {\n            \"type\": \"body\",\n            \"parameters\": [\n                { \"type\": \"text\", \"text\": \"50%\" }\n            ]\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/broadcast/send",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"broadcast",
+								"send"
+							]
+						},
+						"description": "Send a broadcast template message to multiple phone numbers. The broadcast job ID is automatically saved to `broadcast_job_id` variable."
+					}
+				},
+				{
+					"name": "List Broadcast Jobs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/broadcast/jobs?limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"broadcast",
+								"jobs"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Number of broadcast jobs to return (default 10)"
+								}
+							]
+						},
+						"description": "List all broadcast jobs with their status and delivery statistics."
+					}
+				},
+				{
+					"name": "Get Broadcast Job",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/broadcast/jobs/{{broadcast_job_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"broadcast",
+								"jobs",
+								"{{broadcast_job_id}}"
+							]
+						},
+						"description": "Get details and delivery stats for a specific broadcast job."
+					}
+				},
+				{
+					"name": "Cancel Broadcast",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/broadcast/jobs/{{broadcast_job_id}}/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"broadcast",
+								"jobs",
+								"{{broadcast_job_id}}",
+								"cancel"
+							]
+						},
+						"description": "Cancel a pending or in-progress broadcast job. Messages already sent cannot be recalled."
+					}
+				}
+			]
+		},
+		{
+			"name": "Media Upload",
+			"description": "Upload media files to WhatsApp (Meta) for use in messages and templates.\n\nThe returned `media_id` can be used in send message payloads. Media expires after 30 days on Meta's servers.",
+			"item": [
+				{
+					"name": "Upload Image",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"description": "Image file (JPEG, PNG, WebP — max 5MB)"
+								},
+								{
+									"key": "whatsapp_phone_number_id",
+									"value": "{{whatsapp_phone_number_id}}",
+									"type": "text",
+									"description": "Optional: specify which phone number to upload to",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/media/upload",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"media",
+								"upload"
+							]
+						},
+						"description": "Upload an image to WhatsApp Meta servers.\n\nReturns a `media_id` that you can use in:\n- `media_url` field when sending image messages\n- Template header media\n\n**Supported:** JPEG, PNG, WebP (max 5MB)\n\n**Media expires after 30 days.**"
+					}
+				},
+				{
+					"name": "Upload Document",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"description": "Document file (PDF, DOC, DOCX — max 16MB)"
+								},
+								{
+									"key": "whatsapp_phone_number_id",
+									"value": "{{whatsapp_phone_number_id}}",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/media/upload",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"media",
+								"upload"
+							]
+						},
+						"description": "Upload a document (PDF, DOC, DOCX) to WhatsApp Meta servers."
+					}
+				},
+				{
+					"name": "Upload Video",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"description": "Video file (MP4, 3GP — max 16MB)"
+								},
+								{
+									"key": "whatsapp_phone_number_id",
+									"value": "{{whatsapp_phone_number_id}}",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/media/upload",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"media",
+								"upload"
+							]
+						},
+						"description": "Upload a video (MP4, 3GP) to WhatsApp Meta servers."
+					}
+				},
+				{
+					"name": "Upload Audio",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"description": "Audio file (OGG, MP3, AMR — max 16MB)"
+								},
+								{
+									"key": "whatsapp_phone_number_id",
+									"value": "{{whatsapp_phone_number_id}}",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/media/upload",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"media",
+								"upload"
+							]
+						},
+						"description": "Upload an audio file (OGG, MP3, AMR) to WhatsApp Meta servers."
+					}
+				}
+			]
+		},
+		{
+			"name": "Health",
+			"description": "API health check.",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/public/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"public",
+								"health"
+							]
+						},
+						"description": "Check if the API is running and your authentication is valid."
+					}
+				}
+			]
+		}
+	]
+}
