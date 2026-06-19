@@ -19,6 +19,9 @@ services:
     environment:
       APP_DEBUG: "false"
       LOG_LEVEL: warning
+    volumes:
+      - ./storage/backups:/var/www/html/storage/backups
+      - /etc/mcuppkp/backup.pass:/etc/mcuppkp/backup.pass:ro
     security_opt:
       - no-new-privileges:true
 
@@ -26,6 +29,9 @@ services:
     <<: *container-dns
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    volumes:
+      - ./storage/backups:/var/www/html/storage/backups
+      - /etc/mcuppkp/backup.pass:/etc/mcuppkp/backup.pass:ro
     security_opt:
       - no-new-privileges:true
 
@@ -33,5 +39,8 @@ services:
     <<: *container-dns
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    volumes:
+      - ./storage/backups:/var/www/html/storage/backups
+      - /etc/mcuppkp/backup.pass:/etc/mcuppkp/backup.pass:ro
     security_opt:
       - no-new-privileges:true

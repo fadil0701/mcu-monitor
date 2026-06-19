@@ -1,6 +1,26 @@
 #!/usr/bin/env bash
 # Helper GPG untuk backup/restore database (symmetric / passphrase).
 
+backup_gpg_resolve_path() {
+    local path="$1"
+
+    if [ -z "$path" ]; then
+        return 1
+    fi
+
+    case "$path" in
+        /*)
+            echo "$path"
+            ;;
+        [A-Za-z]:*|[A-Za-z]:/*)
+            echo "$path"
+            ;;
+        *)
+            echo "${ROOT:-.}/${path#./}"
+            ;;
+    esac
+}
+
 backup_gpg_enabled() {
     local flag="${BACKUP_ENCRYPT:-}"
     if [ -z "$flag" ] && [ -f "${ROOT:-.}/.env" ]; then
@@ -16,8 +36,14 @@ backup_gpg_passphrase_file() {
     fi
 
     if [ -n "$from_env" ]; then
+        from_env="$(backup_gpg_resolve_path "$from_env")"
         if [ ! -f "$from_env" ]; then
             echo "ERROR: BACKUP_GPG_PASSPHRASE_FILE tidak ditemukan: $from_env" >&2
+            echo "       Buat passphrase (sekali, di server):" >&2
+            echo "         cp ${ROOT}/deploy/backup-passphrase.example ${ROOT}/.backup-passphrase" >&2
+            echo "         chmod 600 ${ROOT}/.backup-passphrase && nano ${ROOT}/.backup-passphrase" >&2
+            echo "       Produksi (disarankan): sudo cp deploy/backup-passphrase.example /etc/mcuppkp/backup.pass" >&2
+            echo "         lalu set BACKUP_GPG_PASSPHRASE_FILE=/etc/mcuppkp/backup.pass di .env" >&2
             return 1
         fi
         echo "$from_env"

@@ -390,6 +390,29 @@ docker compose exec -T app php artisan mcu:backup-database
 
 **Env penting (Docker):** set `MYSQL_ROOT_PASSWORD` agar `mysqldump` dari container `app` dapat mengakses MySQL.
 
+**Setup pertama kali enkripsi (wajib sebelum backup dengan `BACKUP_ENCRYPT=true`):**
+
+```bash
+cd /var/www/html/mcu-monitor
+
+# Opsi A — file di folder proyek (cukup untuk script host)
+cp deploy/backup-passphrase.example .backup-passphrase
+chmod 600 .backup-passphrase
+nano .backup-passphrase   # isi passphrase kuat (min. 20 karakter)
+
+# Opsi B — produksi (disarankan, sama pola SIKERJA)
+sudo mkdir -p /etc/mcuppkp
+sudo cp deploy/backup-passphrase.example /etc/mcuppkp/backup.pass
+sudo chmod 600 /etc/mcuppkp/backup.pass
+sudo nano /etc/mcuppkp/backup.pass
+# .env:
+# BACKUP_GPG_PASSPHRASE_FILE=/etc/mcuppkp/backup.pass
+```
+
+Setelah file passphrase ada, jalankan ulang `./deploy/backup-database.sh` atau `docker compose exec -T app php artisan mcu:backup-database`.
+
+**Catatan Docker:** mount passphrase ke container sudah diset di `docker-compose.prod.yml` (`/etc/mcuppkp/backup.pass`). Buat file di host **sebelum** `docker compose up` agar backup dari UI/scheduler di container juga berhasil.
+
 ## Riwayat perubahan
 
 | Commit | Ringkasan |
