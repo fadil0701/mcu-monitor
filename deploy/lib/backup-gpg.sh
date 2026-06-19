@@ -35,29 +35,39 @@ backup_gpg_passphrase_file() {
         from_env="$(grep -E '^BACKUP_GPG_PASSPHRASE_FILE=' "${ROOT}/.env" | tail -1 | cut -d= -f2- | sed 's/\r$//' | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")"
     fi
 
+    local candidates=()
+    local configured=""
+
     if [ -n "$from_env" ]; then
-        from_env="$(backup_gpg_resolve_path "$from_env")"
-        if [ ! -f "$from_env" ]; then
-            echo "ERROR: BACKUP_GPG_PASSPHRASE_FILE tidak ditemukan: $from_env" >&2
-            echo "       Buat passphrase (sekali, di server):" >&2
-            echo "         cp ${ROOT}/deploy/backup-passphrase.example ${ROOT}/.backup-passphrase" >&2
-            echo "         chmod 600 ${ROOT}/.backup-passphrase && nano ${ROOT}/.backup-passphrase" >&2
-            echo "       Produksi (disarankan): sudo cp deploy/backup-passphrase.example /etc/mcuppkp/backup.pass" >&2
-            echo "         lalu set BACKUP_GPG_PASSPHRASE_FILE=/etc/mcuppkp/backup.pass di .env" >&2
-            return 1
+        configured="$(backup_gpg_resolve_path "$from_env")"
+        candidates+=("$configured")
+    fi
+    candidates+=("${ROOT}/.backup-passphrase")
+    candidates+=("/etc/mcuppkp/backup.pass")
+
+    local path seen=""
+    for path in "${candidates[@]}"; do
+        [ -z "$path" ] && continue
+        case " $seen " in
+            *" $path "*) continue ;;
+        esac
+        seen="$seen $path"
+        if [ -f "$path" ]; then
+            if [ -n "$configured" ] && [ "$path" != "$configured" ]; then
+                echo "PERINGATAN: BACKUP_GPG_PASSPHRASE_FILE=${configured} tidak ada, memakai ${path}" >&2
+            fi
+            echo "$path"
+            return 0
         fi
-        echo "$from_env"
-        return 0
-    fi
+    done
 
-    if [ -f "${ROOT:-.}/.backup-passphrase" ]; then
-        echo "${ROOT}/.backup-passphrase"
-        return 0
+    echo "ERROR: File passphrase backup tidak ditemukan." >&2
+    if [ -n "$configured" ]; then
+        echo "       Dikonfigurasi: ${configured}" >&2
     fi
-
-    echo "ERROR: Passphrase backup belum diset." >&2
-    echo "       Salin deploy/backup-passphrase.example ke .backup-passphrase" >&2
-    echo "       atau set BACKUP_GPG_PASSPHRASE_FILE di .env" >&2
+    echo "       Buat salah satu:" >&2
+    echo "         ${ROOT}/.backup-passphrase  (cp deploy/backup-passphrase.example .backup-passphrase && chmod 600 .backup-passphrase)" >&2
+    echo "         /etc/mcuppkp/backup.pass   (sudo mkdir -p /etc/mcuppkp && sudo cp deploy/backup-passphrase.example /etc/mcuppkp/backup.pass)" >&2
     return 1
 }
 

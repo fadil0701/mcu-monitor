@@ -200,11 +200,7 @@ class DatabaseBackupRunner
 
     private function encryptGpg(string $inputPath): string
     {
-        $passphraseFile = (string) config('backup.gpg_passphrase_file');
-
-        if (! is_readable($passphraseFile)) {
-            throw new RuntimeException("File passphrase tidak ditemukan atau tidak bisa dibaca: {$passphraseFile}");
-        }
+        $passphraseFile = BackupPassphrasePath::resolveOrFail();
 
         $gpgCheck = new Process(['gpg', '--version']);
         $gpgCheck->setEnv(['GNUPGHOME' => $this->gpgHome()]);

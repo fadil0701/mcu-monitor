@@ -24,21 +24,22 @@ return [
 
     'encrypt' => filter_var(env('BACKUP_ENCRYPT', false), FILTER_VALIDATE_BOOL),
 
-    'gpg_passphrase_file' => (function (): string {
-        $file = env('BACKUP_GPG_PASSPHRASE_FILE', '.backup-passphrase');
+    'gpg_passphrase_file' => \App\Support\Backup\BackupPassphrasePath::resolve()
+        ?? (function (): string {
+            $file = env('BACKUP_GPG_PASSPHRASE_FILE', '.backup-passphrase');
 
-        if ($file === null || $file === '') {
-            return base_path('.backup-passphrase');
-        }
+            if ($file === null || $file === '') {
+                return base_path('.backup-passphrase');
+            }
 
-        $file = (string) $file;
+            $file = (string) $file;
 
-        if (str_starts_with($file, '/') || preg_match('/^[A-Za-z]:[\\\\\\/]/', $file)) {
-            return $file;
-        }
+            if (str_starts_with($file, '/') || preg_match('/^[A-Za-z]:[\\\\\\/]/', $file)) {
+                return $file;
+            }
 
-        return base_path($file);
-    })(),
+            return base_path($file);
+        })(),
 
     'keep_plain' => filter_var(env('BACKUP_KEEP_PLAIN', false), FILTER_VALIDATE_BOOL),
 
