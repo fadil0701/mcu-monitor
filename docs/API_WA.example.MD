@@ -26,10 +26,11 @@ Postman: [`Api.co.id-Chat-Gateway.postman_collection.json`](./Api.co.id-Chat-Gat
 | API_KEY | API Token / API Key |
 | PHONE NUMBER ID | Phone Number ID |
 | PHONE NUMBER | Nomor WhatsApp Pengirim |
-| Bahasa `id` | Bahasa Template WA |
+| Bahasa `id` | Bahasa Template WA (Undangan) |
+| Bahasa `en_US` (jika template hasil terdaftar demikian) | Bahasa Template WA (Hasil MCU) |
 | `mcu_undangan` | Nama Template WA (Undangan) |
 | `mcu_hasil` | Nama Template WA (Hasil MCU) |
-| Variabel undangan | `nama_lengkap,tanggal_pemeriksaan,jam_pemeriksaan,lokasi_pemeriksaan,queue_number` |
+| Variabel undangan | `nama_lengkap,tanggal_pemeriksaan,hari_pemeriksaan,jam_pemeriksaan,queue_number,lokasi_pemeriksaan` |
 | Variabel hasil | `participant_name,tanggal_pemeriksaan,hasil_url` |
 
 **Bukan Phone Number ID:** User ID (`cmqj0glo8…`), nomor HP saja, WABA ID Meta (kecuali sama dengan `id` dari List Phone Numbers).
@@ -65,10 +66,10 @@ Contoh response Api.co.id:
 
 ## Template Meta (harus APPROVED + sync Api.co.id)
 
-| Template | Variabel body |
-|----------|----------------|
-| `mcu_undangan` | {{1}} nama · {{2}} tanggal · {{3}} jam · {{4}} lokasi · {{5}} antrian |
-| `mcu_hasil` | {{1}} nama · {{2}} tanggal · {{3}} URL hasil |
+| Template | Language (Meta) | Variabel body |
+|----------|-----------------|---------------|
+| `mcu_undangan` | `id` | {{1}} nama · {{2}} tanggal · {{3}} hari · {{4}} jam · {{5}} nomor urut · {{6}} tempat |
+| `mcu_hasil` | `en_US` *(cek di Api.co.id — harus sama persis)* | {{1}} nama · {{2}} tanggal · {{3}} URL hasil |
 
 Kirim: `POST /messages/send` dengan `message_type: "template"` — lihat Postman collection.
 
@@ -83,7 +84,8 @@ Implementasi aplikasi: `app/Services/WhatsAppService.php` (provider `apico`).
 | `WhatsApp account not found or not owned by user` | Salah field: pakai **`id`** bukan **`phone_number_id`** dari `/phone-numbers` | Ganti Phone Number ID ke `cmqj83…` (bukan `108105…`) |
 | API Key salah / token lama | Field token dikosongkan saat simpan (token lama tetap) | Pengaturan → WhatsApp → isi ulang API Token → Simpan |
 | Nomor hanya di Meta, belum di Api.co.id | Akun WA belum connect ke Chat Gateway | Dashboard Api.co.id → hubungkan nomor WA (Cloud API) |
-| `Template not found` | Nama template salah / belum APPROVED | Sync template di Api.co.id, cocokkan `mcu_undangan` / `mcu_hasil` |
+| `Template not found` / `Template tidak ditemukan` | Nama template salah, belum APPROVED, **atau kode bahasa tidak cocok** | Sync template di Api.co.id; undangan pakai `id`, hasil cek kolom Language (mis. `en_US` bukan `id`) |
+| `MissingParameter` / parameter hilang | Jumlah variabel body tidak sama dengan template Meta | Template `undangan_mcu_baru` butuh **6** variabel (termasuk **hari**); cek Pengaturan → WhatsApp |
 
 ### Verifikasi cepat (Postman)
 

@@ -2,27 +2,25 @@
 
 namespace App\Support;
 
+use App\Models\Setting;
+
 class WhatsAppTemplateDefaults
 {
-    public const INVITATION_PARAM_KEYS = 'nama_lengkap,tanggal_pemeriksaan,jam_pemeriksaan,lokasi_pemeriksaan,queue_number';
+    public const INVITATION_PARAM_KEYS = 'nama_lengkap,tanggal_pemeriksaan,hari_pemeriksaan,jam_pemeriksaan,queue_number,lokasi_pemeriksaan';
 
     public const RESULT_PARAM_KEYS = 'participant_name,tanggal_pemeriksaan,hasil_url';
 
     public const INVITATION_META = <<<'TEXT'
-Halo {{1}},
+Kepada Yth. Bapak/Ibu {{1}},
 
-Anda diundang untuk mengikuti Medical Check Up pada:
-📅 Tanggal: {{2}}
-🕐 Jam: {{3}}
-📍 Lokasi: {{4}}
-🎫 Nomor Antrian: {{5}}
+Sehubungan dengan kegiatan Medical Check Up (MCU), berikut rincian kehadiran Anda:
+Tanggal: {{2}}
+Hari: {{3}}
+Jam: {{4}}
+Nomor Urut: {{5}}
+Tempat: {{6}}
 
-*Catatan Penting:*
-• Hadir 15 menit lebih awal
-• Bawa KTP/kartu identitas
-• Puasa 8 jam sebelumnya
-
-Mohon hadir tepat waktu.
+Catatan: hadir 15 menit lebih awal, bawa identitas, puasa 8 jam sebelum pemeriksaan.
 
 Terima kasih.
 TEXT;
@@ -74,9 +72,10 @@ TEXT;
         return [
             1 => 'nama_lengkap',
             2 => 'tanggal_pemeriksaan',
-            3 => 'jam_pemeriksaan',
-            4 => 'lokasi_pemeriksaan',
+            3 => 'hari_pemeriksaan',
+            4 => 'jam_pemeriksaan',
             5 => 'queue_number',
+            6 => 'lokasi_pemeriksaan',
         ];
     }
 
@@ -94,7 +93,7 @@ TEXT;
 
     public static function usesMetaFormat(?string $provider = null): bool
     {
-        $provider ??= (string) \App\Models\Setting::getValue('whatsapp_provider', 'fonnte');
+        $provider ??= (string) Setting::getValue('whatsapp_provider', 'fonnte');
 
         return in_array($provider, ['apico', 'meta'], true);
     }

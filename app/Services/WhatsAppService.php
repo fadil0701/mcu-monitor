@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\McuResult;
-use App\Models\Setting;
 use App\Models\Schedule;
+use App\Models\Setting;
 use App\Support\WhatsAppTemplateDefaults;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -36,11 +36,11 @@ class WhatsAppService
         try {
             // Get WhatsApp settings
             $whatsappSettings = Setting::getGroup('whatsapp');
-            
+
             $token = $whatsappSettings['whatsapp_token'] ?? '';
             $instanceId = $whatsappSettings['whatsapp_instance_id'] ?? '';
             $provider = $this->getProvider();
-            
+
             if (empty($token)) {
                 return $this->setError('WhatsApp token not configured');
             }
@@ -74,6 +74,12 @@ class WhatsAppService
                 $message,
                 $templateData,
                 $schedule->nama_lengkap,
+                (string) Setting::getValue('whatsapp_apico_template_name', ''),
+                (string) Setting::getValue(
+                    'whatsapp_apico_invitation_param_keys',
+                    WhatsAppTemplateDefaults::INVITATION_PARAM_KEYS,
+                ),
+                (string) Setting::getValue('whatsapp_apico_template_language', 'id'),
             );
 
             if ($result) {
@@ -84,13 +90,16 @@ class WhatsAppService
                 ]);
 
                 Log::info("WhatsApp sent successfully to {$phoneNumber} via {$provider}");
+
                 return true;
             } else {
                 Log::error("Failed to send WhatsApp to {$phoneNumber} via {$provider}");
+
                 return false;
             }
         } catch (\Exception $e) {
-            Log::error('Failed to send WhatsApp invitation: ' . $e->getMessage());
+            Log::error('Failed to send WhatsApp invitation: '.$e->getMessage());
+
             return false;
         }
     }
@@ -99,7 +108,7 @@ class WhatsAppService
     {
         try {
             Log::info("Sending WhatsApp via Fonnte to {$phoneNumber}");
-            
+
             $response = Http::withOptions([
                 'verify' => false, // Disable SSL verification for local development
             ])->withHeaders([
@@ -111,7 +120,7 @@ class WhatsAppService
             ]);
 
             $responseData = $response->json();
-            Log::info('Fonnte API response: ' . json_encode($responseData));
+            Log::info('Fonnte API response: '.json_encode($responseData));
 
             if ($response->successful()) {
                 // Check if Fonnte returned success
@@ -119,17 +128,20 @@ class WhatsAppService
                 if (isset($responseData['status']) && $responseData['status'] == true) {
                     return true;
                 }
-                
+
                 // If status is not true, log the reason
                 $reason = $responseData['reason'] ?? 'Unknown error';
                 Log::error("Fonnte API returned false status: {$reason}");
+
                 return false;
             } else {
-                Log::error('Fonnte API HTTP error: ' . $response->status() . ' - ' . $response->body());
+                Log::error('Fonnte API HTTP error: '.$response->status().' - '.$response->body());
+
                 return false;
             }
         } catch (\Exception $e) {
-            Log::error('Fonnte exception: ' . $e->getMessage());
+            Log::error('Fonnte exception: '.$e->getMessage());
+
             return false;
         }
     }
@@ -138,7 +150,7 @@ class WhatsAppService
     {
         try {
             Log::info("Sending WhatsApp via Wablas to {$phoneNumber}");
-            
+
             $response = Http::withOptions([
                 'verify' => false,
             ])->withHeaders([
@@ -149,14 +161,17 @@ class WhatsAppService
             ]);
 
             if ($response->successful()) {
-                Log::info('Wablas API response: ' . $response->body());
+                Log::info('Wablas API response: '.$response->body());
+
                 return true;
             } else {
-                Log::error('Wablas API error: ' . $response->body());
+                Log::error('Wablas API error: '.$response->body());
+
                 return false;
             }
         } catch (\Exception $e) {
-            Log::error('Wablas exception: ' . $e->getMessage());
+            Log::error('Wablas exception: '.$e->getMessage());
+
             return false;
         }
     }
@@ -170,6 +185,7 @@ class WhatsAppService
         ?string $recipientName = null,
         ?string $apicoTemplateSetting = null,
         ?string $apicoParamKeysSetting = null,
+        ?string $apicoLanguageSetting = null,
     ): bool {
         $provider = $this->getProvider();
 
@@ -186,6 +202,7 @@ class WhatsAppService
                 $recipientName,
                 $apicoTemplateSetting,
                 $apicoParamKeysSetting,
+                $apicoLanguageSetting,
             ),
             default => tap(false, function () use ($provider) {
                 $this->setError('Unknown WhatsApp provider: '.$provider);
@@ -269,6 +286,7 @@ class WhatsAppService
         ?string $recipientName = null,
         ?string $templateNameSetting = null,
         ?string $paramKeysSetting = null,
+        ?string $languageSetting = null,
     ): bool {
         $this->lastError = null;
 
@@ -282,17 +300,19 @@ class WhatsAppService
 
         $templateName = trim((string) ($templateNameSetting ?? Setting::getValue('whatsapp_apico_template_name', '')));
         if ($templateName !== '') {
-            $language = (string) Setting::getValue('whatsapp_apico_template_language', 'id');
+            $language = $languageSetting ?? $this->resolveApiCoTemplateLanguage($templateName);
             $paramKeys = $paramKeysSetting ?? (string) Setting::getValue(
                 'whatsapp_apico_invitation_param_keys',
-                'nama_lengkap,tanggal_pemeriksaan,jam_pemeriksaan,lokasi_pemeriksaan,queue_number',
+                WhatsAppTemplateDefaults::INVITATION_PARAM_KEYS,
             );
-            $bodyParams = $this->buildApiCoTemplateParams($templateData, $paramKeys);
+            $legend = $this->apiCoParamLegendForTemplate($templateName);
+            $bodyParams = $this->buildApiCoTemplateParams($templateData, $paramKeys, $legend);
 
             return $this->sendApiCoMessage($token, $phoneNumberId, $recipientPhone, [
                 'message_type' => 'template',
+                'content' => $message,
                 'template' => $this->buildApiCoTemplatePayload($templateName, $language, $bodyParams),
-            ]);
+            ], $templateName, $language, count($bodyParams));
         }
 
         return $this->sendApiCoMessage($token, $phoneNumberId, $recipientPhone, [
@@ -301,18 +321,99 @@ class WhatsAppService
         ]);
     }
 
+    private function resolveApiCoTemplateLanguage(string $templateName): string
+    {
+        $resultTemplate = trim((string) Setting::getValue('whatsapp_apico_result_template_name', ''));
+        if ($resultTemplate !== '' && $templateName === $resultTemplate) {
+            return (string) Setting::getValue('whatsapp_apico_result_template_language', 'en_US');
+        }
+
+        return (string) Setting::getValue('whatsapp_apico_template_language', 'id');
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function apiCoParamLegendForTemplate(string $templateName): array
+    {
+        $resultTemplate = trim((string) Setting::getValue('whatsapp_apico_result_template_name', ''));
+
+        return ($resultTemplate !== '' && $templateName === $resultTemplate)
+            ? WhatsAppTemplateDefaults::resultVariableLegend()
+            : WhatsAppTemplateDefaults::invitationVariableLegend();
+    }
+
     /**
      * @param  array<string, string>  $templateData
+     * @param  array<int, string>  $legend
      * @return list<string>
      */
-    private function buildApiCoTemplateParams(array $templateData, string $paramKeys): array
+    private function buildApiCoTemplateParams(array $templateData, string $paramKeys, array $legend): array
     {
-        $keys = array_filter(array_map('trim', explode(',', $paramKeys)));
+        $keys = $this->parseApiCoParamKeys($paramKeys, $legend);
+
+        if ($keys === [] || count($keys) !== count($legend)) {
+            if ($keys !== [] && count($keys) !== count($legend)) {
+                Log::warning('Api.co.id template variable count mismatch; using default legend order', [
+                    'configured_count' => count($keys),
+                    'expected_count' => count($legend),
+                    'configured_keys' => $keys,
+                    'expected_keys' => array_values($legend),
+                ]);
+            }
+
+            $keys = array_values($legend);
+        }
 
         return array_map(
-            fn (string $key) => (string) ($templateData[$key] ?? '-'),
+            fn (string $key) => $this->sanitizeApiCoTemplateParamValue($templateData[$key] ?? null),
             $keys,
         );
+    }
+
+    private function sanitizeApiCoTemplateParamValue(mixed $value): string
+    {
+        $text = trim((string) ($value ?? ''));
+
+        return $text !== '' ? $text : '-';
+    }
+
+    /**
+     * @param  array<int, string>  $legend
+     * @return list<string>
+     */
+    private function parseApiCoParamKeys(string $paramKeys, array $legend): array
+    {
+        $parts = array_values(array_filter(array_map('trim', explode(',', $paramKeys))));
+
+        if ($parts === []) {
+            return [];
+        }
+
+        if (preg_match('/^\{\{\d+\}\}$/', $parts[0])) {
+            $indices = [];
+            foreach ($parts as $part) {
+                if (preg_match('/^\{\{(\d+)\}\}$/', $part, $matches)) {
+                    $indices[] = (int) $matches[1];
+                }
+            }
+
+            if ($indices !== [] && (max($indices) < count($legend) || count($parts) < count($legend))) {
+                return array_values($legend);
+            }
+
+            return array_map(function (string $part) use ($legend): string {
+                if (preg_match('/^\{\{(\d+)\}\}$/', $part, $matches)) {
+                    $index = (int) $matches[1];
+
+                    return $legend[$index] ?? $part;
+                }
+
+                return $part;
+            }, $parts);
+        }
+
+        return $parts;
     }
 
     /**
@@ -347,11 +448,17 @@ class WhatsAppService
         string $phoneNumberId,
         string $recipientPhone,
         array $payload,
+        ?string $templateName = null,
+        ?string $languageCode = null,
+        ?int $bodyParamCount = null,
     ): bool {
         try {
             Log::info('Sending WhatsApp via Api.co.id Chat Gateway', [
                 'to' => $recipientPhone,
                 'message_type' => $payload['message_type'] ?? 'unknown',
+                'template' => $templateName,
+                'language' => $languageCode,
+                'body_param_count' => $bodyParamCount,
             ]);
 
             $response = Http::withHeaders($this->apiCoHeaders($token))
@@ -382,11 +489,51 @@ class WhatsAppService
                 );
             }
 
+            if ($this->isApiCoTemplateNotFoundError($message)) {
+                $hint = $templateName && $languageCode
+                    ? " Template \"{$templateName}\" + bahasa \"{$languageCode}\" tidak cocok dengan Meta. Cek kolom bahasa di Api.co.id (mis. undangan=id, hasil=en_US)."
+                    : ' Periksa nama template dan kode bahasa di Pengaturan WhatsApp.';
+
+                return $this->setError('Api.co.id: '.$message.$hint);
+            }
+
+            if ($this->isApiCoMissingParameterError($message)) {
+                $hint = ' Pastikan jumlah variabel body template cocok dengan Meta (undangan_mcu_baru: 6 variabel — nama, tanggal, hari, jam, nomor urut, tempat). Perbarui field Variabel Template Undangan di Pengaturan → WhatsApp.';
+                if ($bodyParamCount !== null) {
+                    $hint .= " Aplikasi mengirim {$bodyParamCount} variabel body.";
+                }
+
+                return $this->setError('Api.co.id: '.$message.$hint);
+            }
+
             return $this->setError('Api.co.id: '.$message);
         } catch (\Exception $e) {
             return $this->setError('Api.co.id exception: '.$e->getMessage());
         }
     }
+
+    private function isApiCoMissingParameterError(string $message): bool
+    {
+        $haystack = strtolower($message);
+
+        return str_contains($haystack, 'missingparameter')
+            || str_contains($haystack, 'required parameter is missing')
+            || str_contains($haystack, 'parameter is missing');
+    }
+
+    private function isApiCoTemplateNotFoundError(string $message): bool
+    {
+        $haystack = strtolower($message);
+
+        return str_contains($haystack, 'template')
+            && (
+                str_contains($haystack, 'not found')
+                || str_contains($haystack, 'tidak ditemukan')
+                || str_contains($haystack, 'disetujui')
+                || str_contains($haystack, 'approved')
+            );
+    }
+
     private function sendViaMeta(string $token, string $phoneNumberId, string $recipientPhone, string $message): bool
     {
         if ($phoneNumberId === '') {
@@ -397,11 +544,11 @@ class WhatsAppService
 
         try {
             Log::info("Sending WhatsApp via Meta to {$recipientPhone}");
-            
+
             $response = Http::withOptions([
                 'verify' => false,
             ])->withHeaders([
-                'Authorization' => 'Bearer ' . $token,
+                'Authorization' => 'Bearer '.$token,
                 'Content-Type' => 'application/json',
             ])->post("https://graph.facebook.com/v18.0/{$phoneNumberId}/messages", [
                 'messaging_product' => 'whatsapp',
@@ -413,14 +560,17 @@ class WhatsAppService
             ]);
 
             if ($response->successful()) {
-                Log::info('Meta API response: ' . $response->body());
+                Log::info('Meta API response: '.$response->body());
+
                 return true;
             } else {
-                Log::error('Meta API error: ' . $response->body());
+                Log::error('Meta API error: '.$response->body());
+
                 return false;
             }
         } catch (\Exception $e) {
-            Log::error('Meta exception: ' . $e->getMessage());
+            Log::error('Meta exception: '.$e->getMessage());
+
             return false;
         }
     }
@@ -452,17 +602,17 @@ class WhatsAppService
     {
         // Remove all non-numeric characters
         $phone = preg_replace('/[^0-9]/', '', $phone);
-        
+
         // If starts with 0, replace with 62
         if (substr($phone, 0, 1) === '0') {
-            $phone = '62' . substr($phone, 1);
+            $phone = '62'.substr($phone, 1);
         }
-        
+
         // If doesn't start with 62, add it
         if (substr($phone, 0, 2) !== '62') {
-            $phone = '62' . $phone;
+            $phone = '62'.$phone;
         }
-        
+
         return $phone;
     }
 
@@ -481,7 +631,7 @@ class WhatsAppService
             'hari_pemeriksaan' => $schedule->tanggal_pemeriksaan ? $schedule->tanggal_pemeriksaan->locale('id')->dayName : '-',
             'jam_pemeriksaan' => $schedule->jam_pemeriksaan ? $schedule->jam_pemeriksaan->format('H:i') : '-',
             'lokasi_pemeriksaan' => $schedule->lokasi_pemeriksaan,
-            'queue_number' => $schedule->queue_number,
+            'queue_number' => (string) ($schedule->queue_number ?? '-'),
             'skpd' => $schedule->skpd,
             'ukpd' => $schedule->ukpd,
             'no_telp' => $schedule->no_telp,
@@ -572,8 +722,9 @@ class WhatsAppService
                 (string) Setting::getValue('whatsapp_apico_result_template_name', ''),
                 (string) Setting::getValue(
                     'whatsapp_apico_result_param_keys',
-                    'participant_name,tanggal_pemeriksaan,hasil_url',
+                    WhatsAppTemplateDefaults::RESULT_PARAM_KEYS,
                 ),
+                (string) Setting::getValue('whatsapp_apico_result_template_language', 'en_US'),
             );
 
             if ($sent) {
