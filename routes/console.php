@@ -16,3 +16,8 @@ Schedule::call(function (): void {
 })->name('mcu-sync-participants-from-ckg-delta')
     ->dailyAt('02:00')
     ->withoutOverlapping();
+
+Schedule::command('mcu:backup-database')
+    ->name('mcu-backup-database')
+    ->dailyAt('03:00')
+    ->withoutOverlapping();

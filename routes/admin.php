@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminNotificationsController;
 use App\Http\Controllers\Admin\CkgBridgeMonitoringController;
+use App\Http\Controllers\Admin\DatabaseBackupController;
 use App\Http\Controllers\Admin\DiagnosisController;
 use App\Http\Controllers\Admin\EmailTemplateController;
 use App\Http\Controllers\Admin\McuResultController;
@@ -76,6 +77,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
         Route::get('settings/email-result-template', [SettingController::class, 'emailResultTemplate'])->name('settings.email-result-template');
         Route::post('settings/email-result-template', [SettingController::class, 'updateEmailResultTemplate'])->name('settings.update-email-result-template');
+
+        Route::get('backup', [DatabaseBackupController::class, 'index'])->name('backup.index');
+        Route::post('backup', [DatabaseBackupController::class, 'store'])->middleware('throttle:3,10')->name('backup.store');
+        Route::get('backup/download/{filename}', [DatabaseBackupController::class, 'download'])->name('backup.download');
     });
 
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

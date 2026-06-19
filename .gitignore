@@ -19,6 +19,8 @@ docs/API_WA.MD
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/backups
+.backup-passphrase
 /vendor
 Homestead.json
 Homestead.yaml

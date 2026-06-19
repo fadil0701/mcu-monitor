@@ -356,11 +356,45 @@ Integrasi WhatsApp produksi memakai **Api.co.id** — salin [`docs/API_WA.exampl
 
 **Penting:** teks di **Admin → Template WhatsApp** tidak menggantikan template Meta jika **Nama Template WA** sudah diisi — edit template di Meta Business Manager, sync di Api.co.id, lalu pastikan nama & urutan variabel cocok.
 
+## Backup database
+
+Menu: **Super Admin → Backup Database** (`/admin/backup`)
+
+| Item | Nilai |
+|------|--------|
+| Output | `storage/backups/database/` (volume `app_storage` di Docker) |
+| Retensi | `BACKUP_RETENTION_DAYS` (default 14 hari) |
+| Kompresi | `BACKUP_COMPRESS=true` (gzip) |
+| Enkripsi | `BACKUP_ENCRYPT=true` + file `.backup-passphrase` (salin dari `deploy/backup-passphrase.example`) |
+| Restore | **Hanya SSH** — `./deploy/restore-database.sh` (tidak tersedia di UI) |
+
+**Backup manual (UI):** Super Admin → Backup Database → **Backup sekarang** (maks. 3× per 10 menit).
+
+**Backup otomatis (cron / scheduler):**
+
+```bash
+# Via scheduler container (sudah terjadwal 03:00 WIB)
+docker compose exec -T app php artisan mcu:backup-database
+
+# Atau shell di host VM
+./deploy/backup-database.sh
+```
+
+**Restore (SSH di server):**
+
+```bash
+./deploy/restore-database.sh --list
+./deploy/restore-database.sh --verify storage/backups/database/backup-monitoring_mcu-YYYYMMDD-HHMMSS.sql.gz.gpg
+./deploy/restore-database.sh storage/backups/database/backup-monitoring_mcu-YYYYMMDD-HHMMSS.sql.gz.gpg
+```
+
+**Env penting (Docker):** set `MYSQL_ROOT_PASSWORD` agar `mysqldump` dari container `app` dapat mengakses MySQL.
+
 ## Riwayat perubahan
 
 | Commit | Ringkasan |
 |--------|-----------|
-| *(pending)* | UI: modal proses import peserta tampil saat upload |
+| *(pending)* | Backup database: UI Super Admin, artisan `mcu:backup-database`, script deploy |
 | *(pending)* | UI: pagination per page 15/50/100 di Data Peserta |
 | *(pending)* | Portal peserta: kuota harian MCU + syarat CKG sebelum ajukan jadwal |
 | `3b1c5b6` | Fix import: hanya baca sheet Data Peserta (bukan Referensi) |

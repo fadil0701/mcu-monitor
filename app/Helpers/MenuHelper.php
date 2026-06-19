@@ -62,6 +62,11 @@ class MenuHelper
                         ['name' => 'PDF Templates', 'path' => route('admin.pdf-templates.index')],
                     ],
                 ];
+                $items[] = [
+                    'icon' => 'bx-data',
+                    'name' => 'Backup Database',
+                    'path' => route('admin.backup.index'),
+                ];
             }
 
             $items[] = [
