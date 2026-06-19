@@ -84,10 +84,12 @@
                                 </td>
                                 <td>
                                     <div class="table-action-group">
+                                        @if($whatsappSendEnabled ?? false)
                                         <form method="POST" action="{{ route('admin.schedules.send-whatsapp', $s) }}" class="d-inline" onsubmit="return confirm('Kirim jadwal MCU via WhatsApp ke {{ addslashes($s->nama_lengkap) }}?');">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-outline-success" title="Kirim WA"><i class="bx bxl-whatsapp"></i></button>
                                         </form>
+                                        @endif
                                         <form method="POST" action="{{ route('admin.schedules.send-email', $s) }}" class="d-inline" onsubmit="return confirm('Kirim jadwal MCU via Email ke {{ addslashes($s->email ?? $s->nama_lengkap) }}?');">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-outline-primary" title="Kirim Email"><i class="bx bx-envelope"></i></button>

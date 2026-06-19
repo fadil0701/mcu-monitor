@@ -107,6 +107,15 @@ return [
             'icon' => 'bxl-whatsapp',
             'description' => 'Koneksi API WhatsApp untuk pengiriman undangan dan hasil MCU.',
             'fields' => [
+                'whatsapp_send_enabled' => [
+                    'label' => 'Aktifkan Tombol Kirim WhatsApp',
+                    'type' => 'boolean',
+                    'group' => 'whatsapp',
+                    'storage_type' => 'boolean',
+                    'rules' => 'nullable|boolean',
+                    'default' => false,
+                    'help' => 'Jika aktif, tombol kirim WA muncul di Jadwal MCU dan Hasil MCU. Jika nonaktif, tombol disembunyikan (pengiriman otomatis bulk tidak terpengaruh).',
+                ],
                 'whatsapp_provider' => [
                     'label' => 'Penyedia Layanan',
                     'type' => 'select',

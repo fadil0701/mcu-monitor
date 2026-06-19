@@ -66,6 +66,19 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                @elseif($fieldType === 'boolean')
+                                    <input type="hidden" name="{{ $fieldKey }}" value="0">
+                                    <div class="form-check mt-1">
+                                        <input
+                                            type="checkbox"
+                                            class="form-check-input @error($fieldKey) is-invalid @enderror"
+                                            id="field_{{ $fieldKey }}"
+                                            name="{{ $fieldKey }}"
+                                            value="1"
+                                            @checked(filter_var(old($fieldKey, $values[$fieldKey] ?? false), FILTER_VALIDATE_BOOLEAN))
+                                        >
+                                        <label class="form-check-label" for="field_{{ $fieldKey }}">Aktif</label>
+                                    </div>
                                 @elseif($fieldType === 'password')
                                     <input
                                         type="password"

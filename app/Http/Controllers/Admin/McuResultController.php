@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Support\SqlFilter;
-use App\Support\SqlLike;
 use App\Models\McuResult;
+use App\Models\Participant;
 use App\Services\EmailService;
 use App\Services\WhatsAppService;
-use App\Models\Participant;
+use App\Support\SqlFilter;
+use App\Support\SqlLike;
+use App\Support\WhatsAppSendSettings;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class McuResultController extends Controller
 {
@@ -93,6 +94,7 @@ class McuResultController extends Controller
             $valid['file_hasil'] = $paths[0] ?? null;
         }
         McuResult::create($valid);
+
         return redirect()->route('admin.mcu-results.index')->with('success', 'Hasil MCU berhasil ditambahkan.');
     }
 
@@ -100,6 +102,7 @@ class McuResultController extends Controller
     {
         $mcu_result->load(['participant', 'schedule']);
         $participants = Participant::orderBy('nama_lengkap')->get();
+
         return view('admin.mcu-results.edit', [
             'mcuResult' => $mcu_result,
             'participants' => $participants,
@@ -127,35 +130,42 @@ class McuResultController extends Controller
             $valid['file_hasil'] = $valid['file_hasil_files'][0] ?? null;
         }
         $mcu_result->update($valid);
+
         return redirect()->route('admin.mcu-results.index')->with('success', 'Hasil MCU berhasil diubah.');
     }
 
     public function destroy(McuResult $mcu_result)
     {
         $mcu_result->delete();
+
         return redirect()->route('admin.mcu-results.index')->with('success', 'Hasil MCU berhasil dihapus.');
     }
 
     public function sendEmail(McuResult $mcu_result)
     {
         $participant = $mcu_result->participant;
-        if (!$participant || empty($participant->email)) {
+        if (! $participant || empty($participant->email)) {
             return redirect()->back()->withErrors(['send' => 'Email peserta tidak tersedia.']);
         }
         if ($this->emailService->sendMcuResult($mcu_result)) {
-            return redirect()->back()->with('success', 'Email hasil MCU berhasil dikirim ke ' . $participant->email . '.');
+            return redirect()->back()->with('success', 'Email hasil MCU berhasil dikirim ke '.$participant->email.'.');
         }
+
         return redirect()->back()->withErrors(['send' => 'Gagal mengirim email. Periksa pengaturan SMTP.']);
     }
 
     public function sendWhatsApp(McuResult $mcu_result)
     {
+        if (! WhatsAppSendSettings::buttonsEnabled()) {
+            return redirect()->back()->withErrors(['send' => 'Pengiriman WhatsApp dinonaktifkan di Pengaturan → WhatsApp.']);
+        }
+
         $participant = $mcu_result->participant;
-        if (!$participant || empty($participant->no_telp)) {
+        if (! $participant || empty($participant->no_telp)) {
             return redirect()->back()->withErrors(['send' => 'Nomor telepon peserta tidak tersedia.']);
         }
         if ($this->whatsappService->sendMcuResult($mcu_result)) {
-            return redirect()->back()->with('success', 'WhatsApp hasil MCU berhasil dikirim ke ' . $participant->nama_lengkap . '.');
+            return redirect()->back()->with('success', 'WhatsApp hasil MCU berhasil dikirim ke '.$participant->nama_lengkap.'.');
         }
 
         $detail = $this->whatsappService->getLastError();

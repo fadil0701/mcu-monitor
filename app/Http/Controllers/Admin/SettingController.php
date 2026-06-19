@@ -26,6 +26,8 @@ class SettingController extends Controller
                 if (($field['type'] ?? '') === 'password') {
                     $secretConfigured[$key] = filled(Setting::getValue($key));
                     $values[$key] = '';
+                } elseif (($field['type'] ?? '') === 'boolean') {
+                    $values[$key] = Setting::getValue($key, $field['default'] ?? false);
                 } else {
                     $values[$key] = Setting::getValue($key, $field['default'] ?? '');
                 }
@@ -70,6 +72,8 @@ class SettingController extends Controller
                 }
 
                 $value = (string) $request->input($key);
+            } elseif (($field['type'] ?? '') === 'boolean') {
+                $value = $request->boolean($key) ? '1' : '0';
             } else {
                 $value = $validated[$key] ?? '';
             }

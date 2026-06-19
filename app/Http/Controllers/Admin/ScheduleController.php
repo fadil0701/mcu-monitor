@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Support\SqlFilter;
-use App\Support\SqlLike;
-use App\Models\Schedule;
 use App\Models\Participant;
+use App\Models\Schedule;
 use App\Services\EmailService;
 use App\Services\WhatsAppService;
 use App\Support\ScheduleParticipantNotifier;
+use App\Support\SqlFilter;
+use App\Support\SqlLike;
+use App\Support\WhatsAppSendSettings;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ScheduleController extends Controller
@@ -37,6 +39,7 @@ class ScheduleController extends Controller
             $query->whereDate('tanggal_pemeriksaan', $request->date);
         }
         $schedules = $query->paginate(15)->withQueryString();
+
         return view('admin.schedules.index', compact('schedules'));
     }
 
@@ -44,6 +47,7 @@ class ScheduleController extends Controller
     {
         $participants = Participant::orderBy('nama_lengkap')->get();
         $participantId = $request->get('participant_id');
+
         return view('admin.schedules.create', compact('participants', 'participantId'));
     }
 
@@ -68,10 +72,10 @@ class ScheduleController extends Controller
         $valid['no_telp'] = $p->no_telp;
         $valid['email'] = $p->email;
         $valid['status'] = $valid['status'] ?? 'Terjadwal';
-        $valid['jam_pemeriksaan'] = \Carbon\Carbon::parse($valid['jam_pemeriksaan'])->format('H:i:s');
+        $valid['jam_pemeriksaan'] = Carbon::parse($valid['jam_pemeriksaan'])->format('H:i:s');
         $valid['lokasi_pemeriksaan'] = $valid['lokasi_pemeriksaan'] ?? config('mcu.default_location');
 
-        if (!Schedule::hasQuotaAvailable($valid['tanggal_pemeriksaan'], $valid['lokasi_pemeriksaan'])) {
+        if (! Schedule::hasQuotaAvailable($valid['tanggal_pemeriksaan'], $valid['lokasi_pemeriksaan'])) {
             return back()->withErrors(['tanggal_pemeriksaan' => 'Kuota untuk tanggal dan lokasi ini sudah penuh.']);
         }
 
@@ -91,6 +95,7 @@ class ScheduleController extends Controller
     {
         $schedule->load('participant');
         $participants = Participant::orderBy('nama_lengkap')->get();
+
         return view('admin.schedules.edit', compact('schedule', 'participants'));
     }
 
@@ -115,14 +120,14 @@ class ScheduleController extends Controller
         $schedule->no_telp = $p->no_telp;
         $schedule->email = $p->email;
         $schedule->tanggal_pemeriksaan = $valid['tanggal_pemeriksaan'];
-        $schedule->jam_pemeriksaan = \Carbon\Carbon::parse($valid['jam_pemeriksaan'])->format('H:i:s');
+        $schedule->jam_pemeriksaan = Carbon::parse($valid['jam_pemeriksaan'])->format('H:i:s');
         $schedule->lokasi_pemeriksaan = $valid['lokasi_pemeriksaan'] ?? config('mcu.default_location');
         $previousStatus = $schedule->status;
         $schedule->status = $valid['status'];
         $schedule->catatan = $valid['catatan'] ?? null;
 
         if (in_array($schedule->status, ['Terjadwal', 'Selesai'])) {
-            if (!Schedule::hasQuotaAvailable(
+            if (! Schedule::hasQuotaAvailable(
                 $schedule->tanggal_pemeriksaan,
                 $schedule->lokasi_pemeriksaan,
                 $schedule->id
@@ -148,6 +153,7 @@ class ScheduleController extends Controller
     public function destroy(Schedule $schedule)
     {
         $schedule->delete();
+
         return redirect()->route('admin.schedules.index')->with('success', 'Jadwal berhasil dihapus.');
     }
 
@@ -155,6 +161,7 @@ class ScheduleController extends Controller
     {
         $request->validate(['ids' => 'required|array|min:1', 'ids.*' => 'integer|exists:schedules,id']);
         $count = Schedule::whereIn('id', $request->ids)->delete();
+
         return redirect()->route('admin.schedules.index', $request->only(['search', 'date', 'status']))
             ->with('success', "{$count} jadwal berhasil dihapus.");
     }
@@ -187,21 +194,26 @@ class ScheduleController extends Controller
 
     public function sendEmail(Schedule $schedule)
     {
-        $emailService = new EmailService();
+        $emailService = new EmailService;
         if ($emailService->sendMcuInvitation($schedule)) {
-            return redirect()->back()->with('success', 'Email undangan berhasil dikirim ke ' . ($schedule->email ?: $schedule->nama_lengkap) . '.');
+            return redirect()->back()->with('success', 'Email undangan berhasil dikirim ke '.($schedule->email ?: $schedule->nama_lengkap).'.');
         }
+
         return redirect()->back()->withErrors(['send' => 'Gagal mengirim email. Periksa pengaturan SMTP.']);
     }
 
     public function sendWhatsApp(Schedule $schedule)
     {
+        if (! WhatsAppSendSettings::buttonsEnabled()) {
+            return redirect()->back()->withErrors(['send' => 'Pengiriman WhatsApp dinonaktifkan di Pengaturan → WhatsApp.']);
+        }
+
         if (empty($schedule->no_telp)) {
             return redirect()->back()->withErrors(['send' => 'Nomor telepon peserta tidak tersedia.']);
         }
-        $whatsappService = new WhatsAppService();
+        $whatsappService = new WhatsAppService;
         if ($whatsappService->sendMcuInvitation($schedule)) {
-            return redirect()->back()->with('success', 'WhatsApp undangan berhasil dikirim ke ' . $schedule->nama_lengkap . '.');
+            return redirect()->back()->with('success', 'WhatsApp undangan berhasil dikirim ke '.$schedule->nama_lengkap.'.');
         }
 
         $detail = $whatsappService->getLastError();

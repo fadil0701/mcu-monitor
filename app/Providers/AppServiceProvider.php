@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Support\InstansiPemprovDkiCatalog;
+use App\Support\WhatsAppSendSettings;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
@@ -28,6 +29,14 @@ class AppServiceProvider extends ServiceProvider
             'admin.reschedule-center.index',
         ], function ($view): void {
             $view->with('instansiPemprov', InstansiPemprovDkiCatalog::optionsForForms());
+        });
+
+        View::composer([
+            'admin.schedules.index',
+            'admin.mcu-results.index',
+            'admin.mcu-results.edit',
+        ], function ($view): void {
+            $view->with('whatsappSendEnabled', WhatsAppSendSettings::buttonsEnabled());
         });
 
         Paginator::defaultView('vendor.pagination.bootstrap-5');

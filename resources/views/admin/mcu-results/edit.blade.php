@@ -62,7 +62,7 @@
                 </button>
             </form>
             @endif
-            @if($mcuResult->participant?->no_telp)
+            @if(($whatsappSendEnabled ?? false) && $mcuResult->participant?->no_telp)
             <form method="POST" action="{{ route('admin.mcu-results.send-whatsapp', $mcuResult) }}" class="d-inline">
                 @csrf
                 <button type="submit" class="btn btn-outline-success d-inline-flex align-items-center gap-2">

@@ -126,7 +126,7 @@
                                         </form>
                                     @endif
 
-                                    @if($participant->no_telp && $participant->no_telp !== '-')
+                                    @if(($whatsappSendEnabled ?? false) && $participant->no_telp && $participant->no_telp !== '-')
                                         <form method="POST" action="{{ route('admin.mcu-results.send-whatsapp', $r) }}" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-outline-success" title="Kirim WhatsApp"><i class="bx bxl-whatsapp"></i></button>
