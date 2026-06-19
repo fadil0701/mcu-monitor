@@ -52,6 +52,9 @@ if [ ! -f public/build/manifest.json ]; then
     exit 1
 fi
 
+mkdir -p storage/backups/database
+chmod 775 storage/backups storage/backups/database 2>/dev/null || true
+
 echo "Membangun image dan menjalankan stack produksi..."
 export DOCKER_BUILDKIT=1
 export COMPOSE_PARALLEL_LIMIT=1

@@ -4,6 +4,7 @@ set -e
 cd /var/www/html
 
 fix_permissions() {
+    mkdir -p storage/backups/database storage/logs 2>/dev/null || true
     chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
     chmod -R ug+rwx storage bootstrap/cache 2>/dev/null || true
 }

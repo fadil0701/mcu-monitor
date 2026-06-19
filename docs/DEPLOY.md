@@ -403,6 +403,14 @@ Buat **salah satu** file passphrase (script dan artisan otomatis memakai yang ad
 
 **Catatan Docker:** mount passphrase ke container sudah diset di `docker-compose.prod.yml` (`/etc/mcuppkp/backup.pass`). Buat file di host **sebelum** `docker compose up` agar backup dari UI/scheduler di container juga berhasil.
 
+**Izin folder backup (Permission denied):** jika `bash deploy/backup-database.sh` gagal menulis ke `storage/backups/database`, script otomatis fallback ke `docker compose exec app php artisan mcu:backup-database`. Perbaikan permanen:
+
+```bash
+sudo mkdir -p storage/backups/database
+sudo chown -R "$(whoami):$(id -gn)" storage/backups
+chmod -R 775 storage/backups
+```
+
 ## Riwayat perubahan
 
 | Commit | Ringkasan |

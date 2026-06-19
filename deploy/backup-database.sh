@@ -41,7 +41,22 @@ if [ "$ENCRYPT" = "1" ]; then
     backup_gpg_require_tools || exit 1
 fi
 
-mkdir -p "$BACKUP_DIR"
+mkdir -p "$BACKUP_DIR" 2>/dev/null || true
+if [ ! -d "$BACKUP_DIR" ] || [ ! -w "$BACKUP_DIR" ]; then
+    if [ "$MYSQL_MODE" = "docker" ] && command -v docker >/dev/null 2>&1; then
+        echo "PERINGATAN: Tidak bisa menulis ke ${BACKUP_DIR} (user: $(whoami)) — backup via container app..." >&2
+        docker compose $(compose_prod_args) exec -T app php artisan mcu:backup-database
+        exit $?
+    fi
+
+    echo "ERROR: Folder backup tidak bisa ditulis: ${BACKUP_DIR}" >&2
+    echo "       Perbaiki izin di server:" >&2
+    echo "         sudo mkdir -p ${BACKUP_DIR}" >&2
+    echo "         sudo chown -R \$(whoami):\$(id -gn) storage/backups" >&2
+    echo "       Atau jalankan backup lewat container:" >&2
+    echo "         docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app php artisan mcu:backup-database" >&2
+    exit 1
+fi
 
 BASE_NAME="backup-${DB_DATABASE}-${TIMESTAMP}"
 SQL_PATH="${BACKUP_DIR}/${BASE_NAME}.sql"
