@@ -18,7 +18,9 @@ class ScheduleController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Schedule::query()->with('participant')->orderBy('tanggal_pemeriksaan', 'desc');
+        $query = Schedule::query()
+            ->with('participant:id,nama_lengkap,nik_ktp,ckg_peserta_id,ckg_registration_code,ckg_synced_at')
+            ->orderBy('tanggal_pemeriksaan', 'desc');
         if ($request->filled('search')) {
             $q = (string) $request->search;
             $pattern = SqlLike::contains($q);
@@ -47,8 +49,12 @@ class ScheduleController extends Controller
     {
         $participants = Participant::orderBy('nama_lengkap')->get();
         $participantId = $request->get('participant_id');
+        $selectedParticipantId = old('participant_id', $participantId);
+        $selectedParticipant = $selectedParticipantId
+            ? $participants->firstWhere('id', (int) $selectedParticipantId)
+            : null;
 
-        return view('admin.schedules.create', compact('participants', 'participantId'));
+        return view('admin.schedules.create', compact('participants', 'participantId', 'selectedParticipant'));
     }
 
     public function store(Request $request)
@@ -95,8 +101,11 @@ class ScheduleController extends Controller
     {
         $schedule->load('participant');
         $participants = Participant::orderBy('nama_lengkap')->get();
+        $selectedParticipantId = old('participant_id', $schedule->participant_id);
+        $selectedParticipant = $participants->firstWhere('id', (int) $selectedParticipantId)
+            ?? $schedule->participant;
 
-        return view('admin.schedules.edit', compact('schedule', 'participants'));
+        return view('admin.schedules.edit', compact('schedule', 'participants', 'selectedParticipant'));
     }
 
     public function update(Request $request, Schedule $schedule)

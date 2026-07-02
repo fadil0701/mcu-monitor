@@ -184,4 +184,16 @@ class ParticipantController extends Controller
                 ->with('error', 'Import gagal: '.$message);
         }
     }
+
+    public function scheduleMeta(Participant $participant)
+    {
+        return response()->json([
+            'within_mcu_interval' => $participant->isWithinMcuInterval(),
+            'ckg' => [
+                'label' => $participant->ckgStatusLabel(),
+                'badge' => $participant->ckgStatusBadgeClass(),
+                'hint' => $participant->ckgStatusHint(),
+            ],
+        ]);
+    }
 }

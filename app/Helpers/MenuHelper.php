@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Models\User;
 use App\Support\NotificationBadgeCounts;
 use Illuminate\Support\Facades\Auth;
 
@@ -9,96 +10,120 @@ class MenuHelper
 {
     public static function getMainNavItems(): array
     {
-        $items = [
-            [
-                'icon' => 'bx-home-circle',
-                'name' => 'Dashboard',
-                'path' => Auth::check() && Auth::user()->isAdmin()
-                    ? route('dashboard')
-                    : route('client.dashboard'),
-            ],
-        ];
-
-        if (Auth::check() && Auth::user()->isAdmin()) {
-            $items[] = [
-                'name' => 'Kelola Data',
-                'icon' => 'bx-data',
-                'subItems' => [
-                    ['name' => 'Integrasi CKG', 'path' => route('admin.ckg-bridge.index')],
-                    ['name' => 'Data Peserta', 'path' => route('admin.participants.index')],
-                    ['name' => 'Jadwal MCU', 'path' => route('admin.schedules.index')],
-                    ['name' => 'Hasil MCU', 'path' => route('admin.mcu-results.index')],
-                    ['name' => 'Pengguna', 'path' => route('admin.users.index')],
-                ],
-            ];
-
-            if (Auth::user()->hasRole('super_admin')) {
-                if (config('mcu.menu.master_data_enabled', false)) {
-                    $items[] = [
-                        'name' => 'Master Data',
-                        'icon' => 'bx-book-content',
-                        'subItems' => [
-                            ['name' => 'Diagnosis', 'path' => route('admin.diagnoses.index')],
-                            ['name' => 'Dokter Spesialis', 'path' => route('admin.specialist-doctors.index')],
-                        ],
-                    ];
-                }
-                $items[] = [
-                    'icon' => 'bx-calendar-edit',
-                    'name' => 'Permintaan Reschedule',
-                    'path' => route('admin.reschedule-center.index'),
-                    'badge' => NotificationBadgeCounts::pendingReschedules(),
-                ];
-                $items[] = [
-                    'icon' => 'bx-message-dots',
-                    'name' => 'WhatsApp Template',
-                    'path' => route('admin.whatsapp-templates.index'),
-                ];
-                $items[] = [
-                    'name' => 'Template Email & PDF',
-                    'icon' => 'bx-envelope',
-                    'subItems' => [
-                        ['name' => 'Email Templates', 'path' => route('admin.email-templates.index')],
-                        ['name' => 'PDF Templates', 'path' => route('admin.pdf-templates.index')],
-                    ],
-                ];
-                $items[] = [
-                    'icon' => 'bx-data',
-                    'name' => 'Backup Database',
-                    'path' => route('admin.backup.index'),
-                ];
-            }
-
-            $items[] = [
-                'icon' => 'bx-bell',
-                'name' => 'Notifikasi',
-                'path' => route('admin.notifications.index'),
-                'badge' => NotificationBadgeCounts::unreadFor(),
-            ];
-
-            $items[] = [
-                'icon' => 'bx-bar-chart-alt-2',
-                'name' => 'Laporan',
-                'path' => route('admin.reports.index'),
-            ];
-            $items[] = [
-                'icon' => 'bx-cog',
-                'name' => 'Pengaturan',
-                'path' => route('admin.settings.index'),
-            ];
-        } else {
-            $items[] = ['icon' => 'bx-user', 'name' => 'Profile Saya', 'path' => route('client.profile')];
-            $items[] = [
-                'icon' => 'bx-bell',
-                'name' => 'Notifikasi',
-                'path' => route('client.notifications.index'),
-                'badge' => NotificationBadgeCounts::unreadFor(),
-            ];
-            $items[] = ['icon' => 'bx-calendar', 'name' => 'Jadwal MCU', 'path' => route('client.schedules')];
-            $items[] = ['icon' => 'bx-file', 'name' => 'Hasil MCU', 'path' => route('client.results')];
+        $user = Auth::user();
+        if (! $user instanceof User) {
+            return [];
         }
 
+        return $user->isAdmin()
+            ? self::adminNavItems($user)
+            : self::participantNavItems();
+    }
+
+    private static function adminNavItems(User $user): array
+    {
+        $mcuSubItems = [
+            self::subLink('Data Peserta', route('admin.participants.index')),
+            self::subLink('Jadwal MCU', route('admin.schedules.index')),
+            self::subLink('Hasil MCU', route('admin.mcu-results.index')),
+        ];
+
+        if ($user->isSuperAdmin()) {
+            $mcuSubItems[] = self::subLink(
+                'Permintaan Reschedule',
+                route('admin.reschedule-center.index'),
+                NotificationBadgeCounts::pendingReschedules()
+            );
+        }
+
+        $items = [
+            self::header('Utama'),
+            self::link('bx-home-circle', 'Dashboard', route('dashboard')),
+            self::header('Operasional MCU'),
+            self::group('bx-pulse', 'MCU & Peserta', $mcuSubItems),
+            self::header('Integrasi'),
+            self::link('bx-link-alt', 'Integrasi CKG', route('admin.ckg-bridge.index')),
+            self::header('Laporan'),
+            self::link('bx-bar-chart-alt-2', 'Laporan', route('admin.reports.index')),
+        ];
+
+        if ($user->isSuperAdmin()) {
+            $items[] = self::header('Komunikasi');
+            $items[] = self::group('bx-message-dots', 'Template Pesan', [
+                self::subLink('WhatsApp', route('admin.whatsapp-templates.index')),
+                self::subLink('Email', route('admin.email-templates.index')),
+                self::subLink('PDF', route('admin.pdf-templates.index')),
+            ]);
+        }
+
+        $administration = [
+            self::subLink('Pengguna', route('admin.users.index')),
+            self::subLink('Notifikasi', route('admin.notifications.index'), NotificationBadgeCounts::unreadFor()),
+            self::subLink('Pengaturan', route('admin.settings.index')),
+        ];
+
+        if ($user->isSuperAdmin()) {
+            $administration[] = self::subLink('Backup Database', route('admin.backup.index'));
+
+            if (config('mcu.menu.master_data_enabled', false)) {
+                $items[] = self::header('Master Data');
+                $items[] = self::group('bx-book-content', 'Referensi Medis', [
+                    self::subLink('Diagnosis', route('admin.diagnoses.index')),
+                    self::subLink('Dokter Spesialis', route('admin.specialist-doctors.index')),
+                ]);
+            }
+        }
+
+        $items[] = self::header('Administrasi');
+        $items[] = self::group('bx-cog', 'Sistem', $administration);
+
         return $items;
+    }
+
+    private static function participantNavItems(): array
+    {
+        return [
+            self::header('Utama'),
+            self::link('bx-home-circle', 'Dashboard', route('client.dashboard')),
+            self::header('Layanan MCU'),
+            self::link('bx-calendar', 'Jadwal MCU', route('client.schedules')),
+            self::link('bx-file', 'Hasil MCU', route('client.results')),
+            self::header('Akun'),
+            self::link('bx-user', 'Profile Saya', route('client.profile')),
+            self::link('bx-bell', 'Notifikasi', route('client.notifications.index'), NotificationBadgeCounts::unreadFor()),
+        ];
+    }
+
+    private static function header(string $name): array
+    {
+        return ['type' => 'header', 'name' => $name];
+    }
+
+    private static function link(string $icon, string $name, string $path, int $badge = 0): array
+    {
+        $item = compact('icon', 'name', 'path');
+
+        if ($badge > 0) {
+            $item['badge'] = $badge;
+        }
+
+        return $item;
+    }
+
+    private static function group(string $icon, string $name, array $subItems): array
+    {
+        return compact('icon', 'name', 'subItems');
+    }
+
+    private static function subLink(string $name, string $path, int $badge = 0): array
+    {
+        $item = compact('name', 'path');
+
+        if ($badge > 0) {
+            $item['badge'] = $badge;
+        }
+
+        return $item;
     }
 
     public static function isActive(string $path): bool

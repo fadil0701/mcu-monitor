@@ -30,7 +30,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libonig-dev \
     libxml2-dev \
     libicu-dev \
+    libpq-dev \
     default-mysql-client \
+    postgresql-client \
     gnupg \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
@@ -42,6 +44,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         opcache \
         pcntl \
         pdo_mysql \
+        pdo_pgsql \
         zip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -85,7 +88,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libonig-dev \
     libxml2-dev \
     libicu-dev \
+    libpq-dev \
     default-mysql-client \
+    postgresql-client \
     gnupg \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
@@ -97,6 +102,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         opcache \
         pcntl \
         pdo_mysql \
+        pdo_pgsql \
         zip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

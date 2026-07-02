@@ -12,6 +12,15 @@ source "$ROOT/deploy/lib/backup-mysql.sh"
 
 load_proxy_from_env .env
 
+DB_CONN="$(grep -E '^DB_CONNECTION=' .env 2>/dev/null | head -1 | cut -d= -f2- | tr -d ' \"'"'"'')"
+if [ "$DB_CONN" = "pgsql" ]; then
+    echo "ERROR: Restore PostgreSQL tidak didukung oleh skrip MySQL ini."
+    echo "       Gunakan pg_restore / panduan health-platform:"
+    echo "         health-platform/infrastructure/backup/restore-pre-cutover.sh"
+    echo "       Atau restore lewat pgAdmin (database mcu_monitor)."
+    exit 1
+fi
+
 usage() {
     cat <<'EOF'
 Monitoring MCU — restore / verifikasi backup database

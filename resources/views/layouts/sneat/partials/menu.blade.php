@@ -17,10 +17,12 @@
     <div class="menu-inner-shadow"></div>
 
     <ul class="menu-inner py-1">
-        <li class="menu-header small text-uppercase"><span class="menu-header-text">Menu</span></li>
-
         @foreach(\App\Helpers\MenuHelper::getMainNavItems() as $item)
-            @if(isset($item['subItems']))
+            @if(($item['type'] ?? null) === 'header')
+                <li class="menu-header small text-uppercase mcu-menu-section">
+                    <span class="menu-header-text">{{ $item['name'] }}</span>
+                </li>
+            @elseif(isset($item['subItems']))
                 @php $subActive = \App\Helpers\MenuHelper::isSubmenuActive($item['subItems']); @endphp
                 <li class="menu-item {{ $subActive ? 'active open' : '' }}">
                     <a href="javascript:void(0);" class="menu-link menu-toggle">

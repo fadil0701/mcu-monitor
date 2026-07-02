@@ -25,6 +25,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('participants/template/download', [ParticipantController::class, 'downloadTemplate'])->name('participants.template');
     Route::post('participants/import', [ParticipantController::class, 'import'])->name('participants.import');
     Route::post('participants/bulk-destroy', [ParticipantController::class, 'bulkDestroy'])->name('participants.bulk-destroy');
+    Route::get('participants/{participant}/schedule-meta', [ParticipantController::class, 'scheduleMeta'])->name('participants.schedule-meta');
     Route::delete('participants/bulk-destroy', function () {
         return redirect()->route('admin.participants.index')
             ->with('error', 'Permintaan hapus tidak valid. Gunakan ikon hapus per baris atau tombol Bulk Hapus.');

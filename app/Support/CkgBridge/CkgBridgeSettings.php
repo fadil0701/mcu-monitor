@@ -21,8 +21,11 @@ final class CkgBridgeSettings
     public static function apiKey(): string
     {
         $config = CkgBridgeConfig::current();
-        if ($config?->is_active && filled($config->api_key)) {
-            return (string) $config->api_key;
+        if ($config?->is_active) {
+            $key = $config->readApiKey();
+            if ($key !== null && $key !== '') {
+                return $key;
+            }
         }
 
         return (string) config('ckg_bridge.api_key', '');

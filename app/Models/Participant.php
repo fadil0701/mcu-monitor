@@ -53,6 +53,97 @@ class Participant extends Model
         return $this->ckg_peserta_id !== null || filled($this->ckg_registration_code);
     }
 
+    public function ckgScreeningYear(): ?int
+    {
+        if ($this->ckg_synced_at) {
+            return (int) $this->ckg_synced_at->format('Y');
+        }
+
+        if (preg_match('/(\d{4})/', (string) $this->ckg_registration_code, $matches) === 1) {
+            $year = (int) $matches[1];
+            if ($year >= 2020 && $year <= 2100) {
+                return $year;
+            }
+        }
+
+        return null;
+    }
+
+    public function hasCkgForCurrentYear(): bool
+    {
+        return $this->hasCompletedCkgScreening()
+            && $this->ckgScreeningYear() === (int) now()->format('Y');
+    }
+
+    public function ckgStatusLabel(): string
+    {
+        if (! $this->hasCompletedCkgScreening()) {
+            return 'Belum CKG';
+        }
+
+        $year = $this->ckgScreeningYear();
+        $currentYear = (int) now()->format('Y');
+
+        if ($year === $currentYear) {
+            return 'Sudah CKG '.$currentYear;
+        }
+
+        if ($year !== null) {
+            return 'CKG '.$year;
+        }
+
+        return 'Sudah CKG';
+    }
+
+    public function ckgStatusBadgeClass(): string
+    {
+        if (! $this->hasCompletedCkgScreening()) {
+            return 'bg-label-danger';
+        }
+
+        if ($this->hasCkgForCurrentYear()) {
+            return 'bg-label-success';
+        }
+
+        return 'bg-label-warning';
+    }
+
+    public function ckgStatusHint(): ?string
+    {
+        if (! $this->hasCompletedCkgScreening()) {
+            return 'Belum tersinkron dari Portal CKG (belum selesai pemeriksaan atau perlu sync).';
+        }
+
+        $parts = array_filter([
+            $this->ckg_registration_code ? 'Kode: '.$this->ckg_registration_code : null,
+            $this->ckg_synced_at ? 'Sinkron: '.$this->ckg_synced_at->format('d/m/Y H:i') : null,
+        ]);
+
+        return $parts !== [] ? implode(' · ', $parts) : null;
+    }
+
+    public function isWithinMcuInterval(): bool
+    {
+        if ($this->tanggal_mcu_terakhir === null) {
+            return false;
+        }
+
+        $eligibleFrom = $this->tanggal_mcu_terakhir->copy()
+            ->addYears((int) config('mcu.interval_years', 3));
+
+        return $eligibleFrom->isFuture();
+    }
+
+    public function mcuEligibleFrom(): ?Carbon
+    {
+        if ($this->tanggal_mcu_terakhir === null) {
+            return null;
+        }
+
+        return $this->tanggal_mcu_terakhir->copy()
+            ->addYears((int) config('mcu.interval_years', 3));
+    }
+
     public function getUmurAttribute(): int
     {
         return Carbon::parse($this->tanggal_lahir)->age;

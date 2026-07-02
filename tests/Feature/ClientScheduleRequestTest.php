@@ -27,6 +27,20 @@ class ClientScheduleRequestTest extends TestCase
         $this->assertSame(0, Schedule::query()->count());
     }
 
+    public function test_participant_cannot_submit_when_mcu_within_interval(): void
+    {
+        [$user] = $this->makeEligibleParticipant(withCkg: true, mcuWithinInterval: true);
+
+        $this->actingAs($user)
+            ->post(route('client.schedule.request.store'), [
+                'tanggal_pemeriksaan' => now()->addWeek()->toDateString(),
+                'jam_pemeriksaan' => '08:30',
+            ])
+            ->assertSessionHasErrors('request');
+
+        $this->assertSame(0, Schedule::query()->count());
+    }
+
     public function test_participant_cannot_submit_when_daily_quota_full(): void
     {
         config(['mcu.daily_quota' => 1]);
@@ -168,7 +182,7 @@ class ClientScheduleRequestTest extends TestCase
     /**
      * @return array{0: User, 1: Participant}
      */
-    private function makeEligibleParticipant(bool $withCkg = true): array
+    private function makeEligibleParticipant(bool $withCkg = true, bool $mcuWithinInterval = false): array
     {
         $participant = Participant::query()->create([
             'nik_ktp' => '3202180701930005',
@@ -182,8 +196,8 @@ class ClientScheduleRequestTest extends TestCase
             'no_telp' => '081234567890',
             'email' => 'peserta.mcu@test.local',
             'status_pegawai' => 'PNS',
-            'status_mcu' => 'Belum MCU',
-            'tanggal_mcu_terakhir' => null,
+            'status_mcu' => $mcuWithinInterval ? 'Sudah MCU' : 'Belum MCU',
+            'tanggal_mcu_terakhir' => $mcuWithinInterval ? now()->subYear() : null,
             'ckg_peserta_id' => $withCkg ? 99 : null,
             'ckg_registration_code' => $withCkg ? 'CKG-0099' : null,
         ]);

@@ -20,15 +20,7 @@
                 <input type="email" id="email" name="email" value="{{ old('email') }}" required class="form-control @error('email') is-invalid @enderror">
                 @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
-            <div class="col-md-6">
-                <label for="password" class="form-label">Password *</label>
-                <input type="password" id="password" name="password" required class="form-control @error('password') is-invalid @enderror">
-                @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="col-md-6">
-                <label for="password_confirmation" class="form-label">Konfirmasi Password *</label>
-                <input type="password" id="password_confirmation" name="password_confirmation" required class="form-control">
-            </div>
+            @include('admin.users.partials.password-fields', ['passwordRequired' => true])
             <div class="col-md-6">
                 <label for="role" class="form-label">Role *</label>
                 <select id="role" name="role" required class="form-select @error('role') is-invalid @enderror">
@@ -49,3 +41,7 @@
     </form>
 </x-common.component-card>
 @endsection
+
+@push('scripts')
+    @include('admin.users.partials.password-fields-script')
+@endpush

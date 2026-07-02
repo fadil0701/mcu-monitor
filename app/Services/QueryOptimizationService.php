@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\SqlDialect;
 use App\Support\SqlFilter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -18,13 +19,14 @@ class QueryOptimizationService
             $startTime = microtime(true);
             $intervalYears = (int) config('mcu.interval_years', 3);
             $cutoffDate = now()->subYears($intervalYears)->toDateString();
+            $today = now()->toDateString();
 
             // Subquery terpisah agar selaras dengan halaman Data Peserta (status_mcu)
             // dan tidak terdistorsi oleh JOIN schedules + mcu_results.
             $stats = DB::selectOne('
                 SELECT
                     (SELECT COUNT(*) FROM participants) as total_participants,
-                    (SELECT COUNT(DISTINCT participant_id) FROM schedules WHERE status = ? AND tanggal_pemeriksaan >= CURDATE()) as scheduled_participants,
+                    (SELECT COUNT(DISTINCT participant_id) FROM schedules WHERE status = ? AND tanggal_pemeriksaan >= ?) as scheduled_participants,
                     (SELECT COUNT(*) FROM participants WHERE status_mcu = ?) as sudah_mcu_status,
                     (SELECT COUNT(*) FROM participants WHERE status_mcu = ?) as belum_mcu_status,
                     (SELECT COUNT(*) FROM participants WHERE status_mcu = ?) as ditolak_mcu_status,
@@ -35,6 +37,7 @@ class QueryOptimizationService
                     (SELECT COUNT(*) FROM schedules WHERE status = ?) as rejected_schedules
             ', [
                 'Terjadwal',
+                $today,
                 'Sudah MCU',
                 'Belum MCU',
                 'Ditolak',
@@ -66,8 +69,8 @@ class QueryOptimizationService
             return DB::selectOne('
                 SELECT
                     (SELECT COUNT(*) FROM mcu_results) as total_results,
-                    (SELECT COUNT(*) FROM mcu_results WHERE is_published = 1) as published_count,
-                    (SELECT COUNT(*) FROM mcu_results WHERE is_published = 0 OR is_published IS NULL) as unpublished_count,
+                    (SELECT COUNT(*) FROM mcu_results WHERE is_published IS TRUE) as published_count,
+                    (SELECT COUNT(*) FROM mcu_results WHERE is_published IS NOT TRUE) as unpublished_count,
                     (SELECT COUNT(*) FROM participants p
                         WHERE p.status_mcu = ?
                         AND NOT EXISTS (SELECT 1 FROM mcu_results mr WHERE mr.participant_id = p.id)
@@ -106,15 +109,15 @@ class QueryOptimizationService
         return Cache::remember('today_operational_stats_' . $today, 120, function () use ($today) {
             return DB::selectOne('
                 SELECT
-                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ?) as total,
-                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND status = ?) as terjadwal,
-                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND status = ?) as selesai,
-                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND status = ?) as batal,
-                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND status = ?) as ditolak,
-                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND participant_confirmed = 1) as confirmed,
-                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND status = ? AND (participant_confirmed = 0 OR participant_confirmed IS NULL)) as belum_konfirmasi,
-                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) = ? AND reschedule_requested = 1) as reschedule_pending,
-                    (SELECT COUNT(*) FROM schedules WHERE DATE(tanggal_pemeriksaan) >= ? AND DATE(tanggal_pemeriksaan) <= ? AND status = ?) as upcoming_week
+                    (SELECT COUNT(*) FROM schedules WHERE tanggal_pemeriksaan = ?) as total,
+                    (SELECT COUNT(*) FROM schedules WHERE tanggal_pemeriksaan = ? AND status = ?) as terjadwal,
+                    (SELECT COUNT(*) FROM schedules WHERE tanggal_pemeriksaan = ? AND status = ?) as selesai,
+                    (SELECT COUNT(*) FROM schedules WHERE tanggal_pemeriksaan = ? AND status = ?) as batal,
+                    (SELECT COUNT(*) FROM schedules WHERE tanggal_pemeriksaan = ? AND status = ?) as ditolak,
+                    (SELECT COUNT(*) FROM schedules WHERE tanggal_pemeriksaan = ? AND participant_confirmed IS TRUE) as confirmed,
+                    (SELECT COUNT(*) FROM schedules WHERE tanggal_pemeriksaan = ? AND status = ? AND participant_confirmed IS NOT TRUE) as belum_konfirmasi,
+                    (SELECT COUNT(*) FROM schedules WHERE tanggal_pemeriksaan = ? AND reschedule_requested IS TRUE) as reschedule_pending,
+                    (SELECT COUNT(*) FROM schedules WHERE tanggal_pemeriksaan >= ? AND tanggal_pemeriksaan <= ? AND status = ?) as upcoming_week
             ', [
                 $today,
                 $today, 'Terjadwal',
@@ -157,25 +160,28 @@ class QueryOptimizationService
         return Cache::remember("skpd_stats_{$limit}", 1800, function () use ($limit) {
             $startTime = microtime(true);
             
-            $stats = DB::select("
-                SELECT 
-                    p.skpd,
-                    COUNT(DISTINCT p.id) as total_participants,
-                    COUNT(DISTINCT CASE WHEN s.status = 'Terjadwal' THEN s.id END) as scheduled_count,
-                    COUNT(DISTINCT CASE WHEN s.status = 'Selesai' THEN s.id END) as completed_count,
-                    COUNT(DISTINCT mr.id) as mcu_results_count,
-                    ROUND(
-                        (COUNT(DISTINCT CASE WHEN s.status = 'Selesai' THEN s.id END) / 
-                         NULLIF(COUNT(DISTINCT p.id), 0)) * 100, 2
-                    ) as completion_rate
-                FROM participants p
-                LEFT JOIN schedules s ON p.id = s.participant_id
-                LEFT JOIN mcu_results mr ON p.id = mr.participant_id
-                GROUP BY p.skpd
-                HAVING total_participants > 0
+            $stats = DB::select('
+                SELECT *
+                FROM (
+                    SELECT
+                        p.skpd,
+                        COUNT(DISTINCT p.id) as total_participants,
+                        COUNT(DISTINCT CASE WHEN s.status = ? THEN s.id END) as scheduled_count,
+                        COUNT(DISTINCT CASE WHEN s.status = ? THEN s.id END) as completed_count,
+                        COUNT(DISTINCT mr.id) as mcu_results_count,
+                        ROUND(
+                            (COUNT(DISTINCT CASE WHEN s.status = ? THEN s.id END) /
+                             NULLIF(COUNT(DISTINCT p.id), 0)) * 100, 2
+                        ) as completion_rate
+                    FROM participants p
+                    LEFT JOIN schedules s ON p.id = s.participant_id
+                    LEFT JOIN mcu_results mr ON p.id = mr.participant_id
+                    GROUP BY p.skpd
+                ) skpd_stats
+                WHERE total_participants > 0
                 ORDER BY total_participants DESC, completion_rate DESC
                 LIMIT ?
-            ", [$limit]);
+            ', ['Terjadwal', 'Selesai', 'Selesai', $limit]);
             
             $executionTime = round((microtime(true) - $startTime) * 1000, 2);
             Log::info("SKPD stats query executed in {$executionTime}ms");
@@ -193,27 +199,29 @@ class QueryOptimizationService
             $startTime = microtime(true);
             $startDate = now()->subMonths($months)->startOfMonth();
             $endDate = now()->endOfMonth();
+            $participantMonth = SqlDialect::monthBucket('created_at');
+            $mcuMonth = SqlDialect::monthBucket('COALESCE(tanggal_pemeriksaan, created_at)');
 
             $data = DB::select("
                 SELECT 
-                    DATE_FORMAT(created_at, '%Y-%m') as month,
+                    {$participantMonth} as month,
                     'participants' as type,
                     COUNT(*) as count
                 FROM participants 
                 WHERE created_at BETWEEN ? AND ?
-                GROUP BY month
+                GROUP BY 1
                 
                 UNION ALL
                 
                 SELECT 
-                    DATE_FORMAT(COALESCE(tanggal_pemeriksaan, created_at), '%Y-%m') as month,
+                    {$mcuMonth} as month,
                     'mcu_results' as type,
                     COUNT(*) as count
                 FROM mcu_results 
                 WHERE COALESCE(tanggal_pemeriksaan, created_at) BETWEEN ? AND ?
-                GROUP BY month
+                GROUP BY 1
                 
-                ORDER BY month
+                ORDER BY 1
             ", [$startDate, $endDate, $startDate, $endDate]);
 
             $participantsData = collect();

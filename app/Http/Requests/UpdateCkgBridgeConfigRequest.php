@@ -21,7 +21,7 @@ class UpdateCkgBridgeConfigRequest extends FormRequest
         return [
             'base_url' => ['required', 'string', 'max:500', 'regex:/^https?:\/\/.+/i'],
             'api_key' => 'nullable|string|max:500',
-            'api_key_header' => 'nullable|string|max:64',
+            'api_key_header' => 'nullable|string|max:64|in:X-Mcu-Api-Key',
             'per_page' => 'integer|min:1|max:500',
             'timeout_seconds' => 'integer|min:10|max:120',
             'is_active' => 'boolean',

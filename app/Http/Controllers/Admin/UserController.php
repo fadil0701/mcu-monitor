@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Support\SqlFilter;
 use App\Support\SqlLike;
+use App\Support\UserPasswordRules;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -43,10 +44,11 @@ class UserController extends Controller
         $valid = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'confirmed', UserPasswordRules::defaults()],
             'role' => 'required|in:super_admin,admin,peserta',
             'is_active' => 'nullable|boolean',
         ]);
+        $valid['role'] = $this->normalizeRole($valid['role']);
         $valid['password'] = Hash::make($valid['password']);
         $valid['is_active'] = (bool) ($valid['is_active'] ?? true);
         $user = User::create($valid);
@@ -64,10 +66,11 @@ class UserController extends Controller
         $valid = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => ['nullable', 'confirmed', UserPasswordRules::defaults()],
             'role' => 'required|in:super_admin,admin,peserta',
             'is_active' => 'nullable|boolean',
         ]);
+        $valid['role'] = $this->normalizeRole($valid['role']);
         if (!empty($valid['password'])) {
             $user->password = Hash::make($valid['password']);
         }
@@ -87,5 +90,10 @@ class UserController extends Controller
         }
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus.');
+    }
+
+    private function normalizeRole(string $role): string
+    {
+        return $role === 'peserta' ? 'user' : $role;
     }
 }

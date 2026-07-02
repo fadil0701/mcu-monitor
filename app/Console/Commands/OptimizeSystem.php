@@ -108,33 +108,37 @@ class OptimizeSystem extends Command
         // Pre-warm critical caches
         try {
             // Warm dashboard stats
-            $stats = DB::select("
+            $today = now()->toDateString();
+            $stats = DB::select('
                 SELECT 
                     COUNT(DISTINCT p.id) as total_participants,
-                    COUNT(DISTINCT CASE WHEN s.status = 'Terjadwal' THEN s.id END) as scheduled_participants,
+                    COUNT(DISTINCT CASE WHEN s.status = ? THEN s.id END) as scheduled_participants,
                     COUNT(DISTINCT mr.id) as completed_mcu,
-                    COUNT(DISTINCT CASE WHEN s.status = 'Terjadwal' AND s.tanggal_pemeriksaan >= CURDATE() THEN s.id END) as pending_mcu
+                    COUNT(DISTINCT CASE WHEN s.status = ? AND s.tanggal_pemeriksaan >= ? THEN s.id END) as pending_mcu
                 FROM participants p
                 LEFT JOIN schedules s ON p.id = s.participant_id
                 LEFT JOIN mcu_results mr ON p.id = mr.participant_id
-            ");
+            ', ['Terjadwal', 'Terjadwal', $today]);
             
             Cache::put('dashboard_stats', $stats[0], 900);
             
             // Warm SKPD stats
-            $skpdStats = DB::select("
-                SELECT 
-                    participants.skpd,
-                    COUNT(DISTINCT participants.id) as total,
-                    COUNT(DISTINCT CASE WHEN schedules.status = 'Terjadwal' THEN schedules.id END) as scheduled_count,
-                    COUNT(DISTINCT mcu_results.id) as completed_count
-                FROM participants
-                LEFT JOIN schedules ON participants.id = schedules.participant_id AND schedules.status = 'Terjadwal'
-                LEFT JOIN mcu_results ON participants.id = mcu_results.participant_id
-                GROUP BY participants.skpd
+            $skpdStats = DB::select('
+                SELECT *
+                FROM (
+                    SELECT
+                        participants.skpd,
+                        COUNT(DISTINCT participants.id) as total,
+                        COUNT(DISTINCT CASE WHEN schedules.status = ? THEN schedules.id END) as scheduled_count,
+                        COUNT(DISTINCT mcu_results.id) as completed_count
+                    FROM participants
+                    LEFT JOIN schedules ON participants.id = schedules.participant_id AND schedules.status = ?
+                    LEFT JOIN mcu_results ON participants.id = mcu_results.participant_id
+                    GROUP BY participants.skpd
+                ) skpd_stats
                 ORDER BY total DESC
                 LIMIT 5
-            ");
+            ', ['Terjadwal', 'Terjadwal']);
             
             Cache::put('skpd_stats', $skpdStats, 1800);
             

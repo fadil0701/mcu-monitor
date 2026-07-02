@@ -25,6 +25,8 @@
 | Portal CKG | port `9006`, path `/sikerja/` |
 | Proxy korporat (jika dipakai) | `http://10.15.3.20:80` |
 
+> **Migrasi PostgreSQL & deploy rutin:** subdomain dan `bash deploy/update-production.sh` tetap sama setelah cutover — lihat `health-platform/docs/deployment/PRODUCTION-DEPLOY-WORKFLOW.md`
+
 ## Prasyarat VM
 
 - Docker Engine 24+ dan Compose v2
@@ -431,5 +433,6 @@ chmod -R 775 storage/backups
 | `71ecf7d` | Field pendidikan terakhir di form daftar MCU; email placeholder kosong |
 | `d4d9546` | Lindungi konfigurasi bridge CKG saat `update-production.sh` |
 | `0a6250b` | Form aktivasi peserta lengkap + pendidikan terakhir |
+| 2026-06 | Panduan deploy rutin + subdomain pasca migrasi PG: `health-platform/docs/deployment/PRODUCTION-DEPLOY-WORKFLOW.md` |
 
 > Tambahkan baris baru di tabel ini setiap ada perubahan yang di-deploy.

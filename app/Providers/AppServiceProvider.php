@@ -3,12 +3,14 @@
 namespace App\Providers;
 
 use App\Support\InstansiPemprovDkiCatalog;
+use App\Support\UserPasswordRules;
 use App\Support\WhatsAppSendSettings;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Password::defaults(fn () => UserPasswordRules::defaults());
+
         View::composer([
             'auth.register',
             'auth.peserta-register',

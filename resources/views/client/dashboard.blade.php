@@ -60,14 +60,24 @@
                     <div>
                         <h6 class="mb-0">{{ $participant->nama_lengkap }}</h6>
                         <small class="text-muted">{{ $participant->skpd }}</small>
-                        <div class="mt-1">
+                        <div class="mt-1 d-flex flex-wrap gap-1">
                             <span class="badge bg-label-{{ $participant->status_mcu_color }}">{{ $participant->status_mcu }}</span>
+                            @include('partials.participant-ckg-status-badge', ['participant' => $participant])
                         </div>
                     </div>
                 </div>
                 <div class="row g-2 mb-3">
                     <div class="col-6"><small class="text-muted d-block">NIK</small><span class="fw-medium">{{ $participant->nik_ktp }}</span></div>
                     <div class="col-6"><small class="text-muted d-block">No. Telp</small><span class="fw-medium">{{ $participant->no_telp }}</span></div>
+                    <div class="col-12">
+                        <small class="text-muted d-block">Status CKG Terakhir</small>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
+                            @include('partials.participant-ckg-status-badge', ['participant' => $participant])
+                            @if($participant->ckgStatusHint())
+                                <small class="text-muted">{{ $participant->ckgStatusHint() }}</small>
+                            @endif
+                        </div>
+                    </div>
                 </div>
                 <a href="{{ route('client.profile') }}" class="btn btn-primary btn-sm w-100">
                     <i class="bx bx-edit me-1"></i> Perbarui Profile

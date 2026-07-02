@@ -14,11 +14,13 @@ fi
 
 if [ ! -f .env ]; then
     cp .env.production.example .env
-    echo "File .env dibuat dari .env.production.example — edit DB_PASSWORD, MYSQL_ROOT_PASSWORD, APP_KEY, SUPER_ADMIN_*."
+    echo "File .env dibuat dari .env.production.example — edit PGSQL_PASSWORD (= MCU_DB_PASSWORD di health-platform), APP_KEY, SUPER_ADMIN_*."
 fi
 
 fix_placeholder_proxy_in_env .env
 load_proxy_from_env .env
+
+ensure_ppkp_data_network
 
 if ! proxy_is_set; then
     unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy 2>/dev/null || true
@@ -69,6 +71,10 @@ echo "  docker compose -f docker-compose.yml -f docker-compose.prod.yml ps"
 echo ""
 APP_PORT="$(grep '^APP_PORT=' .env 2>/dev/null | head -1 | cut -d= -f2- || echo 9003)"
 echo "Aplikasi (LAN): http://$(hostname -I 2>/dev/null | awk '{print $1}' || echo 127.0.0.1):${APP_PORT}/"
+echo ""
+echo "Prasyarat infra: health-platform jalan (docker network ppkp-data, ppkp-postgres healthy)."
+echo "Migrasi MySQL→PG (sekali): ./deploy/migrate-mysql-to-pgsql.sh"
+echo "Mapping password: health-platform/docs/deployment/APP-ENV.md"
 echo ""
 echo "Buat super admin (sekali):"
 echo "  docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php artisan user:create-admin --from-env"

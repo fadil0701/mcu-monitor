@@ -44,6 +44,11 @@ class User extends Authenticatable
 		return in_array($this->role, ['admin','super_admin'], true);
 	}
 
+	public function isSuperAdmin(): bool
+	{
+		return $this->role === 'super_admin';
+	}
+
 	public function getRoleLabelAttribute(): string
 	{
 		return match ($this->role) {

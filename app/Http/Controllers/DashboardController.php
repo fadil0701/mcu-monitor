@@ -61,8 +61,10 @@ class DashboardController extends Controller
         }
 
         // Tabel konfirmasi hadir hari ini
+        $participantCkgColumns = 'participant:id,nama_lengkap,nik_ktp,ckg_peserta_id,ckg_registration_code,ckg_synced_at';
+
         $confirmedToday = Schedule::query()
-            ->with(['participant:id,nama_lengkap,nik_ktp'])
+            ->with([$participantCkgColumns])
             ->whereDate('tanggal_pemeriksaan', now()->toDateString())
             ->where('status', 'Terjadwal')
             ->where('participant_confirmed', true)
@@ -78,7 +80,7 @@ class DashboardController extends Controller
 
         // Antrian lengkap hari ini (TodayQueueTable)
         $todayQueue = Schedule::query()
-            ->with(['participant:id,nama_lengkap,nik_ktp'])
+            ->with([$participantCkgColumns])
             ->whereDate('tanggal_pemeriksaan', now()->toDateString())
             ->orderBy('jam_pemeriksaan')
             ->limit(50)
@@ -110,6 +112,15 @@ class DashboardController extends Controller
             $dailyQueueData[$key] = array_values($map);
         }
 
+        // Pengajuan jadwal MCU oleh peserta (status Terjadwal, 30 hari terakhir)
+        $recentScheduleRequests = Schedule::query()
+            ->with([$participantCkgColumns])
+            ->where('status', 'Terjadwal')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get();
+
         return view('dashboard.admin', [
             'stats' => $stats,
             'topSkpds' => $topSkpds,
@@ -120,6 +131,7 @@ class DashboardController extends Controller
             'confirmedTodayCount' => $confirmedTodayCount,
             'pendingRescheduleToday' => $pendingRescheduleToday,
             'todayQueue' => $todayQueue,
+            'recentScheduleRequests' => $recentScheduleRequests,
             'dailyQueueData' => $dailyQueueData,
             'mcuResultSummary' => $mcuResultSummary,
             'ckgSummary' => $ckgSummary,

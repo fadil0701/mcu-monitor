@@ -8,6 +8,7 @@ chmod +x deploy/*.sh 2>/dev/null || true
 source "$ROOT/deploy/lib/env-proxy.sh"
 
 load_proxy_from_env .env
+ensure_ppkp_data_network
 
 BRANCH="${DEPLOY_BRANCH:-main}"
 
@@ -58,6 +59,16 @@ docker compose $(compose_prod_args) exec -T app php artisan config:cache
 docker compose $(compose_prod_args) exec -T app php artisan route:cache
 # shellcheck disable=SC2046
 docker compose $(compose_prod_args) exec -T app php artisan view:cache
+
+APP_PORT="$(grep -E '^APP_PORT=' .env 2>/dev/null | head -1 | cut -d= -f2- | tr -d ' \"'"'"'')"
+APP_PORT="${APP_PORT:-9003}"
+echo ""
+echo "==> Health check (port Docker — nginx subdomain tidak berubah)"
+if curl -fsS --connect-timeout 5 "http://127.0.0.1:${APP_PORT}/up" >/dev/null; then
+    echo "    OK  http://127.0.0.1:${APP_PORT}/up"
+else
+    echo "    PERINGATAN: /up gagal di port ${APP_PORT} — cek docker compose ps & logs app"
+fi
 
 echo ""
 echo "==> Verifikasi aset CSS di container"

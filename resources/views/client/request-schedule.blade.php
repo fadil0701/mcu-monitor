@@ -14,6 +14,14 @@
                 </div>
             @endunless
 
+            @if($eligible && ! empty($infoNotes))
+                @foreach($infoNotes as $note)
+                    <div class="alert alert-info py-2">
+                        <i class="bx bx-info-circle me-1"></i>{{ $note }}
+                    </div>
+                @endforeach
+            @endif
+
             @if($eligible && $dailyQuota > 0)
                 <div class="alert alert-info py-2">
                     <i class="bx bx-info-circle me-1"></i>
@@ -99,6 +107,12 @@
                 </dd>
                 <dt class="col-sm-5">MCU Terakhir</dt>
                 <dd class="col-sm-7">{{ $participant->tanggal_mcu_terakhir_formatted }}</dd>
+                @if($participant->isWithinMcuInterval())
+                    <dt class="col-sm-5">Pengajuan ulang</dt>
+                    <dd class="col-sm-7">
+                        <span class="text-muted">Mulai {{ $participant->mcuEligibleFrom()?->format('d/m/Y') ?? '-' }}</span>
+                    </dd>
+                @endif
                 @if($dailyQuota > 0)
                     <dt class="col-sm-5">Kuota / hari</dt>
                     <dd class="col-sm-7">Maks. {{ number_format($dailyQuota, 0, ',', '.') }} peserta</dd>

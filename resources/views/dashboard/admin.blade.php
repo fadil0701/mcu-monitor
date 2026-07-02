@@ -246,7 +246,7 @@
                         </div>
                     </div>
                 </div>
-                <small class="text-muted">Syarat wajib sebelum mengajukan jadwal MCU di portal peserta.</small>
+                <small class="text-muted">Peserta dengan CKG selesai (tersinkron dari portal CKG) dapat mengajukan MCU jika belum MCU dalam {{ config('mcu.interval_years', 3) }} tahun.</small>
             </div>
         </div>
     </div>
@@ -362,6 +362,52 @@
     </div>
 </div>
 
+{{-- Pengajuan Jadwal MCU Terbaru --}}
+<div class="card mb-4" id="pengajuan-jadwal-mcu">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h5 class="mb-0">Pengajuan Jadwal MCU (30 Hari Terakhir)</h5>
+        <a href="{{ route('admin.schedules.index', ['status' => 'Terjadwal']) }}" class="btn btn-sm btn-outline-primary">Semua jadwal terjadwal</a>
+    </div>
+    <div class="card-body">
+        @if(($recentScheduleRequests ?? collect())->count() > 0)
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Diajukan</th>
+                            <th>Peserta</th>
+                            <th>NIK</th>
+                            <th>Status CKG {{ now()->year }}</th>
+                            <th>Tanggal MCU</th>
+                            <th>Jam</th>
+                            <th>Lokasi</th>
+                            <th class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($recentScheduleRequests as $s)
+                            <tr>
+                                <td>{{ $s->created_at?->format('d/m/Y H:i') }}</td>
+                                <td>{{ $s->participant->nama_lengkap ?? $s->nama_lengkap }}</td>
+                                <td>{{ $s->nik_ktp }}</td>
+                                <td>@include('partials.participant-ckg-status-badge', ['participant' => $s->participant])</td>
+                                <td>{{ $s->tanggal_pemeriksaan?->format('d/m/Y') }}</td>
+                                <td>{{ $s->jam_pemeriksaan ? \Carbon\Carbon::parse($s->jam_pemeriksaan)->format('H:i') : '-' }}</td>
+                                <td class="text-truncate" style="max-width: 180px;" title="{{ $s->lokasi_pemeriksaan }}">{{ Str::limit($s->lokasi_pemeriksaan, 25) }}</td>
+                                <td class="text-center">
+                                    <a href="{{ route('admin.schedules.edit', $s) }}" class="btn btn-sm btn-outline-primary" title="Review"><i class="bx bx-edit"></i></a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <p class="text-muted mb-0">Belum ada pengajuan jadwal MCU dalam 30 hari terakhir.</p>
+        @endif
+    </div>
+</div>
+
 {{-- Antrian Hari Ini --}}
 <div class="card mb-4" id="antrian-hari-ini">
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -376,6 +422,7 @@
                         <tr>
                             <th>Peserta</th>
                             <th>NIK</th>
+                            <th>Status CKG</th>
                             <th>Jam</th>
                             <th>Lokasi</th>
                             <th>No.</th>
@@ -388,6 +435,7 @@
                             <tr>
                                 <td>{{ $s->participant->nama_lengkap ?? $s->nama_lengkap }}</td>
                                 <td>{{ $s->nik_ktp }}</td>
+                                <td>@include('partials.participant-ckg-status-badge', ['participant' => $s->participant])</td>
                                 <td>{{ $s->jam_pemeriksaan ? \Carbon\Carbon::parse($s->jam_pemeriksaan)->format('H:i') : '-' }}</td>
                                 <td class="text-truncate" style="max-width: 180px;" title="{{ $s->lokasi_pemeriksaan }}">{{ Str::limit($s->lokasi_pemeriksaan, 25) }}</td>
                                 <td>{{ $s->queue_number ?? '-' }}</td>

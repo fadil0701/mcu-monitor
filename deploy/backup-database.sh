@@ -12,6 +12,17 @@ source "$ROOT/deploy/lib/backup-mysql.sh"
 
 load_proxy_from_env .env
 
+DB_CONN="$(grep -E '^DB_CONNECTION=' .env 2>/dev/null | head -1 | cut -d= -f2- | tr -d ' \"'"'"'')"
+if [ "$DB_CONN" = "pgsql" ]; then
+    echo "==> Monitoring MCU — backup PostgreSQL (pg_dump via artisan)"
+    if command -v docker >/dev/null 2>&1 && docker compose $(compose_prod_args) ps --status running -q app 2>/dev/null | grep -q .; then
+        docker compose $(compose_prod_args) exec -T app php artisan mcu:backup-database
+        exit $?
+    fi
+    php artisan mcu:backup-database
+    exit $?
+fi
+
 BACKUP_DIR="${BACKUP_DIR:-$ROOT/storage/backups/database}"
 RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-14}"
 COMPRESS="${BACKUP_COMPRESS:-1}"

@@ -318,6 +318,7 @@ class ClientController extends Controller
 		$eligibility = new ParticipantMcuScheduleEligibility($participant);
 		$eligible = $eligibility->canRequest();
 		$reason = $eligibility->blockingReason();
+		$infoNotes = $eligibility->infoNotes();
 		$hasCkgScreening = $eligibility->hasCkgScreening();
 		$dailyQuota = McuDailyQuota::limit();
 
@@ -325,6 +326,7 @@ class ClientController extends Controller
 			'participant',
 			'eligible',
 			'reason',
+			'infoNotes',
 			'hasCkgScreening',
 			'dailyQuota',
 		));

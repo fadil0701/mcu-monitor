@@ -248,11 +248,11 @@
                         <a class="nav-link" href="#features">Fitur</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('login') }}">Login</a>
+                        <a class="nav-link btn btn-primary text-white px-3" href="{{ route('login') }}" style="background-color: #007bff !important; border-color: #007bff !important; color: white !important; text-decoration: none !important;">Login</a>
                     </li>
-                    <li class="nav-item">
+                    {{-- <li class="nav-item">
                         <a class="nav-link btn btn-primary text-white px-3" href="{{ route('register') }}" style="background-color: #007bff !important; border-color: #007bff !important; color: white !important; text-decoration: none !important;">Daftar MCU</a>
-                    </li>
+                    </li> --}}
                 </ul>
             </div>
         </div>
@@ -277,9 +277,12 @@
                         <a href="{{ route('register') }}" class="btn-hero btn-primary-hero" style="text-decoration: none !important;">
                             <i class="fas fa-user-plus me-2"></i>Daftar MCU Sekarang
                         </a>
-                        <a href="{{ route('login') }}" class="btn-hero btn-outline-hero" style="text-decoration: none !important;">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        <a href="{{ route('peserta.aktivasi') }}" class="btn-hero btn-outline-hero" style="text-decoration: none !important;">
+                            <i class="fas fa-user-check me-2"></i>Verifikasi Akun
                         </a>
+                        {{-- <a href="{{ route('login') }}" class="btn-hero btn-outline-hero" style="text-decoration: none !important;">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </a> --}}
                     </div>
                 </div>
                 <div class="col-lg-6">
@@ -416,25 +419,25 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="row">
+            <div class="row  ">
                 <div class="col-lg-6">
-                    <h5 class="mb-3">
+                    <h3 class="mb-3 text-white">
                         <i class="fas fa-heartbeat text-primary me-2"></i>
-                        Sistem Monitoring MCU PPKP DKI Jakarta
-                    </h5>
-                    <p class="text-muted">Platform terpadu untuk monitoring dan penjadwalan Medical Check Up AS Jakarta dengan sistem yang aman dan terpercaya.</p>
+                        <b>Sistem Monitoring MCU PPKP DKI Jakarta</b>
+                    </h3>
+                    <p class="text-white">Platform terpadu Monitoring Medical Check Up ASN DKI Jakarta. Pendaftaran, Penjadwalan, Monitoring, Hasil dan Laporan MCU secara terintegrasi.</p>
                 </div>
                 <div class="col-lg-3">
                     <h6 class="mb-3">Quick Links</h6>
                     <ul class="list-unstyled">
-                        <li><a href="#features" class="text-muted text-decoration-none">Fitur</a></li>
-                        <li><a href="{{ route('login') }}" class="text-muted text-decoration-none">Login</a></li>
-                        <li><a href="{{ route('register') }}" class="text-muted text-decoration-none">Daftar</a></li>
+                        <li><a href="#features" class="text-white text-decoration-none">Fitur</a></li>
+                        <li><a href="{{ route('login') }}" class="text-white text-decoration-none">Login</a></li>
+                        <li><a href="{{ route('register') }}" class="text-white text-decoration-none">Daftar</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-3">
                     <h6 class="mb-3">Kontak</h6>
-                    <ul class="list-unstyled text-muted">
+                    <ul class="list-unstyled te">
                         <li><i class="fas fa-envelope me-2"></i>puspelkes@jakarta.go.id</li>
                         <li><i class="fas fa-phone me-2"></i>(021) 382 3065</li>
                         <li><i class="fas fa-map-marker-alt me-2"></i>DKI Jakarta</li>
@@ -444,7 +447,7 @@
             <hr class="my-4">
             <div class="row">
                 <div class="col-12 text-center">
-                    <p class="text-muted mb-0">&copy; 2025 Sistem Monitoring MCU PPKP DKI Jakarta. All rights reserved.</p>
+                    <p class="te mb-0">&copy; 2025 Sistem Monitoring MCU PPKP DKI Jakarta. All rights reserved.</p>
                 </div>
             </div>
         </div>

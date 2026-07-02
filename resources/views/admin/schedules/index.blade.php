@@ -56,6 +56,7 @@
                             </th>
                             <th>Tanggal</th>
                             <th>Peserta</th>
+                            <th>Status CKG</th>
                             <th>Lokasi</th>
                             <th>No. Antrian</th>
                             <th>Status</th>
@@ -70,6 +71,7 @@
                                 </td>
                                 <td>{{ $s->tanggal_pemeriksaan?->format('d/m/Y') }}</td>
                                 <td class="fw-medium">{{ $s->nama_lengkap ?? $s->participant?->nama_lengkap }}</td>
+                                <td>@include('partials.participant-ckg-status-badge', ['participant' => $s->participant])</td>
                                 <td class="text-truncate" style="max-width: 200px;" title="{{ $s->lokasi_pemeriksaan }}">{{ $s->lokasi_pemeriksaan }}</td>
                                 <td>{{ $s->queue_number ?? '-' }}</td>
                                 <td>
@@ -101,7 +103,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="empty-state">Belum ada jadwal.</td>
+                                <td colspan="8" class="empty-state">Belum ada jadwal.</td>
                             </tr>
                         @endforelse
                     </tbody>

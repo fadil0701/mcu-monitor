@@ -12,10 +12,24 @@ class DatabaseBackupRunner
         private readonly DatabaseBackupCatalog $catalog,
     ) {}
 
+    public function driver(): string
+    {
+        return (string) config('database.default', 'mysql');
+    }
+
     public function mysqldumpAvailable(): bool
     {
+        return $this->dumpAvailable();
+    }
+
+    public function dumpAvailable(): bool
+    {
         try {
-            $this->findMysqldump();
+            if ($this->driver() === 'pgsql') {
+                $this->findPgDump();
+            } else {
+                $this->findMysqldump();
+            }
 
             return true;
         } catch (\Throwable) {
@@ -42,12 +56,17 @@ class DatabaseBackupRunner
     {
         $this->catalog->ensureDirectory();
 
-        $database = (string) config('database.connections.mysql.database', 'monitoring_mcu');
+        $connection = $this->activeConnectionName();
+        $database = (string) config("database.connections.{$connection}.database", 'monitoring_mcu');
         $timestamp = now()->format('Ymd-His');
         $baseName = "backup-{$database}-{$timestamp}";
         $sqlPath = $this->catalog->directory().DIRECTORY_SEPARATOR."{$baseName}.sql";
 
-        $this->dumpDatabase($sqlPath, $database);
+        if ($this->driver() === 'pgsql') {
+            $this->dumpPostgresDatabase($sqlPath, $connection, $database);
+        } else {
+            $this->dumpMysqlDatabase($sqlPath, $database);
+        }
 
         if (! is_file($sqlPath) || filesize($sqlPath) === 0) {
             @unlink($sqlPath);
@@ -81,11 +100,18 @@ class DatabaseBackupRunner
         return $finalPath;
     }
 
-    private function dumpDatabase(string $outputPath, string $database): void
+    private function activeConnectionName(): string
+    {
+        $default = $this->driver();
+
+        return in_array($default, ['mysql', 'pgsql'], true) ? $default : 'mysql';
+    }
+
+    private function dumpMysqlDatabase(string $outputPath, string $database): void
     {
         $mysqldump = $this->findMysqldump();
 
-        [$host, $port, $user, $password] = $this->dumpCredentials();
+        [$host, $port, $user, $password] = $this->mysqlDumpCredentials();
 
         $command = [
             $mysqldump,
@@ -113,10 +139,44 @@ class DatabaseBackupRunner
         file_put_contents($outputPath, $process->getOutput());
     }
 
+    private function dumpPostgresDatabase(string $outputPath, string $connection, string $database): void
+    {
+        $pgDump = $this->findPgDump();
+
+        $host = (string) config("database.connections.{$connection}.host", '127.0.0.1');
+        $port = (string) config("database.connections.{$connection}.port", '5432');
+        $user = (string) config("database.connections.{$connection}.username", 'postgres');
+        $password = (string) config("database.connections.{$connection}.password", '');
+
+        $command = [
+            $pgDump,
+            '--host='.$host,
+            '--port='.$port,
+            '--username='.$user,
+            '--format=plain',
+            '--no-owner',
+            '--no-privileges',
+            $database,
+        ];
+
+        $process = new Process($command, timeout: 600);
+        $process->setEnv(array_filter([
+            'PGPASSWORD' => $password !== '' ? $password : null,
+            'PGSSLMODE' => (string) config("database.connections.{$connection}.sslmode", 'prefer'),
+        ]));
+        $process->run();
+
+        if (! $process->isSuccessful()) {
+            throw new RuntimeException(trim($process->getErrorOutput() ?: 'pg_dump gagal.'));
+        }
+
+        file_put_contents($outputPath, $process->getOutput());
+    }
+
     /**
      * @return array{0: string, 1: string, 2: string, 3: string}
      */
-    private function dumpCredentials(): array
+    private function mysqlDumpCredentials(): array
     {
         $host = (string) config('database.connections.mysql.host', '127.0.0.1');
         $port = (string) config('database.connections.mysql.port', '3306');
@@ -162,8 +222,21 @@ class DatabaseBackupRunner
         }
 
         throw new RuntimeException(
-            'Binary mysqldump tidak ditemukan. Pasang mysql-client, set LARAGON_ROOT di .env, atau BACKUP_MYSQL_BIN_DIR (contoh Laragon: D:/laragon/bin/mysql/mysql-8.0.30-winx64/bin).'
+            'Binary mysqldump tidak ditemukan. Pasang mysql-client, set LARAGON_ROOT di .env, atau BACKUP_MYSQL_BIN_DIR.'
         );
+    }
+
+    private function findPgDump(): string
+    {
+        foreach (['pg_dump', 'pg_dump.exe'] as $candidate) {
+            $process = new Process([$candidate, '--version']);
+            $process->run();
+            if ($process->isSuccessful()) {
+                return $candidate;
+            }
+        }
+
+        throw new RuntimeException('Binary pg_dump tidak ditemukan. Pasang postgresql-client di image Docker.');
     }
 
     /**

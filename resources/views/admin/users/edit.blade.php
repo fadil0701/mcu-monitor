@@ -20,19 +20,14 @@
                 <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required class="form-control @error('email') is-invalid @enderror">
                 @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
-            <div class="col-md-6">
-                <label for="password" class="form-label">Password (kosongkan jika tidak diubah)</label>
-                <input type="password" id="password" name="password" class="form-control @error('password') is-invalid @enderror">
-                @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="col-md-6">
-                <label for="password_confirmation" class="form-label">Konfirmasi Password</label>
-                <input type="password" id="password_confirmation" name="password_confirmation" class="form-control">
-            </div>
+            @include('admin.users.partials.password-fields', [
+                'passwordRequired' => false,
+                'passwordOptionalHint' => 'kosongkan jika tidak diubah',
+            ])
             <div class="col-md-6">
                 <label for="role" class="form-label">Role *</label>
                 <select id="role" name="role" required class="form-select @error('role') is-invalid @enderror">
-                    <option value="peserta" {{ old('role', $user->role) === 'peserta' ? 'selected' : '' }}>Peserta</option>
+                    <option value="peserta" {{ old('role', $user->role === 'user' ? 'peserta' : $user->role) === 'peserta' ? 'selected' : '' }}>Peserta</option>
                     <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Admin</option>
                     <option value="super_admin" {{ old('role', $user->role) === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                 </select>
@@ -49,3 +44,7 @@
     </form>
 </x-common.component-card>
 @endsection
+
+@push('scripts')
+    @include('admin.users.partials.password-fields-script')
+@endpush

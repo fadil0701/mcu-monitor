@@ -55,6 +55,15 @@
                 <span class="badge {{ $participant->status_mcu === 'Sudah MCU' ? 'bg-success' : ($participant->status_mcu === 'Ditolak' ? 'bg-danger' : 'bg-warning text-dark') }}">{{ $participant->status_mcu }}</span>
             </dd>
         </div>
+        <div class="col-md-6">
+            <dt class="text-muted mb-1">Status CKG Terakhir</dt>
+            <dd class="mb-0">
+                @include('partials.participant-ckg-status-badge', ['participant' => $participant])
+                @if($participant->ckgStatusHint())
+                    <small class="text-muted d-block mt-1">{{ $participant->ckgStatusHint() }}</small>
+                @endif
+            </dd>
+        </div>
         @if($participant->catatan)
             <div class="col-12">
                 <dt class="text-muted mb-1">Catatan</dt>

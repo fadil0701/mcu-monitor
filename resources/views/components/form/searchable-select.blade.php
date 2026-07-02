@@ -123,6 +123,7 @@
             function selectOption(opt) {
                 hidden.value = opt.dataset.value || '';
                 input.value = opt.dataset.label || '';
+                hidden.dispatchEvent(new Event('change', { bubbles: true }));
                 closeAll();
             }
 

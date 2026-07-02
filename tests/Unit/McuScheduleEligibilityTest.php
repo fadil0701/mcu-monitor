@@ -7,6 +7,7 @@ use App\Models\Schedule;
 use App\Support\McuDailyQuota;
 use App\Support\ParticipantMcuScheduleEligibility;
 use App\Support\ScheduleExaminationTime;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,9 +23,10 @@ class McuScheduleEligibilityTest extends TestCase
 
         $this->assertFalse($eligibility->canRequest());
         $this->assertStringContainsString('CKG', (string) $eligibility->blockingReason());
+        $this->assertSame([], $eligibility->infoNotes());
     }
 
-    public function test_participant_with_ckg_can_request_schedule(): void
+    public function test_participant_with_ckg_and_no_recent_mcu_can_request_schedule(): void
     {
         $participant = $this->makeParticipant([
             'ckg_peserta_id' => 42,
@@ -35,6 +37,40 @@ class McuScheduleEligibilityTest extends TestCase
 
         $this->assertTrue($eligibility->canRequest());
         $this->assertNull($eligibility->blockingReason());
+        $this->assertNotEmpty($eligibility->infoNotes());
+        $this->assertStringContainsString('belum pernah melakukan MCU', $eligibility->infoNotes()[0]);
+    }
+
+    public function test_participant_with_ckg_and_old_mcu_can_request_schedule_with_info_note(): void
+    {
+        $participant = $this->makeParticipant([
+            'ckg_peserta_id' => 42,
+            'ckg_registration_code' => 'CKG-0042',
+            'tanggal_mcu_terakhir' => Carbon::now()->subYears(4)->toDateString(),
+            'status_mcu' => 'Sudah MCU',
+        ]);
+
+        $eligibility = new ParticipantMcuScheduleEligibility($participant);
+
+        $this->assertTrue($eligibility->canRequest());
+        $this->assertNull($eligibility->blockingReason());
+        $this->assertStringContainsString('belum melakukan MCU dalam 3 tahun terakhir', $eligibility->infoNotes()[0]);
+    }
+
+    public function test_participant_with_recent_mcu_cannot_request_schedule(): void
+    {
+        $participant = $this->makeParticipant([
+            'ckg_peserta_id' => 42,
+            'ckg_registration_code' => 'CKG-0042',
+            'tanggal_mcu_terakhir' => Carbon::now()->subYear()->toDateString(),
+            'status_mcu' => 'Sudah MCU',
+        ]);
+
+        $eligibility = new ParticipantMcuScheduleEligibility($participant);
+
+        $this->assertFalse($eligibility->canRequest());
+        $this->assertStringContainsString('belum 3 tahun', (string) $eligibility->blockingReason());
+        $this->assertTrue($eligibility->hasMcuWithinInterval());
     }
 
     public function test_daily_quota_remaining_decreases_when_schedule_exists(): void

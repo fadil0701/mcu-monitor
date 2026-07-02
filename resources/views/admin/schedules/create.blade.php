@@ -7,6 +7,14 @@
 @section('content')
 
 <x-common.component-card title="Form Jadwal MCU">
+    <div class="alert alert-info py-2 mb-3">
+        <i class="bx bx-info-circle me-1"></i>
+        Admin dan super admin dapat mendaftarkan peserta MCU meskipun belum memenuhi interval {{ config('mcu.interval_years', 3) }} tahun sejak MCU terakhir.
+    </div>
+    <div id="participant-interval-warning" class="alert alert-warning py-2 mb-3 {{ ($selectedParticipant?->isWithinMcuInterval() ?? false) ? '' : 'd-none' }}">
+        <i class="bx bx-error me-1"></i>
+        Peserta terpilih masih dalam interval {{ config('mcu.interval_years', 3) }} tahun sejak MCU terakhir. Pendaftaran tetap dapat dilanjutkan oleh admin.
+    </div>
     <form method="POST" action="{{ route('admin.schedules.store') }}">
         @csrf
         <div class="row g-3">
@@ -23,6 +31,7 @@
                     :required="true"
                 />
             </div>
+            @include('partials.participant-ckg-form-field', ['participant' => $selectedParticipant])
             <div class="col-md-6">
                 <label for="tanggal_pemeriksaan" class="form-label">Tanggal Pemeriksaan *</label>
                 <input type="date" id="tanggal_pemeriksaan" name="tanggal_pemeriksaan" value="{{ old('tanggal_pemeriksaan') }}" min="{{ now()->toDateString() }}" onclick="this.showPicker?.()" required class="form-control @error('tanggal_pemeriksaan') is-invalid @enderror">
@@ -48,3 +57,7 @@
     </form>
 </x-common.component-card>
 @endsection
+
+@push('scripts')
+    @include('admin.schedules.partials.participant-meta-script')
+@endpush

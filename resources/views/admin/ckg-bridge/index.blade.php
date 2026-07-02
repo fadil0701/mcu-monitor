@@ -12,7 +12,8 @@
 @endif
 
 <div class="alert alert-info" role="alert">
-    Jika form simpan ditolak, atur bridge lewat CLI — panduan di <code>docs/DEPLOY.md</code> (bagian Bridge CKG).
+    <strong>API key</strong> di-generate di Dashboard CKG: menu <em>Bridging Monitoring MCU</em> → <strong>Generate API key baru</strong>.
+    Tempel key yang ditampilkan ke form di bawah (bukan di <code>.env</code>).
 </div>
 
 <div class="row g-4">
@@ -39,23 +40,25 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" for="ckg_api_key">API key (dari menu Bridging MCU di CKG)</label>
+                        <label class="form-label" for="ckg_api_key">API key (dari Generate di CKG → Bridging MCU)</label>
                         <input type="password" class="form-control" id="ckg_api_key" name="api_key" autocomplete="new-password"
-                               placeholder="{{ filled($config->api_key) ? '•••••••• (kosongkan jika tidak diubah)' : 'Tempel API key dari CKG' }}">
+                               placeholder="{{ $config->hasStoredApiKey() ? '•••••••• (kosongkan jika tidak diubah)' : 'Tempel API key hasil generate di CKG' }}">
                         <div class="form-text">
                             Status:
-                            @if(filled($config->api_key))
+                            @if($config->hasStoredApiKey())
                                 <span class="text-success fw-semibold">Terisi</span>
                             @else
-                                <span class="text-warning fw-semibold">Belum diisi</span>
+                                <span class="text-warning fw-semibold">Belum diisi — generate dulu di CKG</span>
                             @endif
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label" for="ckg_api_key_header">Header API key</label>
-                        <input type="text" class="form-control" id="ckg_api_key_header" name="api_key_header"
-                               value="{{ old('api_key_header', $config->api_key_header ?: 'X-Mcu-Api-Key') }}">
+                        <input type="hidden" name="api_key_header" value="X-Mcu-Api-Key">
+                        <input type="text" class="form-control bg-light" id="ckg_api_key_header" readonly
+                               value="X-Mcu-Api-Key">
+                        <div class="form-text">Harus sama dengan header di menu Bridging MCU (CKG).</div>
                     </div>
 
                     <div class="row g-2 mb-3">

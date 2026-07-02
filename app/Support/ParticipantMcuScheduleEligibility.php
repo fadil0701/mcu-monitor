@@ -21,9 +21,46 @@ final class ParticipantMcuScheduleEligibility
         return $this->ckgReason() ?? $this->intervalReason();
     }
 
+    /**
+     * @return list<string>
+     */
+    public function infoNotes(): array
+    {
+        if ($this->blockingReason() !== null) {
+            return [];
+        }
+
+        $intervalYears = $this->intervalYears();
+
+        if ($this->participant->tanggal_mcu_terakhir === null) {
+            return [
+                'Anda belum pernah melakukan MCU. Anda memenuhi syarat pengajuan jadwal MCU setelah menyelesaikan skrining CKG.',
+            ];
+        }
+
+        return [
+            'Anda belum melakukan MCU dalam '.$intervalYears.' tahun terakhir dan memenuhi syarat pengajuan jadwal MCU.',
+        ];
+    }
+
     public function hasCkgScreening(): bool
     {
         return $this->participant->hasCompletedCkgScreening();
+    }
+
+    public function hasMcuWithinInterval(): bool
+    {
+        return $this->intervalReason() !== null;
+    }
+
+    public function mcuEligibleFrom(): ?Carbon
+    {
+        if ($this->participant->tanggal_mcu_terakhir === null) {
+            return null;
+        }
+
+        return Carbon::parse($this->participant->tanggal_mcu_terakhir)
+            ->addYears($this->intervalYears());
     }
 
     private function ckgReason(): ?string
@@ -32,22 +69,25 @@ final class ParticipantMcuScheduleEligibility
             return null;
         }
 
-        return 'Anda belum melakukan Skrining Kesehatan Kerja (CKG) di PPKP. Selesaikan skrining terlebih dahulu sebelum mengajukan jadwal MCU.';
+        return 'Anda belum menyelesaikan Skrining Kesehatan Kerja (CKG) di PPKP. Selesaikan skrining terlebih dahulu sebelum mengajukan jadwal MCU.';
     }
 
     private function intervalReason(): ?string
     {
-        if (! $this->participant->tanggal_mcu_terakhir) {
+        if (! $this->participant->isWithinMcuInterval()) {
             return null;
         }
 
-        $intervalYears = (int) config('mcu.interval_years', 3);
-        $eligibleFrom = Carbon::parse($this->participant->tanggal_mcu_terakhir)->addYears($intervalYears);
+        $intervalYears = $this->intervalYears();
+        $eligibleFrom = $this->mcuEligibleFrom();
 
-        if ($eligibleFrom->lte(Carbon::now())) {
-            return null;
-        }
+        return 'Anda belum memenuhi syarat pendaftaran ulang (belum '.$intervalYears.' tahun sejak MCU terakhir'
+            .($eligibleFrom ? ', dapat mengajukan kembali mulai '.$eligibleFrom->format('d/m/Y') : '')
+            .'). Silakan hubungi admin jika ada kondisi khusus.';
+    }
 
-        return 'Anda belum memenuhi syarat pendaftaran ulang (belum '.$intervalYears.' tahun sejak MCU terakhir). Silakan hubungi admin jika ada kondisi khusus.';
+    private function intervalYears(): int
+    {
+        return (int) config('mcu.interval_years', 3);
     }
 }

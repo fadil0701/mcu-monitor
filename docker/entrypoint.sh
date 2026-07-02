@@ -10,11 +10,7 @@ fix_permissions() {
 }
 
 wait_for_database() {
-    if [ -z "$DB_HOST" ]; then
-        return 0
-    fi
-
-    echo "Waiting for database at ${DB_HOST}:${DB_PORT:-3306}..."
+    echo "Waiting for database (DB_CONNECTION=${DB_CONNECTION:-mysql})..."
     i=0
     while [ "$i" -lt 60 ]; do
         if php artisan db:monitor --no-interaction >/dev/null 2>&1; then
@@ -32,8 +28,6 @@ wait_for_database() {
 ensure_app_key() {
     if [ -z "$APP_KEY" ] || [ "$APP_KEY" = "base64:" ]; then
         echo "ERROR: APP_KEY belum diisi di file .env" >&2
-        echo "Jalankan di mesin lokal: php artisan key:generate --show" >&2
-        echo "Lalu salin nilainya ke APP_KEY= di .env sebelum docker compose up." >&2
         exit 1
     fi
 }

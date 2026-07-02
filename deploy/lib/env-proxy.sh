@@ -76,6 +76,15 @@ docker_proxy_env_args() {
         -e "no_proxy=${NO_PROXY:-}"
 }
 
+ensure_ppkp_data_network() {
+    if ! docker network inspect ppkp-data >/dev/null 2>&1; then
+        echo "ERROR: Docker network ppkp-data belum ada."
+        echo "Jalankan dulu health-platform:"
+        echo "  cd ../health-platform && ./scripts/install-production.sh"
+        exit 1
+    fi
+}
+
 compose_prod_args() {
     printf '%s' "-f docker-compose.yml -f docker-compose.prod.yml"
 }
