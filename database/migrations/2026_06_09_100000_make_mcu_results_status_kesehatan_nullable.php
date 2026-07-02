@@ -8,20 +8,33 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
+        $driver = Schema::getConnection()->getDriverName();
+
+        if ($driver === 'mysql') {
+            DB::statement("ALTER TABLE mcu_results MODIFY status_kesehatan ENUM('Sehat', 'Kurang Sehat', 'Tidak Sehat') NULL DEFAULT NULL");
+
             return;
         }
 
-        DB::statement("ALTER TABLE mcu_results MODIFY status_kesehatan ENUM('Sehat', 'Kurang Sehat', 'Tidak Sehat') NULL DEFAULT NULL");
+        if ($driver === 'pgsql') {
+            DB::statement('ALTER TABLE mcu_results ALTER COLUMN status_kesehatan DROP NOT NULL');
+        }
     }
 
     public function down(): void
     {
-        if (Schema::getConnection()->getDriverName() !== 'mysql') {
+        $driver = Schema::getConnection()->getDriverName();
+
+        if ($driver === 'mysql') {
+            DB::statement("UPDATE mcu_results SET status_kesehatan = 'Sehat' WHERE status_kesehatan IS NULL");
+            DB::statement("ALTER TABLE mcu_results MODIFY status_kesehatan ENUM('Sehat', 'Kurang Sehat', 'Tidak Sehat') NOT NULL");
+
             return;
         }
 
-        DB::statement("UPDATE mcu_results SET status_kesehatan = 'Sehat' WHERE status_kesehatan IS NULL");
-        DB::statement("ALTER TABLE mcu_results MODIFY status_kesehatan ENUM('Sehat', 'Kurang Sehat', 'Tidak Sehat') NOT NULL");
+        if ($driver === 'pgsql') {
+            DB::statement("UPDATE mcu_results SET status_kesehatan = 'Sehat' WHERE status_kesehatan IS NULL");
+            DB::statement('ALTER TABLE mcu_results ALTER COLUMN status_kesehatan SET NOT NULL');
+        }
     }
 };

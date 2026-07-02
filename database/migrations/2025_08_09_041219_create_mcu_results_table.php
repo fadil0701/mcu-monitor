@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('tanggal_pemeriksaan');
             $table->string('diagnosis')->nullable();
             $table->text('hasil_pemeriksaan');
-            $table->enum('status_kesehatan', ['Sehat', 'Kurang Sehat', 'Tidak Sehat']);
+            $table->enum('status_kesehatan', ['Sehat', 'Kurang Sehat', 'Tidak Sehat'])->nullable();
             $table->text('rekomendasi')->nullable();
             $table->string('file_hasil')->nullable();
             $table->boolean('is_downloaded')->default(false);
