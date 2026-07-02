@@ -37,6 +37,7 @@ fi
 echo "==> 2/6 Schema PostgreSQL"
 "${COMPOSE[@]}" exec -T app php artisan config:clear
 "${COMPOSE[@]}" exec -T app php artisan migrate --database=pgsql --force
+"${COMPOSE[@]}" exec -T app php artisan mcu:prepare-pgsql-schema
 
 if ! $SKIP_DATA; then
     echo ""
