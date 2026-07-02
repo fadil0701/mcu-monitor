@@ -37,18 +37,17 @@ class MenuHelper
         }
 
         $items = [
-            self::header('Utama'),
             self::link('bx-home-circle', 'Dashboard', route('dashboard')),
-            self::header('Operasional MCU'),
             self::group('bx-pulse', 'MCU & Peserta', $mcuSubItems),
-            self::header('Integrasi'),
+            self::group('bx-calendar', 'Kuota & Jadwal', [
+                self::subLink('Kuota MCU', route('admin.settings.index', ['tab' => 'schedule_quota'])),
+                self::subLink('Kalender Libur', route('admin.mcu-work-calendar.index')),
+            ]),
             self::link('bx-link-alt', 'Integrasi CKG', route('admin.ckg-bridge.index')),
-            self::header('Laporan'),
             self::link('bx-bar-chart-alt-2', 'Laporan', route('admin.reports.index')),
         ];
 
         if ($user->isSuperAdmin()) {
-            $items[] = self::header('Komunikasi');
             $items[] = self::group('bx-message-dots', 'Template Pesan', [
                 self::subLink('WhatsApp', route('admin.whatsapp-templates.index')),
                 self::subLink('Email', route('admin.email-templates.index')),
@@ -59,14 +58,13 @@ class MenuHelper
         $administration = [
             self::subLink('Pengguna', route('admin.users.index')),
             self::subLink('Notifikasi', route('admin.notifications.index'), NotificationBadgeCounts::unreadFor()),
-            self::subLink('Pengaturan', route('admin.settings.index')),
+            self::subLink('Pengaturan', route('admin.settings.index', ['tab' => 'general'])),
         ];
 
         if ($user->isSuperAdmin()) {
             $administration[] = self::subLink('Backup Database', route('admin.backup.index'));
 
             if (config('mcu.menu.master_data_enabled', false)) {
-                $items[] = self::header('Master Data');
                 $items[] = self::group('bx-book-content', 'Referensi Medis', [
                     self::subLink('Diagnosis', route('admin.diagnoses.index')),
                     self::subLink('Dokter Spesialis', route('admin.specialist-doctors.index')),
@@ -74,7 +72,6 @@ class MenuHelper
             }
         }
 
-        $items[] = self::header('Administrasi');
         $items[] = self::group('bx-cog', 'Sistem', $administration);
 
         return $items;
@@ -83,20 +80,12 @@ class MenuHelper
     private static function participantNavItems(): array
     {
         return [
-            self::header('Utama'),
             self::link('bx-home-circle', 'Dashboard', route('client.dashboard')),
-            self::header('Layanan MCU'),
             self::link('bx-calendar', 'Jadwal MCU', route('client.schedules')),
             self::link('bx-file', 'Hasil MCU', route('client.results')),
-            self::header('Akun'),
             self::link('bx-user', 'Profile Saya', route('client.profile')),
             self::link('bx-bell', 'Notifikasi', route('client.notifications.index'), NotificationBadgeCounts::unreadFor()),
         ];
-    }
-
-    private static function header(string $name): array
-    {
-        return ['type' => 'header', 'name' => $name];
     }
 
     private static function link(string $icon, string $name, string $path, int $badge = 0): array
@@ -126,16 +115,46 @@ class MenuHelper
         return $item;
     }
 
+    /** @var list<string> */
+    private const SETTINGS_DEDICATED_TABS = [
+        'schedule_quota',
+    ];
+
     public static function isActive(string $path): bool
     {
-        if (str_starts_with($path, 'http')) {
-            $path = parse_url($path, PHP_URL_PATH) ?? $path;
-        }
-
-        $path = ltrim($path, '/');
+        $parsed = parse_url($path);
+        $menuPath = ltrim((string) ($parsed['path'] ?? $path), '/');
         $current = request()->path();
 
-        return $current === $path || str_starts_with($current, $path.'/');
+        if ($current !== $menuPath && ! str_starts_with($current, $menuPath.'/')) {
+            return false;
+        }
+
+        if (! empty($parsed['query'])) {
+            parse_str((string) $parsed['query'], $menuQuery);
+
+            foreach ($menuQuery as $key => $value) {
+                $currentValue = request()->query($key);
+
+                if ($key === 'tab' && ($currentValue === null || $currentValue === '') && $value === 'general') {
+                    continue;
+                }
+
+                if ((string) $currentValue !== (string) $value) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        if ($menuPath === 'admin/settings') {
+            $tab = (string) (request()->query('tab') ?: 'general');
+
+            return ! in_array($tab, self::SETTINGS_DEDICATED_TABS, true);
+        }
+
+        return true;
     }
 
     public static function isSubmenuActive(array $subItems): bool

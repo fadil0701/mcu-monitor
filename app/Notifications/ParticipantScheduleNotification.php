@@ -26,20 +26,24 @@ class ParticipantScheduleNotification extends Notification
             : '-';
         $queue = $this->schedule->queue_number ? (string) $this->schedule->queue_number : null;
 
-        [$title, $message] = match ($this->type) {
-            'reschedule_approved' => [
-                'Reschedule Disetujui',
-                "Permintaan reschedule Anda disetujui. Jadwal baru: {$date} pukul {$time}.",
-            ],
-            'reschedule_rejected' => [
-                'Reschedule Ditolak',
-                'Permintaan reschedule Anda ditolak. Jadwal tetap pada tanggal semula.',
-            ],
-            'schedule_created' => [
-                'Jadwal MCU Baru',
-                "Admin menjadwalkan MCU Anda pada {$date} pukul {$time}.",
-            ],
-            'schedule_confirmed' => [
+		[$title, $message] = match ($this->type) {
+			'reschedule_approved' => [
+				'Reschedule Disetujui',
+				"Permintaan reschedule Anda disetujui. Jadwal baru: {$date} pukul {$time}.",
+			],
+			'reschedule_rejected' => [
+				'Reschedule Ditolak',
+				'Permintaan reschedule Anda ditolak. Jadwal tetap pada tanggal semula.',
+			],
+			'schedule_created' => [
+				'Jadwal MCU Baru',
+				"Admin menjadwalkan MCU Anda pada {$date} pukul {$time}.",
+			],
+			'schedule_pending' => [
+				'Pengajuan Jadwal MCU Diterima',
+				"Pengajuan jadwal MCU Anda pada {$date} pukul {$time} menunggu konfirmasi admin karena belum melakukan CKG di tahun berjalan.",
+			],
+			'schedule_confirmed' => [
                 'Jadwal MCU Dikonfirmasi',
                 $queue
                     ? "Jadwal MCU Anda: {$date} pukul {$time} (No. antrian {$queue})."

@@ -366,7 +366,7 @@
 <div class="card mb-4" id="pengajuan-jadwal-mcu">
     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
         <h5 class="mb-0">Pengajuan Jadwal MCU (30 Hari Terakhir)</h5>
-        <a href="{{ route('admin.schedules.index', ['status' => 'Terjadwal']) }}" class="btn btn-sm btn-outline-primary">Semua jadwal terjadwal</a>
+        <a href="{{ route('admin.schedules.index', ['status' => \App\Support\ScheduleStatuses::PENDING_ADMIN]) }}" class="btn btn-sm btn-outline-primary">Semua pengajuan menunggu</a>
     </div>
     <div class="card-body">
         @if(($recentScheduleRequests ?? collect())->count() > 0)
@@ -395,7 +395,19 @@
                                 <td>{{ $s->jam_pemeriksaan ? \Carbon\Carbon::parse($s->jam_pemeriksaan)->format('H:i') : '-' }}</td>
                                 <td class="text-truncate" style="max-width: 180px;" title="{{ $s->lokasi_pemeriksaan }}">{{ Str::limit($s->lokasi_pemeriksaan, 25) }}</td>
                                 <td class="text-center">
-                                    <a href="{{ route('admin.schedules.edit', $s) }}" class="btn btn-sm btn-outline-primary" title="Review"><i class="bx bx-edit"></i></a>
+                                    <div class="d-flex flex-wrap justify-content-center gap-1">
+                                        <form method="POST" action="{{ route('admin.schedules.quick-status', $s) }}" class="d-inline" onsubmit="return confirm('Konfirmasi jadwal ini?');">
+                                            @csrf
+                                            <input type="hidden" name="status" value="Terjadwal">
+                                            <button type="submit" class="btn btn-sm btn-icon btn-outline-success" title="Konfirmasi"><i class="bx bx-check"></i></button>
+                                        </form>
+                                        <form method="POST" action="{{ route('admin.schedules.quick-status', $s) }}" class="d-inline" onsubmit="return confirm('Tolak pengajuan ini?');">
+                                            @csrf
+                                            <input type="hidden" name="status" value="Ditolak">
+                                            <button type="submit" class="btn btn-sm btn-icon btn-outline-secondary" title="Tolak"><i class="bx bx-block"></i></button>
+                                        </form>
+                                        <a href="{{ route('admin.schedules.edit', $s) }}" class="btn btn-sm btn-outline-primary" title="Review"><i class="bx bx-edit"></i></a>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -403,7 +415,7 @@
                 </table>
             </div>
         @else
-            <p class="text-muted mb-0">Belum ada pengajuan jadwal MCU dalam 30 hari terakhir.</p>
+            <p class="text-muted mb-0">Belum ada pengajuan jadwal MCU yang menunggu konfirmasi dalam 30 hari terakhir.</p>
         @endif
     </div>
 </div>
@@ -444,6 +456,7 @@
                                         $badge = match($s->status) {
                                             'Terjadwal' => 'bg-label-warning',
                                             'Selesai' => 'bg-label-success',
+                                            'Menunggu Konfirmasi' => 'bg-label-info',
                                             'Batal' => 'bg-label-danger',
                                             'Ditolak' => 'bg-label-secondary',
                                             default => 'bg-label-secondary',

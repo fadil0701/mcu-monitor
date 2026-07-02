@@ -7,7 +7,7 @@
 <div class="card mb-4">
     <div class="card-body pb-0">
         <p class="text-muted mb-3">Kelola konfigurasi sistem monitoring MCU. Pilih kategori di bawah, ubah nilainya, lalu klik Simpan.</p>
-        <ul class="nav nav-tabs nav-tabs-settings" role="tablist">
+        <ul class="nav nav-tabs nav-tabs-settings flex-nowrap" role="tablist">
             @foreach($sections as $sectionKey => $section)
                 <li class="nav-item" role="presentation">
                     <a
@@ -35,15 +35,20 @@
                     @method('PUT')
                     <div class="row g-3">
                         @foreach($section['fields'] as $fieldKey => $field)
-                            <div class="{{ in_array($field['type'] ?? 'text', ['textarea']) ? 'col-12' : 'col-md-6' }}">
+                            @php
+                                $fieldType = $field['type'] ?? 'text';
+                                $colClass = match ($fieldType) {
+                                    'textarea' => 'col-12',
+                                    default => 'col-md-6',
+                                };
+                            @endphp
+                            <div class="{{ $colClass }}">
                                 <label for="field_{{ $fieldKey }}" class="form-label">
                                     {{ $field['label'] }}
                                     @if(str_contains($field['rules'] ?? '', 'required'))
                                         <span class="text-danger">*</span>
                                     @endif
                                 </label>
-
-                                @php $fieldType = $field['type'] ?? 'text'; @endphp
 
                                 @if($fieldType === 'textarea')
                                     <textarea
@@ -160,6 +165,16 @@
 
 @push('page-css')
 <style>
+.nav-tabs-settings {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+.nav-tabs-settings .nav-item {
+    flex-shrink: 0;
+}
 .nav-tabs-settings .nav-link {
     color: #697a8d;
     border: none;

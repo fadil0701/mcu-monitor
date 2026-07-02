@@ -16,7 +16,7 @@ final class ScheduleExaminationTime
 
     public static function defaultLocation(): string
     {
-        return (string) config('mcu.default_location', 'Klinik Utama Balaikota');
+        return McuScheduleSettings::defaultLocation();
     }
 
     public static function isAllowed(string $time): bool

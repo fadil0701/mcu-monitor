@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Rules\BookableExaminationDate;
 use App\Http\Controllers\Controller;
 use App\Models\Participant;
 use App\Models\Schedule;
 use App\Services\EmailService;
 use App\Services\WhatsAppService;
 use App\Support\ScheduleParticipantNotifier;
+use App\Support\ScheduleStatuses;
 use App\Support\SqlFilter;
 use App\Support\SqlLike;
 use App\Support\WhatsAppSendSettings;
@@ -32,7 +34,7 @@ class ScheduleController extends Controller
         }
         $status = SqlFilter::enum(
             $request->filled('status') ? (string) $request->status : null,
-            ['Terjadwal', 'Selesai', 'Batal', 'Ditolak'],
+            ScheduleStatuses::ALL,
         );
         if ($status !== null) {
             $query->where('status', $status);
@@ -61,10 +63,10 @@ class ScheduleController extends Controller
     {
         $valid = $request->validate([
             'participant_id' => 'required|exists:participants,id',
-            'tanggal_pemeriksaan' => 'required|date|after_or_equal:today',
+            'tanggal_pemeriksaan' => ['required', 'date', 'after_or_equal:today', new BookableExaminationDate],
             'jam_pemeriksaan' => 'required|string|max:10',
             'lokasi_pemeriksaan' => 'required|string|max:500',
-            'status' => 'nullable|in:Terjadwal,Selesai,Batal,Ditolak',
+            'status' => 'nullable|in:'.implode(',', ScheduleStatuses::ALL),
             'catatan' => 'nullable|string',
         ]);
         $p = Participant::findOrFail($valid['participant_id']);
@@ -112,10 +114,10 @@ class ScheduleController extends Controller
     {
         $valid = $request->validate([
             'participant_id' => 'required|exists:participants,id',
-            'tanggal_pemeriksaan' => 'required|date',
+            'tanggal_pemeriksaan' => ['required', 'date', new BookableExaminationDate],
             'jam_pemeriksaan' => 'required|string|max:10',
             'lokasi_pemeriksaan' => 'required|string|max:500',
-            'status' => 'required|in:Terjadwal,Selesai,Batal,Ditolak',
+            'status' => 'required|in:'.implode(',', ScheduleStatuses::ALL),
             'catatan' => 'nullable|string',
         ]);
         $p = Participant::findOrFail($valid['participant_id']);
@@ -131,30 +133,14 @@ class ScheduleController extends Controller
         $schedule->tanggal_pemeriksaan = $valid['tanggal_pemeriksaan'];
         $schedule->jam_pemeriksaan = Carbon::parse($valid['jam_pemeriksaan'])->format('H:i:s');
         $schedule->lokasi_pemeriksaan = $valid['lokasi_pemeriksaan'] ?? config('mcu.default_location');
-        $previousStatus = $schedule->status;
-        $schedule->status = $valid['status'];
         $schedule->catatan = $valid['catatan'] ?? null;
+        $previousStatus = $schedule->status;
 
-        if (in_array($schedule->status, ['Terjadwal', 'Selesai'])) {
-            if (! Schedule::hasQuotaAvailable(
-                $schedule->tanggal_pemeriksaan,
-                $schedule->lokasi_pemeriksaan,
-                $schedule->id
-            )) {
-                return back()->withErrors(['tanggal_pemeriksaan' => 'Kuota untuk tanggal dan lokasi ini sudah penuh.']);
-            }
-            $schedule->queue_number = Schedule::getNextQueueNumber(
-                $schedule->tanggal_pemeriksaan,
-                $schedule->lokasi_pemeriksaan,
-                $schedule->id
-            );
-        } else {
-            $schedule->queue_number = null;
+        if ($error = $this->applyStatusTransition($schedule, $valid['status'])) {
+            return $error;
         }
 
-        $schedule->save();
-
-        $this->notifyParticipantOnStatusChange($schedule, $previousStatus);
+        $this->notifyParticipantOnStatusChange($schedule->fresh(), $previousStatus);
 
         return redirect()->route('admin.schedules.index')->with('success', 'Jadwal berhasil diubah.');
     }
@@ -177,13 +163,44 @@ class ScheduleController extends Controller
 
     public function quickStatus(Request $request, Schedule $schedule)
     {
-        $request->validate(['status' => 'required|in:Terjadwal,Selesai,Batal,Ditolak']);
+        $request->validate(['status' => 'required|in:'.implode(',', ScheduleStatuses::ALL)]);
         $previousStatus = $schedule->status;
-        $schedule->update(['status' => $request->status]);
+        $newStatus = $request->status;
+
+        if ($error = $this->applyStatusTransition($schedule, $newStatus)) {
+            return $error;
+        }
 
         $this->notifyParticipantOnStatusChange($schedule->fresh(), $previousStatus);
 
         return redirect()->back()->with('success', 'Status jadwal berhasil diubah.');
+    }
+
+    private function applyStatusTransition(Schedule $schedule, string $newStatus): ?\Illuminate\Http\RedirectResponse
+    {
+        if (in_array($newStatus, ScheduleStatuses::QUOTA_COUNTED, true)) {
+            if (! Schedule::hasQuotaAvailable(
+                $schedule->tanggal_pemeriksaan->format('Y-m-d'),
+                $schedule->lokasi_pemeriksaan,
+                $schedule->id
+            )) {
+                return back()->withErrors(['status' => 'Kuota untuk tanggal dan lokasi ini sudah penuh.']);
+            }
+
+            $schedule->status = $newStatus;
+            $schedule->queue_number = Schedule::getNextQueueNumber(
+                $schedule->tanggal_pemeriksaan->format('Y-m-d'),
+                $schedule->lokasi_pemeriksaan,
+                $schedule->id
+            );
+        } else {
+            $schedule->status = $newStatus;
+            $schedule->queue_number = null;
+        }
+
+        $schedule->save();
+
+        return null;
     }
 
     private function notifyParticipantOnStatusChange(Schedule $schedule, string $previousStatus): void
@@ -195,6 +212,7 @@ class ScheduleController extends Controller
         $type = match ($schedule->status) {
             'Terjadwal', 'Selesai' => 'schedule_confirmed',
             'Batal', 'Ditolak' => 'schedule_rejected',
+            ScheduleStatuses::PENDING_ADMIN => 'schedule_pending',
             default => 'status_updated',
         };
 

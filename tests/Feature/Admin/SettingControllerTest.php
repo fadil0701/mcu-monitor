@@ -62,4 +62,18 @@ class SettingControllerTest extends TestCase
         $this->assertSame('existing-secret', Setting::getValue('smtp_password'));
         $this->assertSame('587', Setting::getValue('smtp_port'));
     }
+
+    public function test_admin_can_save_schedule_quota_settings(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->put(route('admin.settings.update-section', 'schedule_quota'), [
+                'mcu_daily_quota' => '75',
+                'mcu_default_location' => 'Klinik Utama Balaikota',
+            ])
+            ->assertRedirect(route('admin.settings.index', ['tab' => 'schedule_quota']));
+
+        $this->assertSame('75', Setting::getValue('mcu_daily_quota'));
+    }
 }

@@ -50,6 +50,7 @@
             <div class="col-md-6">
                 <label for="status" class="form-label">Status *</label>
                 <select id="status" name="status" required class="form-select @error('status') is-invalid @enderror">
+                    <option value="Menunggu Konfirmasi" {{ old('status', $schedule->status) === 'Menunggu Konfirmasi' ? 'selected' : '' }}>Menunggu Konfirmasi</option>
                     <option value="Terjadwal" {{ old('status', $schedule->status) === 'Terjadwal' ? 'selected' : '' }}>Terjadwal</option>
                     <option value="Selesai" {{ old('status', $schedule->status) === 'Selesai' ? 'selected' : '' }}>Selesai</option>
                     <option value="Batal" {{ old('status', $schedule->status) === 'Batal' ? 'selected' : '' }}>Batal</option>

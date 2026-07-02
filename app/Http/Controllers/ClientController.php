@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Notifications\NewScheduleRequest;
 use App\Support\ScheduleExaminationTime;
 use App\Support\ScheduleParticipantNotifier;
+use App\Rules\BookableExaminationDate;
 use App\Support\McuDailyQuota;
 use App\Support\ParticipantMcuScheduleEligibility;
 use App\Notifications\NewRegistrationNotification;
@@ -320,6 +321,7 @@ class ClientController extends Controller
 		$reason = $eligibility->blockingReason();
 		$infoNotes = $eligibility->infoNotes();
 		$hasCkgScreening = $eligibility->hasCkgScreening();
+		$requiresAdminConfirmation = $eligibility->requiresAdminConfirmation();
 		$dailyQuota = McuDailyQuota::limit();
 
 		return view('client.request-schedule', compact(
@@ -328,6 +330,7 @@ class ClientController extends Controller
 			'reason',
 			'infoNotes',
 			'hasCkgScreening',
+			'requiresAdminConfirmation',
 			'dailyQuota',
 		));
 	}
@@ -344,6 +347,26 @@ class ClientController extends Controller
 		return response()->json(McuDailyQuota::snapshot($valid['date']));
 	}
 
+	public function scheduleQuotaMonth(Request $request)
+	{
+		$user = Auth::user();
+		Participant::where('nik_ktp', $user->nik_ktp)->firstOrFail();
+
+		$valid = $request->validate([
+			'year' => ['required', 'integer', 'min:'.now()->year, 'max:'.(now()->year + 2)],
+			'month' => ['required', 'integer', 'min:1', 'max:12'],
+		]);
+
+		$requested = \Carbon\Carbon::createFromDate((int) $valid['year'], (int) $valid['month'], 1)->startOfMonth();
+		$earliest = now()->startOfMonth();
+
+		if ($requested->lt($earliest)) {
+			abort(422, 'Bulan tidak valid.');
+		}
+
+		return response()->json(McuDailyQuota::monthCalendar((int) $valid['year'], (int) $valid['month']));
+	}
+
 	public function storeScheduleRequest(Request $request)
 	{
 		$user = Auth::user();
@@ -355,7 +378,12 @@ class ClientController extends Controller
 		}
 
         $request->validate([
-            'tanggal_pemeriksaan' => ['required', 'date', 'after_or_equal:' . now()->startOfDay()->toDateString()],
+            'tanggal_pemeriksaan' => [
+                'required',
+                'date',
+                'after_or_equal:'.now()->startOfDay()->toDateString(),
+                new BookableExaminationDate,
+            ],
 			'jam_pemeriksaan' => [
                 'required',
                 'date_format:H:i',
@@ -372,6 +400,15 @@ class ClientController extends Controller
 
 		if (! McuDailyQuota::isAvailable($request->tanggal_pemeriksaan, $lokasiPemeriksaan)) {
 			$limit = McuDailyQuota::limit();
+			$snapshot = McuDailyQuota::snapshot($request->tanggal_pemeriksaan, $lokasiPemeriksaan);
+
+			if (! $snapshot['bookable']) {
+				return back()
+					->withInput()
+					->withErrors([
+						'tanggal_pemeriksaan' => $snapshot['bookable_reason'],
+					]);
+			}
 
 			return back()
 				->withInput()
@@ -394,23 +431,30 @@ class ClientController extends Controller
 			'tanggal_pemeriksaan' => $request->tanggal_pemeriksaan,
 			'jam_pemeriksaan' => $request->jam_pemeriksaan,
 			'lokasi_pemeriksaan' => $lokasiPemeriksaan,
-			'status' => 'Terjadwal',
+			'status' => $eligibility->requiresAdminConfirmation()
+				? \App\Support\ScheduleStatuses::PENDING_ADMIN
+				: 'Terjadwal',
 			'catatan' => $request->catatan,
 		]);
 
-        // Assign queue number for the date
-        $schedule->update([
-            'queue_number' => Schedule::getNextQueueNumber(
-                $schedule->tanggal_pemeriksaan->format('Y-m-d'),
-                $lokasiPemeriksaan,
-            ),
-        ]);
+		if ($schedule->isConfirmedSchedule()) {
+			$schedule->update([
+				'queue_number' => Schedule::getNextQueueNumber(
+					$schedule->tanggal_pemeriksaan->format('Y-m-d'),
+					$lokasiPemeriksaan,
+				),
+			]);
 
-        ScheduleParticipantNotifier::notify($schedule->fresh(), 'schedule_confirmed');
+			ScheduleParticipantNotifier::notify($schedule->fresh(), 'schedule_confirmed');
+		} else {
+			ScheduleParticipantNotifier::notify($schedule, 'schedule_pending');
+		}
 
-		// Notify admins about repeat registration (schedule request)
-		User::query()->whereIn('role', ['admin','super_admin'])->get()->each(function (User $admin) use ($participant, $schedule) {
-			$admin->notify(new NewRegistrationNotification('ulang', [
+		$adminNotificationType = $schedule->isPendingAdminConfirmation() ? 'menunggu_konfirmasi' : 'ulang';
+
+		// Notify admins about schedule request
+		User::query()->whereIn('role', ['admin','super_admin'])->get()->each(function (User $admin) use ($participant, $schedule, $adminNotificationType) {
+			$admin->notify(new NewRegistrationNotification($adminNotificationType, [
 				'participant_name' => $participant->nama_lengkap,
 				'nik_ktp' => $participant->nik_ktp,
 				'nrk_pegawai' => $participant->nrk_pegawai,
@@ -420,6 +464,10 @@ class ClientController extends Controller
 			]));
 		});
 
-		return redirect()->route('client.schedules')->with('success', 'Permintaan jadwal MCU berhasil dibuat. Menunggu konfirmasi admin.');
+		$successMessage = $schedule->isPendingAdminConfirmation()
+			? 'Permintaan jadwal MCU berhasil diajukan. Menunggu konfirmasi admin karena Anda belum melakukan CKG di tahun berjalan.'
+			: 'Jadwal MCU Anda telah dikonfirmasi. Silakan cek detail jadwal dan nomor antrian.';
+
+		return redirect()->route('client.schedules')->with('success', $successMessage);
 	}
 }

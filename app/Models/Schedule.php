@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\McuDailyQuota;
+use App\Support\ScheduleStatuses;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -68,12 +70,23 @@ class Schedule extends Model
 
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
+            ScheduleStatuses::PENDING_ADMIN => 'info',
             'Terjadwal' => 'warning',
             'Selesai' => 'success',
             'Batal' => 'danger',
             default => 'secondary',
         };
+    }
+
+    public function isPendingAdminConfirmation(): bool
+    {
+        return $this->status === ScheduleStatuses::PENDING_ADMIN;
+    }
+
+    public function isConfirmedSchedule(): bool
+    {
+        return in_array($this->status, ['Terjadwal', 'Selesai'], true);
     }
 
     public function getJenisKelaminTextAttribute(): string
@@ -127,7 +140,7 @@ class Schedule extends Model
 
     public static function hasQuotaAvailable(string $date, string $location, ?int $excludeId = null): bool
     {
-        $quota = config('mcu.daily_quota', 100);
+        $quota = McuDailyQuota::limit();
         if ($quota <= 0) {
             return true;
         }
@@ -135,7 +148,7 @@ class Schedule extends Model
         $query = static::query()
             ->whereDate('tanggal_pemeriksaan', $date)
             ->where('lokasi_pemeriksaan', $location)
-            ->whereIn('status', ['Terjadwal', 'Selesai']);
+            ->whereIn('status', ScheduleStatuses::QUOTA_COUNTED);
 
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
@@ -149,7 +162,7 @@ class Schedule extends Model
         $query = static::query()
             ->whereDate('tanggal_pemeriksaan', $date)
             ->where('lokasi_pemeriksaan', $location)
-            ->whereIn('status', ['Terjadwal', 'Selesai']);
+            ->whereIn('status', ScheduleStatuses::QUOTA_COUNTED);
 
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);

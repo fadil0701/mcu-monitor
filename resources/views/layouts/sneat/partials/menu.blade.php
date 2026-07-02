@@ -18,11 +18,7 @@
 
     <ul class="menu-inner py-1">
         @foreach(\App\Helpers\MenuHelper::getMainNavItems() as $item)
-            @if(($item['type'] ?? null) === 'header')
-                <li class="menu-header small text-uppercase mcu-menu-section">
-                    <span class="menu-header-text">{{ $item['name'] }}</span>
-                </li>
-            @elseif(isset($item['subItems']))
+            @if(isset($item['subItems']))
                 @php $subActive = \App\Helpers\MenuHelper::isSubmenuActive($item['subItems']); @endphp
                 <li class="menu-item {{ $subActive ? 'active open' : '' }}">
                     <a href="javascript:void(0);" class="menu-link menu-toggle">

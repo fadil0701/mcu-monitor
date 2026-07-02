@@ -30,6 +30,7 @@
                     <label class="form-label mb-1">Status</label>
                     <select name="status" class="form-select form-select-sm">
                         <option value="">Semua Status</option>
+                        <option value="Menunggu Konfirmasi" {{ request('status') === 'Menunggu Konfirmasi' ? 'selected' : '' }}>Menunggu Konfirmasi</option>
                         <option value="Terjadwal" {{ request('status') === 'Terjadwal' ? 'selected' : '' }}>Terjadwal</option>
                         <option value="Selesai" {{ request('status') === 'Selesai' ? 'selected' : '' }}>Selesai</option>
                         <option value="Batal" {{ request('status') === 'Batal' ? 'selected' : '' }}>Batal</option>
@@ -78,6 +79,7 @@
                                     @php
                                         $badge = match($s->status) {
                                             'Selesai' => 'bg-label-success',
+                                            'Menunggu Konfirmasi' => 'bg-label-info',
                                             'Batal', 'Ditolak' => 'bg-label-danger',
                                             default => 'bg-label-warning',
                                         };
@@ -86,6 +88,18 @@
                                 </td>
                                 <td>
                                     <div class="table-action-group">
+                                        @if($s->status === 'Menunggu Konfirmasi')
+                                            <form method="POST" action="{{ route('admin.schedules.quick-status', $s) }}" class="d-inline" onsubmit="return confirm('Konfirmasi jadwal ini?');">
+                                                @csrf
+                                                <input type="hidden" name="status" value="Terjadwal">
+                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Konfirmasi"><i class="bx bx-check"></i></button>
+                                            </form>
+                                            <form method="POST" action="{{ route('admin.schedules.quick-status', $s) }}" class="d-inline" onsubmit="return confirm('Tolak pengajuan ini?');">
+                                                @csrf
+                                                <input type="hidden" name="status" value="Ditolak">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Tolak"><i class="bx bx-block"></i></button>
+                                            </form>
+                                        @endif
                                         @if($whatsappSendEnabled ?? false)
                                         <form method="POST" action="{{ route('admin.schedules.send-whatsapp', $s) }}" class="d-inline" onsubmit="return confirm('Kirim jadwal MCU via WhatsApp ke {{ addslashes($s->nama_lengkap) }}?');">
                                             @csrf

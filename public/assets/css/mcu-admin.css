@@ -76,35 +76,56 @@
     font-weight: 400;
 }
 
-/* Sidebar menu */
+/* Sidebar menu — jarak baris & section lebih rapat */
+.layout-menu .menu-inner.py-1 {
+    padding-top: 0.125rem !important;
+    padding-bottom: 0.125rem !important;
+}
+
+.layout-menu .menu-vertical .menu-inner > .menu-item {
+    margin: 0;
+}
+
+.layout-menu .menu-vertical .menu-item .menu-link,
+.layout-menu .menu-vertical .menu-block {
+    padding: 0.3125rem 0.875rem;
+    min-height: 1.875rem;
+    line-height: 1.2;
+}
+
+.layout-menu .menu-vertical .menu-sub {
+    padding-top: 0.0625rem;
+    padding-bottom: 0.0625rem;
+}
+
+.layout-menu .menu-vertical .menu-sub .menu-link {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.layout-menu .menu-icon {
+    font-size: 1.0625rem;
+    margin-right: 0.4375rem;
+}
+
 .layout-menu .menu-link div {
     color: #566a7f;
-}
-.layout-menu .menu-item.active > .menu-link div,
-.layout-menu .menu-item.active > .menu-link i {
-    color: #696cff;
-}
-.layout-menu .menu-header-text {
-    color: #a1acb8;
-    font-weight: 600;
+    font-size: 0.875rem;
 }
 
-.mcu-menu-section {
-    margin-top: 0.75rem;
-}
-
-.mcu-menu-section:first-child {
-    margin-top: 0;
-}
-
-.mcu-menu-section .menu-header-text {
-    color: #8592ad;
-    font-size: 0.6875rem;
-    letter-spacing: 0.06em;
+.layout-menu .menu-item > .menu-link > div > span:first-child,
+.layout-menu .menu-item > .menu-link.menu-toggle > div > span:first-child {
+    font-size: 0.875rem;
 }
 
 .layout-menu .menu-sub .menu-link {
-    padding-left: 2.75rem;
+    padding-left: 2.35rem;
+}
+
+.layout-menu .menu-item.active > .menu-link div,
+.layout-menu .menu-item.active > .menu-link i {
+    color: #696cff;
 }
 
 .layout-menu .menu-item.active > .menu-link,

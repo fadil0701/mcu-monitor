@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Schedule;
+use App\Support\ScheduleStatuses;
 use App\Services\QueryOptimizationService;
 use App\Support\McuDailyQuota;
 use Illuminate\Support\Facades\Auth;
@@ -112,10 +113,10 @@ class DashboardController extends Controller
             $dailyQueueData[$key] = array_values($map);
         }
 
-        // Pengajuan jadwal MCU oleh peserta (status Terjadwal, 30 hari terakhir)
+        // Pengajuan jadwal MCU oleh peserta yang menunggu konfirmasi admin (30 hari terakhir)
         $recentScheduleRequests = Schedule::query()
             ->with([$participantCkgColumns])
-            ->where('status', 'Terjadwal')
+            ->where('status', ScheduleStatuses::PENDING_ADMIN)
             ->where('created_at', '>=', now()->subDays(30))
             ->orderByDesc('created_at')
             ->limit(20)

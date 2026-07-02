@@ -64,6 +64,9 @@ Tim Medical Check Up', 'text', 'email_template', 'Template Email Undangan');
         $this->setValueIfNotExists('app_name', 'Sistem Monitoring MCU', 'string', 'general', 'Nama Aplikasi');
         $this->setValueIfNotExists('app_description', 'Sistem Monitoring Medical Check Up', 'string', 'general', 'Deskripsi Aplikasi');
         $this->setValueIfNotExists('mcu_interval_years', '3', 'string', 'general', 'Interval MCU (Tahun)');
+
+        $this->setValueIfNotExists('mcu_daily_quota', (string) config('mcu.daily_quota', 100), 'string', 'schedule_quota', 'Kuota pemeriksaan per hari kerja');
+        $this->setValueIfNotExists('mcu_default_location', (string) config('mcu.default_location', 'Klinik Utama Balaikota'), 'string', 'schedule_quota', 'Lokasi pemeriksaan default');
     }
 
     /**

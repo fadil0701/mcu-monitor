@@ -6,6 +6,7 @@ use App\Models\Participant;
 use App\Models\Schedule;
 use App\Models\User;
 use App\Support\ScheduleExaminationTime;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -129,7 +130,7 @@ class ClientScheduleRequestTest extends TestCase
 
     public function test_participant_can_submit_schedule_within_allowed_hours(): void
     {
-        [$user, $participant] = $this->makeEligibleParticipant();
+        [$user, $participant] = $this->makeEligibleParticipant(ckgCurrentYear: true);
 
         $this->actingAs($user)
             ->post(route('client.schedule.request.store'), [
@@ -146,6 +147,59 @@ class ClientScheduleRequestTest extends TestCase
             'lokasi_pemeriksaan' => ScheduleExaminationTime::defaultLocation(),
             'status' => 'Terjadwal',
         ]);
+
+        $schedule = Schedule::query()->where('participant_id', $participant->id)->first();
+        $this->assertNotNull($schedule->queue_number);
+    }
+
+    public function test_participant_without_ckg_current_year_submits_pending_schedule(): void
+    {
+        [$user, $participant] = $this->makeEligibleParticipant(ckgCurrentYear: false);
+
+        $this->actingAs($user)
+            ->post(route('client.schedule.request.store'), [
+                'tanggal_pemeriksaan' => now()->addWeek()->toDateString(),
+                'jam_pemeriksaan' => '08:30',
+            ])
+            ->assertRedirect(route('client.schedules'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('schedules', [
+            'participant_id' => $participant->id,
+            'status' => 'Menunggu Konfirmasi',
+            'queue_number' => null,
+        ]);
+    }
+
+    public function test_participant_cannot_submit_while_pending_schedule_exists(): void
+    {
+        [$user, $participant] = $this->makeEligibleParticipant(ckgCurrentYear: false);
+
+        Schedule::query()->create([
+            'participant_id' => $participant->id,
+            'nik_ktp' => $participant->nik_ktp,
+            'nrk_pegawai' => $participant->nrk_pegawai,
+            'nama_lengkap' => $participant->nama_lengkap,
+            'tanggal_lahir' => $participant->tanggal_lahir,
+            'jenis_kelamin' => $participant->jenis_kelamin,
+            'skpd' => $participant->skpd,
+            'ukpd' => $participant->ukpd,
+            'no_telp' => $participant->no_telp,
+            'email' => $participant->email,
+            'tanggal_pemeriksaan' => now()->addWeek()->toDateString(),
+            'jam_pemeriksaan' => '08:00:00',
+            'lokasi_pemeriksaan' => ScheduleExaminationTime::defaultLocation(),
+            'status' => 'Menunggu Konfirmasi',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('client.schedule.request.store'), [
+                'tanggal_pemeriksaan' => now()->addWeeks(2)->toDateString(),
+                'jam_pemeriksaan' => '08:30',
+            ])
+            ->assertSessionHasErrors('request');
+
+        $this->assertSame(1, Schedule::query()->where('participant_id', $participant->id)->count());
     }
 
     public function test_participant_cannot_submit_schedule_outside_allowed_hours(): void
@@ -164,7 +218,7 @@ class ClientScheduleRequestTest extends TestCase
 
     public function test_location_is_forced_from_system_default(): void
     {
-        [$user, $participant] = $this->makeEligibleParticipant();
+        [$user, $participant] = $this->makeEligibleParticipant(ckgCurrentYear: true);
 
         $this->actingAs($user)
             ->post(route('client.schedule.request.store'), [
@@ -179,11 +233,111 @@ class ClientScheduleRequestTest extends TestCase
         $this->assertSame(ScheduleExaminationTime::defaultLocation(), $schedule->lokasi_pemeriksaan);
     }
 
+    public function test_participant_cannot_submit_on_weekend(): void
+    {
+        [$user] = $this->makeEligibleParticipant(ckgCurrentYear: true);
+        $saturday = now()->next(Carbon::SATURDAY)->toDateString();
+
+        $this->actingAs($user)
+            ->post(route('client.schedule.request.store'), [
+                'tanggal_pemeriksaan' => $saturday,
+                'jam_pemeriksaan' => '08:30',
+            ])
+            ->assertSessionHasErrors('tanggal_pemeriksaan');
+
+        $this->assertSame(0, Schedule::query()->count());
+    }
+
+    public function test_participant_cannot_submit_on_configured_holiday(): void
+    {
+        [$user] = $this->makeEligibleParticipant(ckgCurrentYear: true);
+        $holiday = now()->addWeeks(3)->startOfWeek(Carbon::MONDAY)->toDateString();
+
+        \App\Models\McuWorkCalendarClosure::query()->create([
+            'closure_date' => $holiday,
+            'type' => 'libur_nasional',
+            'label' => 'Libur uji',
+        ]);
+
+        app(\App\Support\McuWorkCalendar::class)->clearCache();
+
+        $this->actingAs($user)
+            ->post(route('client.schedule.request.store'), [
+                'tanggal_pemeriksaan' => $holiday,
+                'jam_pemeriksaan' => '08:30',
+            ])
+            ->assertSessionHasErrors('tanggal_pemeriksaan');
+
+        $this->assertSame(0, Schedule::query()->count());
+    }
+
+    public function test_schedule_quota_month_endpoint_returns_calendar_days(): void
+    {
+        [$user, $participant] = $this->makeEligibleParticipant(ckgCurrentYear: true);
+        config(['mcu.daily_quota' => 5]);
+        $year = (int) now()->format('Y');
+        $month = (int) now()->format('n');
+        $weekday = now()->addWeek()->startOfWeek(Carbon::MONDAY);
+
+        if ($weekday->month !== $month) {
+            $weekday = now()->startOfMonth()->next(Carbon::MONDAY);
+        }
+
+        Schedule::query()->create([
+            'participant_id' => $participant->id,
+            'nik_ktp' => $participant->nik_ktp,
+            'nrk_pegawai' => $participant->nrk_pegawai,
+            'nama_lengkap' => $participant->nama_lengkap,
+            'tanggal_lahir' => $participant->tanggal_lahir,
+            'jenis_kelamin' => $participant->jenis_kelamin,
+            'skpd' => $participant->skpd,
+            'ukpd' => $participant->ukpd,
+            'no_telp' => $participant->no_telp,
+            'email' => $participant->email,
+            'tanggal_pemeriksaan' => $weekday->toDateString(),
+            'jam_pemeriksaan' => '08:00:00',
+            'lokasi_pemeriksaan' => ScheduleExaminationTime::defaultLocation(),
+            'status' => 'Terjadwal',
+        ]);
+
+        $this->actingAs($user)
+            ->getJson(route('client.schedule.quota-month', ['year' => $year, 'month' => $month]))
+            ->assertOk()
+            ->assertJsonStructure([
+                'year',
+                'month',
+                'month_label',
+                'limit',
+                'unlimited',
+                'days' => [
+                    ['date', 'day', 'remaining', 'available', 'is_closed'],
+                ],
+            ])
+            ->assertJsonPath('limit', 5);
+
+        $days = $this->actingAs($user)
+            ->getJson(route('client.schedule.quota-month', ['year' => $year, 'month' => $month]))
+            ->json('days');
+
+        $bookedDay = collect($days)->firstWhere('date', $weekday->toDateString());
+        $this->assertNotNull($bookedDay);
+        $this->assertSame(1, $bookedDay['booked']);
+        $this->assertSame(4, $bookedDay['remaining']);
+
+        $saturday = collect($days)->first(fn (array $day) => Carbon::parse($day['date'])->isSaturday());
+        if ($saturday !== null) {
+            $this->assertTrue($saturday['is_closed']);
+        }
+    }
+
     /**
      * @return array{0: User, 1: Participant}
      */
-    private function makeEligibleParticipant(bool $withCkg = true, bool $mcuWithinInterval = false): array
-    {
+    private function makeEligibleParticipant(
+        bool $withCkg = true,
+        bool $mcuWithinInterval = false,
+        bool $ckgCurrentYear = false,
+    ): array {
         $participant = Participant::query()->create([
             'nik_ktp' => '3202180701930005',
             'nrk_pegawai' => '123456',
@@ -200,6 +354,7 @@ class ClientScheduleRequestTest extends TestCase
             'tanggal_mcu_terakhir' => $mcuWithinInterval ? now()->subYear() : null,
             'ckg_peserta_id' => $withCkg ? 99 : null,
             'ckg_registration_code' => $withCkg ? 'CKG-0099' : null,
+            'ckg_synced_at' => $withCkg && $ckgCurrentYear ? now() : ($withCkg ? now()->subYear() : null),
         ]);
 
         $user = User::factory()->create([

@@ -80,9 +80,9 @@ class McuScheduleEligibilityTest extends TestCase
             'ckg_peserta_id' => 1,
         ]);
 
-        $this->createSchedule($participant, '2026-06-20');
+        $this->createSchedule($participant, '2026-06-22');
 
-        $snapshot = McuDailyQuota::snapshot('2026-06-20');
+        $snapshot = McuDailyQuota::snapshot('2026-06-22');
 
         $this->assertSame(2, $snapshot['limit']);
         $this->assertSame(1, $snapshot['booked']);

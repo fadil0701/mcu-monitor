@@ -31,6 +31,10 @@ class NewRegistrationNotification extends Notification
 				'Pembatalan Jadwal MCU',
 				"{$name} membatalkan jadwal MCU (NIK {$nik}).",
 			],
+			'menunggu_konfirmasi' => [
+				'Pengajuan Jadwal MCU (Perlu Konfirmasi)',
+				$this->formatUlangMessage($name, $nik).' Belum CKG tahun berjalan — perlu konfirmasi admin.',
+			],
 			default => [
 				'Pendaftaran Ulang Peserta',
 				$this->formatUlangMessage($name, $nik),

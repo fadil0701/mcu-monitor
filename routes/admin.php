@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RescheduleCenterController;
 use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\McuWorkCalendarController;
 use App\Http\Controllers\Admin\SpecialistDoctorController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WhatsAppTemplatesController;
@@ -89,6 +90,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('settings/section/{section}', [SettingController::class, 'updateSection'])->name('settings.update-section');
+
+    Route::get('mcu-work-calendar', [McuWorkCalendarController::class, 'index'])->name('mcu-work-calendar.index');
+    Route::put('mcu-work-calendar/settings', [McuWorkCalendarController::class, 'updateSettings'])->name('mcu-work-calendar.settings.update');
+    Route::post('mcu-work-calendar/closures', [McuWorkCalendarController::class, 'storeClosure'])->name('mcu-work-calendar.closures.store');
+    Route::delete('mcu-work-calendar/closures/{closure}', [McuWorkCalendarController::class, 'destroyClosure'])->name('mcu-work-calendar.closures.destroy');
 
     Route::get('ckg-bridge', [CkgBridgeMonitoringController::class, 'index'])->name('ckg-bridge.index');
     Route::put('ckg-bridge/config', [CkgBridgeMonitoringController::class, 'updateConfig'])->name('ckg-bridge.config.update');

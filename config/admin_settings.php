@@ -245,6 +245,32 @@ return [
             ],
         ],
 
+        'schedule_quota' => [
+            'label' => 'Kuota MCU',
+            'icon' => 'bx-calendar-check',
+            'description' => 'Kuota pemeriksaan MCU per hari kerja. Untuk libur nasional, cuti bersama, dan blokir akhir pekan, kelola di menu Kalender Libur.',
+            'fields' => [
+                'mcu_daily_quota' => [
+                    'label' => 'Kuota Pemeriksaan per Hari',
+                    'type' => 'number',
+                    'group' => 'schedule_quota',
+                    'storage_type' => 'string',
+                    'rules' => 'required|integer|min:0|max:1000',
+                    'default' => '100',
+                    'help' => 'Maksimal peserta MCU per hari kerja di lokasi pemeriksaan. Isi 0 untuk tidak dibatasi.',
+                ],
+                'mcu_default_location' => [
+                    'label' => 'Lokasi Pemeriksaan Default',
+                    'type' => 'text',
+                    'group' => 'schedule_quota',
+                    'storage_type' => 'string',
+                    'rules' => 'required|string|max:500',
+                    'default' => 'Klinik Utama Balaikota',
+                    'help' => 'Lokasi yang digunakan pada form pengajuan jadwal peserta.',
+                ],
+            ],
+        ],
+
     ],
 
     'links' => [

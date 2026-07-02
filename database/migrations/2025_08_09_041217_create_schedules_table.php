@@ -26,7 +26,7 @@ return new class extends Migration
             $table->date('tanggal_pemeriksaan');
             $table->time('jam_pemeriksaan');
             $table->string('lokasi_pemeriksaan');
-            $table->enum('status', ['Terjadwal', 'Selesai', 'Batal', 'Ditolak'])->default('Terjadwal');
+            $table->enum('status', ['Menunggu Konfirmasi', 'Terjadwal', 'Selesai', 'Batal', 'Ditolak'])->default('Terjadwal');
             $table->boolean('email_sent')->default(false);
             $table->boolean('whatsapp_sent')->default(false);
             $table->timestamp('email_sent_at')->nullable();

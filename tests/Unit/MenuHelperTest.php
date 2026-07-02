@@ -3,42 +3,41 @@
 namespace Tests\Unit;
 
 use App\Helpers\MenuHelper;
-use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Tests\TestCase;
 
 class MenuHelperTest extends TestCase
 {
-    use RefreshDatabase;
-
-    public function test_super_admin_menu_includes_komunikasi_section(): void
+    public function test_settings_quota_tab_only_highlights_quota_menu(): void
     {
-        $user = User::factory()->create(['role' => 'super_admin']);
+        $this->app->instance('request', Request::create('/admin/settings', 'GET', ['tab' => 'schedule_quota']));
 
-        $this->actingAs($user);
-
-        $labels = collect(MenuHelper::getMainNavItems())
-            ->map(fn (array $item) => $item['type'] ?? null === 'header' ? $item['name'] : ($item['name'] ?? null))
-            ->filter()
-            ->values()
-            ->all();
-
-        $this->assertContains('Komunikasi', $labels);
-        $this->assertContains('MCU & Peserta', $labels);
+        $this->assertTrue(MenuHelper::isActive(route('admin.settings.index', ['tab' => 'schedule_quota'])));
+        $this->assertFalse(MenuHelper::isActive(route('admin.settings.index', ['tab' => 'general'])));
+        $this->assertFalse(MenuHelper::isActive(route('admin.mcu-work-calendar.index')));
     }
 
-    public function test_admin_menu_excludes_super_admin_only_sections(): void
+    public function test_work_calendar_highlights_kalender_libur_menu(): void
     {
-        $user = User::factory()->create(['role' => 'admin']);
+        $this->app->instance('request', Request::create('/admin/mcu-work-calendar', 'GET'));
 
-        $this->actingAs($user);
+        $this->assertTrue(MenuHelper::isActive(route('admin.mcu-work-calendar.index')));
+        $this->assertFalse(MenuHelper::isActive(route('admin.settings.index', ['tab' => 'schedule_quota'])));
+    }
 
-        $labels = collect(MenuHelper::getMainNavItems())
-            ->map(fn (array $item) => $item['type'] ?? null === 'header' ? $item['name'] : ($item['name'] ?? null))
-            ->filter()
-            ->values()
-            ->all();
+    public function test_settings_general_tab_highlights_pengaturan_menu(): void
+    {
+        $this->app->instance('request', Request::create('/admin/settings', 'GET', ['tab' => 'general']));
 
-        $this->assertNotContains('Komunikasi', $labels);
+        $this->assertTrue(MenuHelper::isActive(route('admin.settings.index', ['tab' => 'general'])));
+        $this->assertFalse(MenuHelper::isActive(route('admin.settings.index', ['tab' => 'schedule_quota'])));
+    }
+
+    public function test_settings_without_tab_defaults_to_pengaturan_menu(): void
+    {
+        $this->app->instance('request', Request::create('/admin/settings', 'GET'));
+
+        $this->assertTrue(MenuHelper::isActive(route('admin.settings.index', ['tab' => 'general'])));
+        $this->assertFalse(MenuHelper::isActive(route('admin.settings.index', ['tab' => 'schedule_quota'])));
     }
 }

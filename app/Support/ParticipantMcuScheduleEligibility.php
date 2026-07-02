@@ -18,7 +18,14 @@ final class ParticipantMcuScheduleEligibility
 
     public function blockingReason(): ?string
     {
-        return $this->ckgReason() ?? $this->intervalReason();
+        return $this->ckgReason()
+            ?? $this->intervalReason()
+            ?? $this->pendingRequestReason();
+    }
+
+    public function requiresAdminConfirmation(): bool
+    {
+        return $this->canRequest() && ! $this->participant->hasCkgForCurrentYear();
     }
 
     /**
@@ -33,14 +40,22 @@ final class ParticipantMcuScheduleEligibility
         $intervalYears = $this->intervalYears();
 
         if ($this->participant->tanggal_mcu_terakhir === null) {
-            return [
+            $notes = [
                 'Anda belum pernah melakukan MCU. Anda memenuhi syarat pengajuan jadwal MCU setelah menyelesaikan skrining CKG.',
+            ];
+        } else {
+            $notes = [
+                'Anda belum melakukan MCU dalam '.$intervalYears.' tahun terakhir dan memenuhi syarat pengajuan jadwal MCU.',
             ];
         }
 
-        return [
-            'Anda belum melakukan MCU dalam '.$intervalYears.' tahun terakhir dan memenuhi syarat pengajuan jadwal MCU.',
-        ];
+        if ($this->requiresAdminConfirmation()) {
+            $notes[] = 'Anda belum melakukan CKG/skrining di tahun berjalan. Pengajuan jadwal menunggu konfirmasi admin atau super admin.';
+        } else {
+            $notes[] = 'Anda sudah melakukan CKG di tahun berjalan. Jadwal MCU akan langsung dikonfirmasi setelah pengajuan.';
+        }
+
+        return $notes;
     }
 
     public function hasCkgScreening(): bool
@@ -84,6 +99,19 @@ final class ParticipantMcuScheduleEligibility
         return 'Anda belum memenuhi syarat pendaftaran ulang (belum '.$intervalYears.' tahun sejak MCU terakhir'
             .($eligibleFrom ? ', dapat mengajukan kembali mulai '.$eligibleFrom->format('d/m/Y') : '')
             .'). Silakan hubungi admin jika ada kondisi khusus.';
+    }
+
+    private function pendingRequestReason(): ?string
+    {
+        $hasPending = $this->participant->schedules()
+            ->where('status', \App\Support\ScheduleStatuses::PENDING_ADMIN)
+            ->exists();
+
+        if ($hasPending) {
+            return 'Anda masih memiliki pengajuan jadwal MCU yang menunggu konfirmasi admin.';
+        }
+
+        return null;
     }
 
     private function intervalYears(): int
