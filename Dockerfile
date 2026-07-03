@@ -76,9 +76,16 @@ LABEL maintainer="Monitoring MCU"
 LABEL description="Laravel Monitoring MCU application"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    gnupg \
+    && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+        | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
+        > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update && apt-get install -y --no-install-recommends \
     nginx \
     supervisor \
-    curl \
     git \
     unzip \
     libzip-dev \
@@ -90,8 +97,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libicu-dev \
     libpq-dev \
     default-mysql-client \
-    postgresql-client \
-    gnupg \
+    postgresql-client-16 \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" \
         bcmath \
