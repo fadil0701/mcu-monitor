@@ -36,8 +36,8 @@ MYSQL_DATABASE=monitoring_mcu
 
 ```powershell
 cd E:\laragon\www\mcu-monitor
-.\deploy\install-migrate-pgsql.ps1 -InitEnv   # opsional
-.\deploy\install-migrate-pgsql.ps1
+.\deploy\install-local-pgsql.ps1 -InitEnv   # opsional (buat .env + APP_KEY + sync PGSQL_PASSWORD)
+.\deploy\install-local-pgsql.ps1             # migrasi MySQL legacy -> PostgreSQL (sekali)
 ```
 
 ## Produksi VM (`10.15.101.117`)

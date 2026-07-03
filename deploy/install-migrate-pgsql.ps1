@@ -20,6 +20,36 @@ function Require-Docker {
     }
 }
 
+function Read-EnvValue([string]$Key, [string]$File = ".env") {
+    if (-not (Test-Path $File)) { return "" }
+
+    $line = Select-String -Path $File -Pattern "^$([regex]::Escape($Key))=" -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if (-not $line) { return "" }
+
+    return $line.Line.Substring($Key.Length + 1).Trim().Trim('"').Trim("'")
+}
+
+function Set-EnvValue([string]$Key, [string]$Value, [string]$File = ".env") {
+    if (-not (Test-Path $File)) {
+        throw "File tidak ditemukan: $File"
+    }
+
+    $content = Get-Content $File -Raw
+    $pattern = "(?m)^$([regex]::Escape($Key))=.*$"
+    $escaped = [string]$Value
+    $replacement = "$Key=$escaped"
+
+    if ($content -match $pattern) {
+        $content = [regex]::Replace($content, $pattern, $replacement)
+    } else {
+        if (-not $content.EndsWith("`n")) { $content += "`n" }
+        $content += $replacement + "`n"
+    }
+
+    [System.IO.File]::WriteAllText((Resolve-Path $File), $content)
+}
+
 function Ensure-EnvFile {
     if ($InitEnv -or -not (Test-Path ".env")) {
         if ((Test-Path ".env") -and $InitEnv) {
@@ -49,9 +79,76 @@ function Ensure-HealthPlatform {
     }
 }
 
+function Sync-PgsqlPasswordFromHealthPlatform {
+    $hpEnv = Join-Path $HealthPlatform ".env"
+    if (-not (Test-Path $hpEnv)) {
+        Write-Host "PERINGATAN: health-platform/.env tidak ditemukan — pastikan PGSQL_PASSWORD benar."
+        return
+    }
+
+    $mcuPass = Read-EnvValue -Key "MCU_DB_PASSWORD" -File $hpEnv
+    if ([string]::IsNullOrWhiteSpace($mcuPass)) {
+        Write-Host "PERINGATAN: MCU_DB_PASSWORD kosong di health-platform/.env — lewati sync password."
+        return
+    }
+
+    Set-EnvValue -Key "PGSQL_PASSWORD" -Value $mcuPass -File ".env"
+    Write-Host "PGSQL_PASSWORD diselaraskan dengan MCU_DB_PASSWORD (health-platform)."
+}
+
+function Ensure-AppKey {
+    $appKey = Read-EnvValue -Key "APP_KEY" -File ".env"
+    $isValid = -not [string]::IsNullOrWhiteSpace($appKey) -and $appKey.StartsWith("base64:")
+
+    if ($isValid) { return }
+
+    Write-Host "Menghasilkan APP_KEY..."
+    $newKey = docker run --rm `
+        -v "${Root}:/app" -w /app `
+        php:8.3-cli `
+        php -r "echo 'base64:'.base64_encode(random_bytes(32));" | Select-Object -First 1
+
+    if ([string]::IsNullOrWhiteSpace($newKey)) {
+        throw "Gagal menghasilkan APP_KEY."
+    }
+
+    Set-EnvValue -Key "APP_KEY" -Value $newKey -File ".env"
+    Write-Host "APP_KEY sudah diisi (generated)."
+}
+
+function Ensure-FrontendBuild {
+    if (Test-Path "public/build/manifest.json") { return }
+
+    Write-Host "Build frontend (Vite) karena public/build belum ada..."
+    $httpProxy = Read-EnvValue -Key "HTTP_PROXY" -File ".env"
+    $httpsProxy = Read-EnvValue -Key "HTTPS_PROXY" -File ".env"
+    $noProxy = Read-EnvValue -Key "NO_PROXY" -File ".env"
+
+    $dockerArgs = @()
+    if (-not [string]::IsNullOrWhiteSpace($httpProxy)) {
+        $dockerArgs += @("-e", "HTTP_PROXY=$httpProxy", "-e", "http_proxy=$httpProxy")
+    }
+    if (-not [string]::IsNullOrWhiteSpace($httpsProxy)) {
+        $dockerArgs += @("-e", "HTTPS_PROXY=$httpsProxy", "-e", "https_proxy=$httpsProxy")
+    } elseif ($dockerArgs.Count -eq 0 -and -not [string]::IsNullOrWhiteSpace($httpProxy)) {
+        # Fallback: kalau HTTPS_PROXY tidak ada, pakai HTTP_PROXY.
+        $dockerArgs += @("-e", "HTTPS_PROXY=$httpProxy", "-e", "https_proxy=$httpProxy")
+    }
+    if (-not [string]::IsNullOrWhiteSpace($noProxy)) {
+        $dockerArgs += @("-e", "NO_PROXY=$noProxy", "-e", "no_proxy=$noProxy")
+    }
+
+    docker run --rm @dockerArgs `
+        -v "${Root}:/app" -w /app `
+        node:22-bookworm-slim `
+        bash -c "set -e; npm ci --no-audit --no-fund; npm run build; test -f public/build/manifest.json"
+}
+
 Require-Docker
 Ensure-EnvFile
 Ensure-HealthPlatform
+Sync-PgsqlPasswordFromHealthPlatform
+Ensure-AppKey
 
 Write-Host ""
 Write-Host "==> 1/5 MySQL legacy (sumber data)"
@@ -59,8 +156,9 @@ docker compose --profile mysql-legacy up -d mysql
 docker compose --profile mysql-legacy ps
 
 Write-Host ""
-Write-Host "==> 2/5 Build dan start aplikasi (PostgreSQL aktif)"
+Write-Host "==> 2/5 Build & start aplikasi (PostgreSQL aktif)"
 if (-not $SkipBuild) {
+    Ensure-FrontendBuild
     docker compose build app
 }
 docker compose up -d --force-recreate app queue scheduler
@@ -77,6 +175,7 @@ Write-Host ""
 Write-Host "==> 3/5 Schema PostgreSQL"
 docker compose exec app php artisan config:clear
 docker compose exec app php artisan migrate --database=pgsql --force
+docker compose exec app php artisan mcu:prepare-pgsql-schema
 
 if (-not $FreshOnly) {
     Write-Host ""
