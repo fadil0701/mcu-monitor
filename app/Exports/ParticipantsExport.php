@@ -2,34 +2,38 @@
 
 namespace App\Exports;
 
+use App\Exports\Concerns\FormatsExcelColumnsAsText;
 use App\Models\Participant;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class ParticipantsExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
+class ParticipantsExport implements FromCollection, ShouldAutoSize, WithEvents, WithHeadings, WithMapping
 {
+    use FormatsExcelColumnsAsText;
+
     public function __construct(private readonly ?array $filters = null) {}
 
     public function collection(): Collection
     {
         $query = Participant::query();
 
-        if (!empty($this->filters['start_date'])) {
+        if (! empty($this->filters['start_date'])) {
             $query->whereDate('tanggal_mcu_terakhir', '>=', $this->filters['start_date']);
         }
 
-        if (!empty($this->filters['end_date'])) {
+        if (! empty($this->filters['end_date'])) {
             $query->whereDate('tanggal_mcu_terakhir', '<=', $this->filters['end_date']);
         }
 
-        if (!empty($this->filters['skpd'])) {
+        if (! empty($this->filters['skpd'])) {
             $query->where('skpd', $this->filters['skpd']);
         }
 
-        if (!empty($this->filters['status_pegawai'])) {
+        if (! empty($this->filters['status_pegawai'])) {
             $query->where('status_pegawai', $this->filters['status_pegawai']);
         }
 
@@ -43,12 +47,12 @@ class ParticipantsExport implements FromCollection, WithHeadings, WithMapping, S
         ];
     }
 
-    /** @param \App\Models\Participant $row */
+    /** @param Participant $row */
     public function map($row): array
     {
         return [
-            $row->nik_ktp,
-            $row->nrk_pegawai,
+            (string) $row->nik_ktp,
+            (string) $row->nrk_pegawai,
             $row->nama_lengkap,
             $row->tempat_lahir,
             optional($row->tanggal_lahir)->format('Y-m-d'),
@@ -64,10 +68,9 @@ class ParticipantsExport implements FromCollection, WithHeadings, WithMapping, S
             $row->catatan,
         ];
     }
+
+    protected function textFormattedColumns(): array
+    {
+        return ['A'];
+    }
 }
-
-
-
-
-
-
