@@ -14,18 +14,23 @@ class ClientScheduleRequestTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_participant_cannot_submit_without_ckg_screening(): void
+    public function test_participant_without_ckg_submits_pending_schedule(): void
     {
-        [$user] = $this->makeEligibleParticipant(withCkg: false);
+        [$user, $participant] = $this->makeEligibleParticipant(withCkg: false);
 
         $this->actingAs($user)
             ->post(route('client.schedule.request.store'), [
                 'tanggal_pemeriksaan' => now()->addWeek()->toDateString(),
                 'jam_pemeriksaan' => '08:30',
             ])
-            ->assertSessionHasErrors('request');
+            ->assertRedirect(route('client.schedules'))
+            ->assertSessionHas('success');
 
-        $this->assertSame(0, Schedule::query()->count());
+        $this->assertDatabaseHas('schedules', [
+            'participant_id' => $participant->id,
+            'status' => 'Menunggu Konfirmasi',
+            'queue_number' => null,
+        ]);
     }
 
     public function test_participant_cannot_submit_when_mcu_within_interval(): void

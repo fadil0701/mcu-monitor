@@ -15,15 +15,17 @@ class McuScheduleEligibilityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_participant_without_ckg_cannot_request_schedule(): void
+    public function test_participant_without_ckg_can_request_schedule_with_admin_confirmation(): void
     {
         $participant = $this->makeParticipant();
 
         $eligibility = new ParticipantMcuScheduleEligibility($participant);
 
-        $this->assertFalse($eligibility->canRequest());
-        $this->assertStringContainsString('CKG', (string) $eligibility->blockingReason());
-        $this->assertSame([], $eligibility->infoNotes());
+        $this->assertTrue($eligibility->canRequest());
+        $this->assertNull($eligibility->blockingReason());
+        $this->assertTrue($eligibility->requiresAdminConfirmation());
+        $this->assertFalse($eligibility->hasCkgScreening());
+        $this->assertStringContainsString('belum tersinkron', $eligibility->infoNotes()[1]);
     }
 
     public function test_participant_with_ckg_and_no_recent_mcu_can_request_schedule(): void

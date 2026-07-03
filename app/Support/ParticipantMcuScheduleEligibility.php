@@ -18,8 +18,7 @@ final class ParticipantMcuScheduleEligibility
 
     public function blockingReason(): ?string
     {
-        return $this->ckgReason()
-            ?? $this->intervalReason()
+        return $this->intervalReason()
             ?? $this->pendingRequestReason();
     }
 
@@ -41,16 +40,20 @@ final class ParticipantMcuScheduleEligibility
 
         if ($this->participant->tanggal_mcu_terakhir === null) {
             $notes = [
-                'Anda belum pernah melakukan MCU. Anda memenuhi syarat pengajuan jadwal MCU setelah menyelesaikan skrining CKG.',
+                'Anda belum pernah melakukan MCU dan dapat mengajukan jadwal MCU.',
             ];
         } else {
             $notes = [
-                'Anda belum melakukan MCU dalam '.$intervalYears.' tahun terakhir dan memenuhi syarat pengajuan jadwal MCU.',
+                'Anda belum melakukan MCU dalam '.$intervalYears.' tahun terakhir dan dapat mengajukan jadwal MCU.',
             ];
         }
 
         if ($this->requiresAdminConfirmation()) {
-            $notes[] = 'Anda belum melakukan CKG/skrining di tahun berjalan. Pengajuan jadwal menunggu konfirmasi admin atau super admin.';
+            if ($this->hasCkgScreening()) {
+                $notes[] = 'Anda belum melakukan CKG/skrining di tahun berjalan. Pengajuan jadwal menunggu konfirmasi admin atau super admin.';
+            } else {
+                $notes[] = 'Data skrining CKG belum tersinkron ke sistem MCU. Pengajuan jadwal menunggu konfirmasi admin atau super admin.';
+            }
         } else {
             $notes[] = 'Anda sudah melakukan CKG di tahun berjalan. Jadwal MCU akan langsung dikonfirmasi setelah pengajuan.';
         }
@@ -76,15 +79,6 @@ final class ParticipantMcuScheduleEligibility
 
         return Carbon::parse($this->participant->tanggal_mcu_terakhir)
             ->addYears($this->intervalYears());
-    }
-
-    private function ckgReason(): ?string
-    {
-        if ($this->hasCkgScreening()) {
-            return null;
-        }
-
-        return 'Anda belum menyelesaikan Skrining Kesehatan Kerja (CKG) di PPKP. Selesaikan skrining terlebih dahulu sebelum mengajukan jadwal MCU.';
     }
 
     private function intervalReason(): ?string
