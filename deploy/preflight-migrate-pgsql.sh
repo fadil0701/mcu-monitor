@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Cek prasyarat migrasi MySQL → PostgreSQL (MCU Monitor).
-# Jalankan dari /var/www/html/mcu-monitor sebelum ./deploy/migrate-mysql-to-pgsql.sh
+# Jalankan dari <MCU_ROOT> sebelum ./deploy/migrate-mysql-to-pgsql.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -9,7 +9,7 @@ cd "$ROOT"
 source "$ROOT/deploy/lib/env-proxy.sh"
 
 COMPOSE=(docker compose $(compose_prod_args))
-HEALTH_ROOT="${HEALTH_PLATFORM_ROOT:-/var/www/html/healty-platform}"
+HEALTH_ROOT="${HEALTH_PLATFORM_ROOT:-/var/www/html/health-platform}"
 FAIL=0
 
 warn() { echo "  [!] $*"; FAIL=1; }

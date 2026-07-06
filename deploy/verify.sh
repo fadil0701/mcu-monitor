@@ -22,10 +22,11 @@ else
     exit 1
 fi
 
-if [ -f .env ] && grep -q '^APP_URL=https://puspelkes' .env; then
+if [ -f .env ] && grep -q '^APP_URL=https://' .env; then
+    PROD_HOST=$(grep -E '^APP_URL=' .env | tail -1 | sed -E 's#^APP_URL=https?://([^/]+).*#\1#')
     echo ""
     echo "==> health lewat nginx (opsional)"
-    curl -fsS -H "Host: puspelkes.jakarta.go.id" "http://127.0.0.1/mcuppkp/up" >/dev/null \
+    curl -fsS -H "Host: ${PROD_HOST}" "http://127.0.0.1/mcuppkp/up" >/dev/null \
         && echo "OK — /mcuppkp/up via nginx host" \
         || echo "LEWATI — snippet nginx belum dipasang atau path berbeda"
 fi

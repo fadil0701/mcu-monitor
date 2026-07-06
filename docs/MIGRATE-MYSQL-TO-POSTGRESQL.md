@@ -24,7 +24,7 @@ DB_CONNECTION=pgsql
 PGSQL_HOST=mcu-monitor-postgres
 PGSQL_DATABASE=mcu_monitor
 PGSQL_USERNAME=mcu_monitor
-PGSQL_PASSWORD=Ppkp-Dev-2026!   # = MCU_DB_PASSWORD di health-platform/.env
+PGSQL_PASSWORD=GANTI_PASSWORD_DEV   # = MCU_DB_PASSWORD di health-platform/.env
 
 MYSQL_HOST=mysql
 MYSQL_DATABASE=monitoring_mcu
@@ -40,11 +40,11 @@ cd E:\laragon\www\mcu-monitor
 .\deploy\install-local-pgsql.ps1             # migrasi MySQL legacy -> PostgreSQL (sekali)
 ```
 
-## Produksi VM (`10.15.101.117`)
+## Produksi VM (`<VM_HOST>`)
 
 ```bash
-cd /var/www/html/healty-platform && ./scripts/install-production.sh
-cd /var/www/html/mcu-monitor
+cd <HEALTH_PLATFORM_ROOT> && ./scripts/install-production.sh
+cd <MCU_ROOT>
 # Edit .env: PGSQL_* (= MCU_DB_PASSWORD), pertahankan APP_URL/APP_KEY
 ./deploy/migrate-mysql-to-pgsql.sh
 ./deploy/update-production.sh

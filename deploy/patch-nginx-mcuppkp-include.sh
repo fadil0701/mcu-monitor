@@ -18,14 +18,14 @@ fi
 
 mapfile -t CANDIDATES < <(
     grep -rl 'sikerja\.conf' /etc/nginx/sites-enabled/ /etc/nginx/conf.d/ 2>/dev/null \
-        || grep -rl 'puspelkes\.jakarta\.go\.id' /etc/nginx/sites-enabled/ /etc/nginx/conf.d/ 2>/dev/null \
+        || grep -rl 'mcuppkp\.conf' /etc/nginx/sites-enabled/ /etc/nginx/conf.d/ 2>/dev/null \
         || true
 )
 
 if [ "${#CANDIDATES[@]}" -eq 0 ]; then
-    echo "Tidak menemukan vhost puspelkes di sites-enabled/conf.d."
+    echo "Tidak menemukan vhost portal di sites-enabled/conf.d."
     echo "Cari manual:"
-    echo "  sudo nginx -T 2>/dev/null | grep -n 'server_name.*puspelkes' | head -10"
+    echo "  sudo nginx -T 2>/dev/null | grep -n 'server_name' | head -10"
     echo "  ls -la /etc/nginx/sites-enabled/"
     exit 1
 fi

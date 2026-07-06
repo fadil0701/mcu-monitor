@@ -10,7 +10,7 @@ if [ ! -f "$ENV_FILE" ]; then
     exit 1
 fi
 
-BASE="${DOMAIN_BASE_URL:-https://puspelkes.jakarta.go.id/mcuppkp}"
+BASE="${DOMAIN_BASE_URL:-https://<DOMAIN_PRODUKSI>/mcuppkp}"
 BASE="${BASE%/}"
 
 set_var() {

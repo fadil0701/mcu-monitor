@@ -17,10 +17,10 @@
 
 | Item | Nilai |
 |------|--------|
-| VM IP | `10.15.101.117` |
+| VM IP | `<VM_HOST>` |
 | Port Docker MCU | `9002` |
 | Path URL publik | `/mcuppkp/` |
-| URL lengkap | `https://puspelkes.jakarta.go.id/mcuppkp/` |
+| URL lengkap | `https://<DOMAIN_PRODUKSI>/mcuppkp/` |
 | Database | `monitoring_mcu` |
 | Portal CKG | port `9006`, path `/sikerja/` |
 | Proxy korporat (jika dipakai) | `http://10.15.3.20:80` |
@@ -37,7 +37,7 @@
 ## Instalasi pertama
 
 ```bash
-cd /var/www/html
+cd <WWW_ROOT>
 git clone https://github.com/fadil0701/mcu-monitor.git mcu-monitor
 cd mcu-monitor
 
@@ -47,7 +47,7 @@ nano .env
 bash deploy/install.sh
 ```
 
-**Kepemilikan folder:** jika `git clone` pernah pakai `sudo`, jalankan `sudo chown -R $USER:$USER /var/www/html/mcu-monitor`.
+**Kepemilikan folder:** jika `git clone` pernah pakai `sudo`, jalankan `sudo chown -R $USER:$USER <MCU_ROOT>`.
 
 **Super admin:**
 
@@ -61,14 +61,14 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php art
 |------|------------|--------|------------------------|
 | Docker langsung | `http://<VM_IP>:9002/` | `LAN_IP=<VM_IP> ./deploy/set-lan-env.sh` | `true` |
 | Portal + subpath | `http://<VM_IP>/mcuppkp/` | `./deploy/set-domain-env.sh` + snippet nginx | `false` |
-| Domain HTTPS | `https://puspelkes.jakarta.go.id/mcuppkp/` | `./deploy/set-domain-env.sh` + SSL | `false` |
+| Domain HTTPS | `https://<DOMAIN_PRODUKSI>/mcuppkp/` | `./deploy/set-domain-env.sh` + SSL | `false` |
 
 ### URL aplikasi & link login
 
 Laravel membangun semua `route()` (login, daftar, dll.) dari `AppServiceProvider`:
 
-- **`APP_USE_REQUEST_URL=false`** (produksi domain): pakai `APP_URL` → link mengarah ke domain, mis. `https://puspelkes.jakarta.go.id/mcuppkp/login`.
-- **`APP_USE_REQUEST_URL=true`** (mode LAN `:9002`): pakai host permintaan saat ini → jika dibuka lewat `http://10.15.101.117:9002`, link login ikut ke IP tersebut.
+- **`APP_USE_REQUEST_URL=false`** (produksi domain): pakai `APP_URL` → link mengarah ke domain, mis. `https://<DOMAIN_PRODUKSI>/mcuppkp/login`.
+- **`APP_USE_REQUEST_URL=true`** (mode LAN `:9002`): pakai host permintaan saat ini → jika dibuka lewat `http://<VM_HOST>:9002`, link login ikut ke IP tersebut.
 
 **Produksi publik wajib domain:**
 
@@ -83,12 +83,12 @@ Jangan pakai `set-lan-env.sh` untuk pengguna akhir — script itu hanya untuk de
 ## Nginx host (path `/mcuppkp/`)
 
 ```bash
-cd /var/www/html/mcu-monitor
+cd <MCU_ROOT>
 bash deploy/install-nginx-snippet.sh
 sudo bash deploy/patch-nginx-mcuppkp-include.sh
 ```
 
-Vhost aktif di VM ini: `/etc/nginx/sites-enabled/puspelkes.jakarta.go.id`.
+Vhost aktif di VM ini: `/etc/nginx/sites-enabled/<DOMAIN_PRODUKSI>`.
 
 Sisipkan **sebelum** `location /`:
 
@@ -106,7 +106,7 @@ Snippet mem-proxy ke `http://127.0.0.1:9002/` dengan strip prefix `/mcuppkp/`.
 ## Update produksi
 
 ```bash
-cd /var/www/html/mcu-monitor
+cd <MCU_ROOT>
 git pull origin main
 bash deploy/update-production.sh
 ```
@@ -134,7 +134,7 @@ Setelah deploy UI, hard refresh browser (`Ctrl+Shift+R`) atau tab incognito.
 
 | Variabel | Produksi (domain) | Mode LAN (`:9002`) |
 |----------|-------------------|---------------------|
-| `APP_URL` | `https://puspelkes.jakarta.go.id/mcuppkp` | `http://<VM_IP>:9002` |
+| `APP_URL` | `https://<DOMAIN_PRODUKSI>/mcuppkp` | `http://<VM_IP>:9002` |
 | `ASSET_URL` | sama dengan `APP_URL` | (kosong / sama `APP_URL`) |
 | `APP_USE_REQUEST_URL` | `false` | `true` |
 | `APP_PORT` | `9002` |
@@ -166,7 +166,7 @@ Setelah deploy UI, hard refresh browser (`Ctrl+Shift+R`) atau tab incognito.
 
 | Target | Hasil |
 |--------|--------|
-| `http://10.15.101.117:9006` dari container | Gagal (hairpin NAT) |
+| `http://<VM_HOST>:9006` dari container | Gagal (hairpin NAT) |
 | `http://host.docker.internal:9006` tanpa `NO_PROXY` | Gagal (lewat proxy → DNS error) |
 | `http://<gateway_compose>:9006` | **Benar** (mis. `172.22.0.1`) |
 
@@ -245,7 +245,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```bash
 bash deploy/verify.sh
 curl -fsS http://127.0.0.1:9002/up
-curl -fsS https://puspelkes.jakarta.go.id/mcuppkp/up
+curl -fsS https://<DOMAIN_PRODUKSI>/mcuppkp/up
 ```
 
 ## Troubleshooting
@@ -289,7 +289,7 @@ stat -c%s public/assets/css/mcu-admin.css
 
 # Ukuran file di dalam container (harus sama)
 docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app \
-  stat -c%s /var/www/html/public/assets/css/mcu-admin.css
+  stat -c%s <WWW_ROOT>/public/assets/css/mcu-admin.css
 
 # Cek URL CSS di HTML (harus ada ?v=...)
 curl -s http://127.0.0.1:9002/login | grep mcu-admin
