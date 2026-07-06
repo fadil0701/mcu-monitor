@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Support\SqlFilter;
 use App\Support\SqlLike;
 use App\Support\UserPasswordRules;
+use App\Support\UserRole;
+use App\Support\ValidationMessages;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,84 +18,135 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        $actor = Auth::user();
         $query = User::query()->orderBy('name');
+
+        if (UserRole::isAdmin($actor) && ! UserRole::isSuperAdmin($actor)) {
+            $query->where('role', UserRole::PESERTA);
+        }
+
         if ($request->filled('search')) {
             $pattern = SqlLike::contains((string) $request->search);
             $query->where(function ($qry) use ($pattern) {
                 $qry->where('name', 'like', $pattern)->orWhere('email', 'like', $pattern);
             });
         }
+
+        $allowedRoles = UserRole::isSuperAdmin($actor)
+            ? [UserRole::SUPER_ADMIN, UserRole::ADMIN, UserRole::PIMPINAN, UserRole::PESERTA]
+            : [UserRole::PESERTA];
+
         $role = SqlFilter::enum(
-            $request->filled('role') ? (string) $request->role : null,
-            ['super_admin', 'admin', 'user'],
+            $request->filled('role') ? UserRole::normalize((string) $request->role) : null,
+            $allowedRoles,
         );
+
         if ($role !== null) {
             $query->where('role', $role);
         }
+
         $users = $query->paginate(15)->withQueryString();
-        return view('admin.users.index', compact('users'));
+        $canAssignRoles = UserRole::canAssignRoles($actor);
+
+        return view('admin.users.index', compact('users', 'canAssignRoles'));
     }
 
     public function create()
     {
-        return view('admin.users.create');
+        $canAssignRoles = UserRole::canAssignRoles(Auth::user());
+
+        return view('admin.users.create', compact('canAssignRoles'));
     }
 
     public function store(Request $request)
     {
+        $actor = Auth::user();
         $valid = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
             'password' => ['required', 'confirmed', UserPasswordRules::defaults()],
-            'role' => 'required|in:super_admin,admin,peserta',
+            'role' => 'required|in:super_admin,admin,pimpinan,peserta',
             'is_active' => 'nullable|boolean',
-        ]);
-        $valid['role'] = $this->normalizeRole($valid['role']);
+        ], ValidationMessages::adminUser());
+
+        $valid['role'] = UserRole::normalize($valid['role']);
+
+        if (! UserRole::canCreateUserRole($actor, $valid['role'])) {
+            abort(403, 'Anda tidak dapat membuat pengguna dengan role ini.');
+        }
+
         $valid['password'] = Hash::make($valid['password']);
         $valid['is_active'] = (bool) ($valid['is_active'] ?? true);
         $user = User::create($valid);
         $user->syncRoles([$valid['role']]);
+
         return redirect()->route('admin.users.index')->with('success', 'User berhasil ditambahkan.');
     }
 
     public function edit(User $user)
     {
-        return view('admin.users.edit', compact('user'));
+        if (! UserRole::canEditUser(Auth::user(), $user)) {
+            abort(403, 'Anda tidak dapat mengubah pengguna ini.');
+        }
+
+        $canAssignRoles = UserRole::canAssignRoles(Auth::user());
+
+        return view('admin.users.edit', compact('user', 'canAssignRoles'));
     }
 
     public function update(Request $request, User $user)
     {
-        $valid = $request->validate([
+        $actor = Auth::user();
+
+        if (! UserRole::canEditUser($actor, $user)) {
+            abort(403, 'Anda tidak dapat mengubah pengguna ini.');
+        }
+
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => ['nullable', 'confirmed', UserPasswordRules::defaults()],
-            'role' => 'required|in:super_admin,admin,peserta',
             'is_active' => 'nullable|boolean',
-        ]);
-        $valid['role'] = $this->normalizeRole($valid['role']);
-        if (!empty($valid['password'])) {
+        ];
+
+        if (UserRole::canAssignRoles($actor)) {
+            $rules['role'] = 'required|in:super_admin,admin,pimpinan,peserta';
+        }
+
+        $valid = $request->validate($rules, ValidationMessages::identity());
+
+        if (! empty($valid['password'])) {
             $user->password = Hash::make($valid['password']);
         }
+
         $user->name = $valid['name'];
         $user->email = $valid['email'];
-        $user->role = $valid['role'];
         $user->is_active = (bool) ($valid['is_active'] ?? true);
+
+        if (UserRole::canAssignRoles($actor)) {
+            $newRole = UserRole::normalize($valid['role']);
+
+            if (! UserRole::canCreateUserRole($actor, $newRole)) {
+                abort(403, 'Role tidak diizinkan.');
+            }
+
+            $user->role = $newRole;
+        }
+
         $user->save();
-        $user->syncRoles([$valid['role']]);
+        $user->syncRoles([$user->role]);
+
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diubah.');
     }
 
     public function destroy(User $user)
     {
-        if ($user->id === Auth::id()) {
-            return redirect()->route('admin.users.index')->with('error', 'Tidak dapat menghapus akun sendiri.');
+        if (! UserRole::canDeleteUser(Auth::user(), $user)) {
+            abort(403, 'Anda tidak dapat menghapus pengguna ini.');
         }
-        $user->delete();
-        return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus.');
-    }
 
-    private function normalizeRole(string $role): string
-    {
-        return $role === 'peserta' ? 'user' : $role;
+        $user->delete();
+
+        return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus.');
     }
 }

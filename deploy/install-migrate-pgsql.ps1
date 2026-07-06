@@ -1,5 +1,8 @@
 # Migrasi MySQL -> PostgreSQL (MCU Monitor)
 # Prasyarat: health-platform sudah jalan (network ppkp-data, mcu_monitor user).
+#
+# Catatan: service MySQL Docker sudah dihapus. Sumber migrasi harus MySQL eksternal
+# (Laragon/dump) via MYSQL_* di .env. Jika sudah di PG, cukup docker compose up -d.
 
 param(
     [switch]$InitEnv,
@@ -151,17 +154,19 @@ Sync-PgsqlPasswordFromHealthPlatform
 Ensure-AppKey
 
 Write-Host ""
-Write-Host "==> 1/5 MySQL legacy (sumber data)"
-docker compose --profile mysql-legacy up -d mysql
-docker compose --profile mysql-legacy ps
+Write-Host "==> 1/5 Pastikan MYSQL_* di .env mengarah ke sumber MySQL eksternal (bukan container Docker)"
+if (-not (Select-String -Path ".env" -Pattern '^MYSQL_HOST=' -Quiet)) {
+    Write-Host "ERROR: MYSQL_HOST tidak ada di .env. Isi MYSQL_* untuk migrasi, atau skip jika sudah PostgreSQL."
+    exit 1
+}
 
 Write-Host ""
-Write-Host "==> 2/5 Build & start aplikasi (PostgreSQL aktif)"
+Write-Host "==> 2/5 Build & start aplikasi (PostgreSQL + Redis)"
 if (-not $SkipBuild) {
     Ensure-FrontendBuild
     docker compose build app
 }
-docker compose up -d --force-recreate app queue scheduler
+docker compose up -d --force-recreate redis app queue scheduler
 
 Write-Host "Menunggu container app..."
 Start-Sleep -Seconds 8
@@ -195,7 +200,7 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "Panduan: docs/BRIDGE-AFTER-PG-MIGRATION.md"
 }
 
-$appPort = "9003"
+$appPort = "9002"
 $portLine = Select-String -Path ".env" -Pattern "^APP_PORT=" | Select-Object -First 1
 if ($portLine) {
     $appPort = $portLine.Line.Split("=", 2)[1].Trim()

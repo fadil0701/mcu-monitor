@@ -71,6 +71,6 @@ class AppServiceProvider extends ServiceProvider
             return false;
         }
 
-        return (int) $request->getPort() === (int) env('APP_PORT', 9003);
+        return (int) $request->getPort() === (int) env('APP_PORT', 9002);
     }
 }

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Participant;
 use App\Support\ParticipantEducation;
+use App\Support\UserRole;
+use App\Support\ValidationMessages;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,7 +49,7 @@ class RegisteredUserController extends Controller
 			'ukpd' => ['nullable', 'string', 'max:255'],
 			'no_telp' => ['nullable', 'string', 'max:20'],
 			'email_personal' => ['nullable', 'email', 'max:255'],
-		]);
+		], ValidationMessages::registration());
 
 		// Check if employee status is valid for MCU
 		if (!in_array($request->status_pegawai, ['CPNS', 'PNS', 'PPPK'])) {
@@ -102,7 +104,7 @@ class RegisteredUserController extends Controller
 		event(new Registered($user));
 
 		// Notify admins about new registration
-		User::query()->whereIn('role', ['admin','super_admin'])->get()->each(function (User $admin) use ($user) {
+		User::query()->whereIn('role', UserRole::notifiableStaffRoles())->get()->each(function (User $admin) use ($user) {
 			$admin->notify(new NewRegistrationNotification('baru', [
 				'user_name' => $user->name,
 				'user_email' => $user->email,

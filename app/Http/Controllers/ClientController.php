@@ -22,6 +22,8 @@ use App\Support\McuDailyQuota;
 use App\Support\ParticipantMcuScheduleEligibility;
 use App\Notifications\NewRegistrationNotification;
 use App\Support\ParticipantEducation;
+use App\Support\UserRole;
+use App\Support\ValidationMessages;
 use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
@@ -88,7 +90,7 @@ class ClientController extends Controller
 			'pendidikan_terakhir' => ['required', Rule::in(ParticipantEducation::levels())],
 			'no_telp' => 'required|string|max:20',
 			'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-		]);
+		], ValidationMessages::participantForm());
 
 		$participant->update($valid);
 
@@ -170,7 +172,7 @@ class ClientController extends Controller
 		// ]);
 
 		// Notify admins
-		User::query()->whereIn('role', ['admin','super_admin'])->get()->each(function (User $admin) use ($schedule) {
+		User::query()->whereIn('role', UserRole::notifiableStaffRoles())->get()->each(function (User $admin) use ($schedule) {
 			$admin->notify(new NewRegistrationNotification('ulang', [
 				'type' => 'reschedule_request',
 				'participant_name' => $schedule->nama_lengkap,
@@ -202,7 +204,7 @@ class ClientController extends Controller
         ]);
 
         // Notify admins about cancellation
-        User::query()->whereIn('role', ['admin','super_admin'])->get()->each(function (User $admin) use ($schedule, $request) {
+        User::query()->whereIn('role', UserRole::notifiableStaffRoles())->get()->each(function (User $admin) use ($schedule, $request) {
             $admin->notify(new NewRegistrationNotification('batal', [
                 'type' => 'cancellation',
                 'participant_name' => $schedule->nama_lengkap,
@@ -453,7 +455,7 @@ class ClientController extends Controller
 		$adminNotificationType = $schedule->isPendingAdminConfirmation() ? 'menunggu_konfirmasi' : 'ulang';
 
 		// Notify admins about schedule request
-		User::query()->whereIn('role', ['admin','super_admin'])->get()->each(function (User $admin) use ($participant, $schedule, $adminNotificationType) {
+		User::query()->whereIn('role', UserRole::notifiableStaffRoles())->get()->each(function (User $admin) use ($participant, $schedule, $adminNotificationType) {
 			$admin->notify(new NewRegistrationNotification($adminNotificationType, [
 				'participant_name' => $participant->nama_lengkap,
 				'nik_ktp' => $participant->nik_ktp,

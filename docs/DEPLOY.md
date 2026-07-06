@@ -18,7 +18,7 @@
 | Item | Nilai |
 |------|--------|
 | VM IP | `10.15.101.117` |
-| Port Docker MCU | `9003` |
+| Port Docker MCU | `9002` |
 | Path URL publik | `/mcuppkp/` |
 | URL lengkap | `https://puspelkes.jakarta.go.id/mcuppkp/` |
 | Database | `monitoring_mcu` |
@@ -31,7 +31,7 @@
 
 - Docker Engine 24+ dan Compose v2
 - Git
-- Port `9003` bebas
+- Port `9002` bebas
 - Nginx host untuk reverse proxy path `/mcuppkp/`
 
 ## Instalasi pertama
@@ -59,7 +59,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php art
 
 | Mode | URL contoh | Script | `APP_USE_REQUEST_URL` |
 |------|------------|--------|------------------------|
-| Docker langsung | `http://<VM_IP>:9003/` | `LAN_IP=<VM_IP> ./deploy/set-lan-env.sh` | `true` |
+| Docker langsung | `http://<VM_IP>:9002/` | `LAN_IP=<VM_IP> ./deploy/set-lan-env.sh` | `true` |
 | Portal + subpath | `http://<VM_IP>/mcuppkp/` | `./deploy/set-domain-env.sh` + snippet nginx | `false` |
 | Domain HTTPS | `https://puspelkes.jakarta.go.id/mcuppkp/` | `./deploy/set-domain-env.sh` + SSL | `false` |
 
@@ -68,7 +68,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php art
 Laravel membangun semua `route()` (login, daftar, dll.) dari `AppServiceProvider`:
 
 - **`APP_USE_REQUEST_URL=false`** (produksi domain): pakai `APP_URL` → link mengarah ke domain, mis. `https://puspelkes.jakarta.go.id/mcuppkp/login`.
-- **`APP_USE_REQUEST_URL=true`** (mode LAN `:9003`): pakai host permintaan saat ini → jika dibuka lewat `http://10.15.101.117:9003`, link login ikut ke IP tersebut.
+- **`APP_USE_REQUEST_URL=true`** (mode LAN `:9002`): pakai host permintaan saat ini → jika dibuka lewat `http://10.15.101.117:9002`, link login ikut ke IP tersebut.
 
 **Produksi publik wajib domain:**
 
@@ -78,7 +78,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php art
 docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php artisan config:cache
 ```
 
-Jangan pakai `set-lan-env.sh` untuk pengguna akhir — script itu hanya untuk debug/akses internal port `9003`.
+Jangan pakai `set-lan-env.sh` untuk pengguna akhir — script itu hanya untuk debug/akses internal port `9002`.
 
 ## Nginx host (path `/mcuppkp/`)
 
@@ -101,7 +101,7 @@ sudo nginx -t && sudo systemctl reload nginx
 curl -I http://127.0.0.1/mcuppkp/
 ```
 
-Snippet mem-proxy ke `http://127.0.0.1:9003/` dengan strip prefix `/mcuppkp/`.
+Snippet mem-proxy ke `http://127.0.0.1:9002/` dengan strip prefix `/mcuppkp/`.
 
 ## Update produksi
 
@@ -132,12 +132,12 @@ Setelah deploy UI, hard refresh browser (`Ctrl+Shift+R`) atau tab incognito.
 
 ## Variabel `.env` penting
 
-| Variabel | Produksi (domain) | Mode LAN (`:9003`) |
+| Variabel | Produksi (domain) | Mode LAN (`:9002`) |
 |----------|-------------------|---------------------|
-| `APP_URL` | `https://puspelkes.jakarta.go.id/mcuppkp` | `http://<VM_IP>:9003` |
+| `APP_URL` | `https://puspelkes.jakarta.go.id/mcuppkp` | `http://<VM_IP>:9002` |
 | `ASSET_URL` | sama dengan `APP_URL` | (kosong / sama `APP_URL`) |
 | `APP_USE_REQUEST_URL` | `false` | `true` |
-| `APP_PORT` | `9003` |
+| `APP_PORT` | `9002` |
 | `SESSION_PATH` | `/mcuppkp/` |
 | `SESSION_SECURE_COOKIE` | `true` |
 | `TRUSTED_PROXIES` | `*` |
@@ -244,7 +244,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 ```bash
 bash deploy/verify.sh
-curl -fsS http://127.0.0.1:9003/up
+curl -fsS http://127.0.0.1:9002/up
 curl -fsS https://puspelkes.jakarta.go.id/mcuppkp/up
 ```
 
@@ -257,7 +257,7 @@ curl -fsS https://puspelkes.jakarta.go.id/mcuppkp/up
 | Form/view/logo tidak berubah setelah `git pull` | `bash deploy/update-production.sh` (rebuild image), lalu hard refresh browser |
 | CSS/UI admin masih tampilan lama setelah update | Lihat [CSS tidak ter-update](#css-tidak-ter-update-setelah-deploy) di bawah |
 | `instansi_pemprov_dkis` tidak ada / error laporan & form SKPD | `php artisan migrate --force` lalu `php artisan db:seed --class=InstansiPemprovDkiSeeder --force` |
-| Link login ke `http://<IP>:9003` bukan domain | `bash deploy/set-domain-env.sh`, `config:cache`; jangan pakai `set-lan-env.sh` di produksi |
+| Link login ke `http://<IP>:9002` bukan domain | `bash deploy/set-domain-env.sh`, `config:cache`; jangan pakai `set-lan-env.sh` di produksi |
 | Logo form auth membesar / terpotong | Pastikan commit branding terbaru ter-deploy; cek `height:48px` di `brand.blade.php` di dalam container |
 | Logo sidebar garis warna / terpotong | Sidebar harus pakai `icon-ppkp.png`, bukan `logo-ppkp.png`; rebuild image |
 | Login redirect loop | `SESSION_PATH=/mcuppkp/` |
@@ -292,7 +292,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T app \
   stat -c%s /var/www/html/public/assets/css/mcu-admin.css
 
 # Cek URL CSS di HTML (harus ada ?v=...)
-curl -s http://127.0.0.1:9003/login | grep mcu-admin
+curl -s http://127.0.0.1:9002/login | grep mcu-admin
 ```
 
 Script `update-production.sh` membandingkan ukuran host vs container dan memperingatkan jika berbeda.

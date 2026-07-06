@@ -53,20 +53,4 @@
         </div>
     @endif
 </x-common.component-card>
-
-@if($mcuResults->count() > 0)
-    @php $latestResult = $mcuResults->first(); @endphp
-    <x-common.component-card title="Detail Hasil Terbaru">
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label text-muted small">Hasil Pemeriksaan</label>
-                <div class="border rounded p-3 bg-light">{{ $latestResult->hasil_pemeriksaan ?: '-' }}</div>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label text-muted small">Rekomendasi</label>
-                <div class="border rounded p-3 bg-light">{{ $latestResult->rekomendasi ?: 'Tidak ada rekomendasi khusus' }}</div>
-            </div>
-        </div>
-    </x-common.component-card>
-@endif
 @endsection

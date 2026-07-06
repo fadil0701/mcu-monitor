@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use App\Models\User;
 use App\Support\NotificationBadgeCounts;
+use App\Support\UserRole;
 use Illuminate\Support\Facades\Auth;
 
 class MenuHelper
@@ -15,39 +16,70 @@ class MenuHelper
             return [];
         }
 
-        return $user->isAdmin()
-            ? self::adminNavItems($user)
-            : self::participantNavItems();
-    }
+        if (request()->is('client*') && UserRole::hasLinkedParticipant($user)) {
+            $items = self::participantNavItems();
 
-    private static function adminNavItems(User $user): array
-    {
-        $mcuSubItems = [
-            self::subLink('Data Peserta', route('admin.participants.index')),
-            self::subLink('Jadwal MCU', route('admin.schedules.index')),
-            self::subLink('Hasil MCU', route('admin.mcu-results.index')),
-        ];
+            if (UserRole::hasStaffAccess($user)) {
+                array_unshift($items, self::link('bx-grid-alt', 'Panel Admin', route('dashboard')));
+            }
 
-        if ($user->isSuperAdmin()) {
-            $mcuSubItems[] = self::subLink(
-                'Permintaan Reschedule',
-                route('admin.reschedule-center.index'),
-                NotificationBadgeCounts::pendingReschedules()
-            );
+            return $items;
         }
 
+        if (UserRole::hasStaffAccess($user)) {
+            return self::staffNavItems($user);
+        }
+
+        return self::participantNavItems();
+    }
+
+    private static function staffNavItems(User $user): array
+    {
         $items = [
             self::link('bx-home-circle', 'Dashboard', route('dashboard')),
-            self::group('bx-pulse', 'MCU & Peserta', $mcuSubItems),
-            self::group('bx-calendar', 'Kuota & Jadwal', [
-                self::subLink('Kuota MCU', route('admin.settings.index', ['tab' => 'schedule_quota'])),
-                self::subLink('Kalender Libur', route('admin.mcu-work-calendar.index')),
-            ]),
-            self::link('bx-link-alt', 'Integrasi CKG', route('admin.ckg-bridge.index')),
-            self::link('bx-bar-chart-alt-2', 'Laporan', route('admin.reports.index')),
         ];
 
-        if ($user->isSuperAdmin()) {
+        if (UserRole::isSuperAdmin($user) || UserRole::isAdmin($user)) {
+            $mcuSubItems = [
+                self::subLink('Data Peserta', route('admin.participants.index')),
+                self::subLink('Jadwal MCU', route('admin.schedules.index')),
+                self::subLink('Hasil MCU', route('admin.mcu-results.index')),
+            ];
+
+            if (UserRole::isSuperAdmin($user)) {
+                $mcuSubItems[] = self::subLink(
+                    'Permintaan Reschedule',
+                    route('admin.reschedule-center.index'),
+                    NotificationBadgeCounts::pendingReschedules()
+                );
+            }
+
+            $items[] = self::group('bx-pulse', 'MCU & Peserta', $mcuSubItems);
+        } elseif (UserRole::isPimpinan($user)) {
+            $mcuSubItems = [
+                self::subLink('Jadwal MCU', route('admin.schedules.index')),
+                self::subLink('Hasil MCU', route('admin.mcu-results.index')),
+                self::subLink(
+                    'Permintaan Reschedule',
+                    route('admin.reschedule-center.index'),
+                    NotificationBadgeCounts::pendingReschedules()
+                ),
+            ];
+            $items[] = self::group('bx-pulse', 'MCU', $mcuSubItems);
+        }
+
+        $items[] = self::group('bx-calendar', 'Kuota & Jadwal', [
+            self::subLink('Kuota MCU', route('admin.settings.index', ['tab' => 'schedule_quota'])),
+            self::subLink('Kalender Libur', route('admin.mcu-work-calendar.index')),
+        ]);
+
+        if (UserRole::isSuperAdmin($user)) {
+            $items[] = self::link('bx-link-alt', 'Integrasi CKG', route('admin.ckg-bridge.index'));
+        }
+
+        $items[] = self::link('bx-bar-chart-alt-2', 'Laporan', route('admin.reports.index'));
+
+        if (UserRole::isSuperAdmin($user)) {
             $items[] = self::group('bx-message-dots', 'Template Pesan', [
                 self::subLink('WhatsApp', route('admin.whatsapp-templates.index')),
                 self::subLink('Email', route('admin.email-templates.index')),
@@ -55,24 +87,37 @@ class MenuHelper
             ]);
         }
 
-        $administration = [
-            self::subLink('Pengguna', route('admin.users.index')),
-            self::subLink('Notifikasi', route('admin.notifications.index'), NotificationBadgeCounts::unreadFor()),
-            self::subLink('Pengaturan', route('admin.settings.index', ['tab' => 'general'])),
-        ];
+        if (UserRole::isSuperAdmin($user) || UserRole::isAdmin($user)) {
+            $administration = [
+                self::subLink('Pengguna', route('admin.users.index')),
+                self::subLink('Notifikasi', route('admin.notifications.index'), NotificationBadgeCounts::unreadFor()),
+            ];
 
-        if ($user->isSuperAdmin()) {
-            $administration[] = self::subLink('Backup Database', route('admin.backup.index'));
+            if (UserRole::isSuperAdmin($user)) {
+                $administration[] = self::subLink('Pengaturan', route('admin.settings.index', ['tab' => 'general']));
+                $administration[] = self::subLink('Backup Database', route('admin.backup.index'));
 
-            if (config('mcu.menu.master_data_enabled', false)) {
-                $items[] = self::group('bx-book-content', 'Referensi Medis', [
-                    self::subLink('Diagnosis', route('admin.diagnoses.index')),
-                    self::subLink('Dokter Spesialis', route('admin.specialist-doctors.index')),
-                ]);
+                if (config('mcu.menu.master_data_enabled', false)) {
+                    $items[] = self::group('bx-book-content', 'Referensi Medis', [
+                        self::subLink('Diagnosis', route('admin.diagnoses.index')),
+                        self::subLink('Dokter Spesialis', route('admin.specialist-doctors.index')),
+                    ]);
+                }
             }
+
+            $items[] = self::group('bx-cog', 'Sistem', $administration);
+        } elseif (UserRole::isPimpinan($user)) {
+            $items[] = self::link(
+                'bx-bell',
+                'Notifikasi',
+                route('admin.notifications.index'),
+                NotificationBadgeCounts::unreadFor()
+            );
         }
 
-        $items[] = self::group('bx-cog', 'Sistem', $administration);
+        if (UserRole::hasStaffAccess($user)) {
+            $items[] = self::link('bx-user-circle', 'Portal Peserta', route('client.dashboard'));
+        }
 
         return $items;
     }

@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'staff' => \App\Http\Middleware\EnsureStaffPanel::class,
+            'role' => \App\Http\Middleware\EnsureRole::class,
             'super_admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
     })

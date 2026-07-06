@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-APP_PORT="${APP_PORT:-9003}"
+APP_PORT="${APP_PORT:-9002}"
 if [ -f .env ] && grep -q '^APP_PORT=' .env; then
     APP_PORT="$(grep '^APP_PORT=' .env | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")"
 fi

@@ -12,9 +12,9 @@ class CkgBridgeMonitoringTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_can_save_ckg_bridge_config(): void
+    public function test_super_admin_can_save_ckg_bridge_config(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'super_admin']);
 
         $this->actingAs($admin)
             ->put(route('admin.ckg-bridge.config.update'), [
@@ -47,7 +47,7 @@ class CkgBridgeMonitoringTest extends TestCase
 
         config(['ckg_bridge.base_url' => 'http://ckg.test', 'ckg_bridge.api_key' => 'test-mcu-api-key']);
 
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'super_admin']);
 
         $this->actingAs($admin)
             ->post(route('admin.ckg-bridge.sync'))
@@ -62,7 +62,7 @@ class CkgBridgeMonitoringTest extends TestCase
 
     public function test_sync_logs_are_paginated(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'super_admin']);
 
         for ($i = 0; $i < 25; $i++) {
             CkgBridgeSyncLog::query()->create([

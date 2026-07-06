@@ -11,9 +11,32 @@ class SettingControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_can_save_smtp_password(): void
+    public function test_admin_cannot_save_smtp_password(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
+
+        Setting::setValue('smtp_host', 'smtp.gmail.com', 'string', 'smtp');
+        Setting::setValue('smtp_port', '465', 'string', 'smtp');
+        Setting::setValue('smtp_encryption', 'ssl', 'string', 'smtp');
+        Setting::setValue('smtp_from_address', 'mcu@example.com', 'string', 'smtp');
+        Setting::setValue('smtp_from_name', 'MCU', 'string', 'smtp');
+
+        $this->actingAs($admin)
+            ->put(route('admin.settings.update-section', 'email'), [
+                'smtp_host' => 'smtp.gmail.com',
+                'smtp_port' => '465',
+                'smtp_encryption' => 'ssl',
+                'smtp_username' => 'mcu@example.com',
+                'smtp_password' => 'app-password-16chars',
+                'smtp_from_address' => 'mcu@example.com',
+                'smtp_from_name' => 'MCU',
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_super_admin_can_save_smtp_password(): void
+    {
+        $admin = User::factory()->create(['role' => 'super_admin']);
 
         Setting::setValue('smtp_host', 'smtp.gmail.com', 'string', 'smtp');
         Setting::setValue('smtp_port', '465', 'string', 'smtp');
@@ -36,9 +59,9 @@ class SettingControllerTest extends TestCase
         $this->assertSame('app-password-16chars', Setting::getValue('smtp_password'));
     }
 
-    public function test_admin_can_update_smtp_without_changing_password(): void
+    public function test_super_admin_can_update_smtp_without_changing_password(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'super_admin']);
 
         Setting::setValue('smtp_host', 'smtp.gmail.com', 'string', 'smtp');
         Setting::setValue('smtp_port', '465', 'string', 'smtp');

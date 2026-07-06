@@ -6,6 +6,7 @@ use App\Models\Participant;
 use App\Models\User;
 use App\Models\Schedule;
 use App\Support\ParticipantEducation;
+use App\Support\ValidationMessages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,8 @@ class PesertaActivationController extends Controller
     {
         $request->validate([
             'identifier' => 'required|string',
+        ], [
+            'identifier.required' => 'NIK, NRK, atau nomor telepon wajib diisi.',
         ]);
 
         $identifier = $request->input('identifier');
@@ -84,7 +87,10 @@ class PesertaActivationController extends Controller
             'no_telp' => 'required|string|max:20',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|confirmed|min:8',
-        ]);
+        ], ValidationMessages::merge(
+            ValidationMessages::participantForm(),
+            ValidationMessages::passwordActivation(),
+        ));
 
         $participant->update([
             'nama_lengkap' => $valid['nama_lengkap'],

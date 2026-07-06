@@ -21,15 +21,7 @@
                 @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             @include('admin.users.partials.password-fields', ['passwordRequired' => true])
-            <div class="col-md-6">
-                <label for="role" class="form-label">Role *</label>
-                <select id="role" name="role" required class="form-select @error('role') is-invalid @enderror">
-                    <option value="peserta" {{ old('role') === 'peserta' ? 'selected' : '' }}>Peserta</option>
-                    <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-                    <option value="super_admin" {{ old('role') === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
-                </select>
-                @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
+            @include('admin.users.partials.role-field-create')
             <div class="col-md-6 d-flex align-items-end">
                 <div class="form-check mb-3">
                     <input type="checkbox" class="form-check-input" name="is_active" value="1" id="is_active" {{ old('is_active', true) ? 'checked' : '' }}>

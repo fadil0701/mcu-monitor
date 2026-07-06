@@ -21,7 +21,7 @@ bash deploy/install.sh
 docker compose -f docker-compose.yml -f docker-compose.prod.yml exec app php artisan user:create-admin --from-env
 ```
 
-- Port produksi: **9003**
+- Port lokal/produksi Docker: **9002** (`APP_PORT` di `.env`)
 - Path publik: **`/mcuppkp/`**
 - Update: `./deploy/update-production.sh`
 
@@ -71,12 +71,12 @@ docker compose down -v               # stop + hapus volume database
 
 | Service | Fungsi |
 |---------|--------|
+| `redis` | Cache, session, queue |
 | `app` | Nginx + PHP-FPM (web) |
-| `mysql` | Database MySQL 8.4 |
-| `queue` | Worker antrian (`QUEUE_CONNECTION=database`) |
+| `queue` | Worker antrian (`QUEUE_CONNECTION=redis`) |
 | `scheduler` | Menjalankan `schedule:run` setiap menit |
 
-Volume persisten: data MySQL, file upload (`storage`), cache bootstrap.
+Database: PostgreSQL via **health-platform** (`mcu-monitor-postgres`). Volume persisten: file upload (`storage`), cache bootstrap.
 
 ## Setup (tanpa Docker)
 

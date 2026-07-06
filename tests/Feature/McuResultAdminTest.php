@@ -7,7 +7,9 @@ use App\Models\Participant;
 use App\Models\Schedule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class McuResultAdminTest extends TestCase
@@ -144,6 +146,47 @@ class McuResultAdminTest extends TestCase
             ->assertOk()
             ->assertSee('MCU Via Import')
             ->assertSee('10/06/2026');
+    }
+
+    public function test_store_syncs_participant_and_shows_on_index(): void
+    {
+        Storage::fake('public');
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $participant = $this->makeParticipant([
+            'nama_lengkap' => 'Peserta Baru Upload',
+            'nik_ktp' => '3173012345678930',
+            'nrk_pegawai' => 'NRK-030',
+            'status_mcu' => 'Belum MCU',
+            'tanggal_mcu_terakhir' => null,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.mcu-results.store'), [
+                'participant_id' => $participant->id,
+                'tanggal_pemeriksaan' => '2026-06-15',
+                'file_hasil' => [
+                    UploadedFile::fake()->create('hasil-mcu.pdf', 100, 'application/pdf'),
+                ],
+                'is_published' => '1',
+            ])
+            ->assertRedirect(route('admin.mcu-results.index', [
+                'period' => 'bulan',
+                'period_value' => '2026-06',
+            ]));
+
+        $participant->refresh();
+        $this->assertSame('Sudah MCU', $participant->status_mcu);
+        $this->assertSame('2026-06-15', $participant->tanggal_mcu_terakhir?->format('Y-m-d'));
+
+        $this->actingAs($admin)
+            ->get(route('admin.mcu-results.index', [
+                'period' => 'bulan',
+                'period_value' => '2026-06',
+            ]))
+            ->assertOk()
+            ->assertSee('Peserta Baru Upload')
+            ->assertSee('Sudah di Upload');
     }
 
     public function test_index_filters_by_status_hasil_uploaded(): void

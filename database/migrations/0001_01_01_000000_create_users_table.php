@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['super_admin', 'admin', 'user'])->default('user');
+            $table->enum('role', ['super_admin', 'admin', 'pimpinan', 'user'])->default('user');
             $table->string('nik_ktp', 16)->nullable()->unique();
             $table->string('nrk_pegawai')->nullable()->unique();
             $table->boolean('is_active')->default(true);

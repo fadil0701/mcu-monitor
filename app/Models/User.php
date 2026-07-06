@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -41,20 +42,36 @@ class User extends Authenticatable
 
 	public function isAdmin(): bool
 	{
-		return in_array($this->role, ['admin','super_admin'], true);
+		return in_array($this->role, [UserRole::ADMIN, UserRole::SUPER_ADMIN], true);
 	}
 
 	public function isSuperAdmin(): bool
 	{
-		return $this->role === 'super_admin';
+		return UserRole::isSuperAdmin($this);
+	}
+
+	public function isPimpinan(): bool
+	{
+		return UserRole::isPimpinan($this);
+	}
+
+	public function hasStaffAccess(): bool
+	{
+		return UserRole::hasStaffAccess($this);
+	}
+
+	public function hasLinkedParticipant(): bool
+	{
+		return UserRole::hasLinkedParticipant($this);
+	}
+
+	public function canManageReschedule(): bool
+	{
+		return UserRole::canManageReschedule($this);
 	}
 
 	public function getRoleLabelAttribute(): string
 	{
-		return match ($this->role) {
-			'super_admin' => 'Super Admin',
-			'admin' => 'Admin',
-			default => 'Peserta',
-		};
+		return UserRole::label($this->role);
 	}
 }

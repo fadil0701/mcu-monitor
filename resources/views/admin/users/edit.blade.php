@@ -24,15 +24,7 @@
                 'passwordRequired' => false,
                 'passwordOptionalHint' => 'kosongkan jika tidak diubah',
             ])
-            <div class="col-md-6">
-                <label for="role" class="form-label">Role *</label>
-                <select id="role" name="role" required class="form-select @error('role') is-invalid @enderror">
-                    <option value="peserta" {{ old('role', $user->role === 'user' ? 'peserta' : $user->role) === 'peserta' ? 'selected' : '' }}>Peserta</option>
-                    <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Admin</option>
-                    <option value="super_admin" {{ old('role', $user->role) === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
-                </select>
-                @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
+            @include('admin.users.partials.role-field-edit')
             <div class="col-md-6 d-flex align-items-end">
                 <div class="form-check mb-3">
                     <input type="checkbox" class="form-check-input" name="is_active" value="1" id="is_active" {{ old('is_active', $user->is_active) ? 'checked' : '' }}>

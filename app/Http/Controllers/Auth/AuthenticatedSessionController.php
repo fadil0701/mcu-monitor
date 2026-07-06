@@ -54,7 +54,7 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        if ($user->isAdmin()) {
+        if ($user->hasStaffAccess()) {
             return redirect()->intended(route('dashboard'));
         }
 

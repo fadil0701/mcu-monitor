@@ -26,7 +26,7 @@ class SettingSeeder extends Seeder
         $this->setValueIfNotExists('smtp_from_name', 'Sistem Monitoring MCU PPKP', 'string', 'smtp', 'SMTP From Name');
 
         // WhatsApp Settings
-        $this->setValueIfNotExists('whatsapp_provider', 'fonnte', 'string', 'whatsapp', 'WhatsApp Provider (fonnte, wablas, meta, apico)');
+        $this->setValueIfNotExists('whatsapp_provider', 'apico', 'string', 'whatsapp', 'WhatsApp Provider (fonnte, wablas, meta, apico)');
         $this->setValueIfNotExists('whatsapp_token', '', 'string', 'whatsapp', 'WhatsApp API Token / API Key');
         $this->setValueIfNotExists('whatsapp_instance_id', '', 'string', 'whatsapp', 'WhatsApp Phone Number ID (Api.co.id / Meta)');
         $this->setValueIfNotExists('whatsapp_phone_number', '', 'string', 'whatsapp', 'WhatsApp Phone Number');

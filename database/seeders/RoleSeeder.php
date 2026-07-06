@@ -17,6 +17,7 @@ class RoleSeeder extends Seeder
         DB::table('roles')->insertOrIgnore([
             ['name' => 'super_admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'admin', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'pimpinan', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'user', 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()],
         ]);
     }

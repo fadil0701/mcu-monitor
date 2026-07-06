@@ -9,6 +9,7 @@ use App\Exports\ParticipantsImportTemplateExport;
 use App\Imports\ParticipantsImport;
 use App\Models\Participant;
 use App\Support\ParticipantEducation;
+use App\Support\ValidationMessages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -70,7 +71,7 @@ class ParticipantController extends Controller
             'status_mcu' => 'nullable|in:Belum MCU,Sudah MCU,Ditolak',
             'tanggal_mcu_terakhir' => 'nullable|date|before_or_equal:today',
             'catatan' => 'nullable|string',
-        ]);
+        ], ValidationMessages::participantForm());
         $valid['status_mcu'] = $valid['status_mcu'] ?? 'Belum MCU';
         Participant::create($valid);
         return redirect()->route('admin.participants.index')->with('success', 'Peserta berhasil ditambahkan.');
@@ -105,7 +106,7 @@ class ParticipantController extends Controller
             'status_mcu' => 'nullable|in:Belum MCU,Sudah MCU,Ditolak',
             'tanggal_mcu_terakhir' => 'nullable|date|before_or_equal:today',
             'catatan' => 'nullable|string',
-        ]);
+        ], ValidationMessages::participantForm());
         $participant->update($valid);
         return redirect()->route('admin.participants.index')->with('success', 'Peserta berhasil diubah.');
     }

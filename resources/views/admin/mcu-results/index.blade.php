@@ -77,6 +77,7 @@
                     <th>Peserta</th>
                     <th>Publikasi</th>
                     <th>Status hasil</th>
+                    <th class="text-center">Download</th>
                     <th class="text-center">Aksi</th>
                 </tr>
             </thead>
@@ -116,6 +117,15 @@
                                 <span class="badge bg-label-warning">Belum di upload</span>
                             @endif
                         </td>
+                        <td class="text-center">
+                            @if($r && $r->hasFile())
+                                <a href="{{ route('admin.mcu-results.downloadAll', $r) }}" class="btn btn-sm btn-primary" title="Download hasil MCU">
+                                    <i class="bx bx-download"></i>
+                                </a>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
                         <td>
                             <div class="table-action-group">
                                 @if($r)
@@ -144,7 +154,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="text-center text-muted py-4">Tidak ada peserta dengan status Sudah MCU yang cocok dengan filter.</td></tr>
+                    <tr><td colspan="6" class="text-center text-muted py-4">Tidak ada peserta dengan status Sudah MCU yang cocok dengan filter.</td></tr>
                 @endforelse
             </tbody>
         </table>

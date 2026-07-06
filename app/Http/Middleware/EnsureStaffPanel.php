@@ -2,11 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\UserRole;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class EnsureSuperAdmin
+class EnsureStaffPanel
 {
     public function handle(Request $request, Closure $next): Response
     {
@@ -14,8 +15,8 @@ class EnsureSuperAdmin
             return redirect()->route('login');
         }
 
-        if (! auth()->user()->isSuperAdmin()) {
-            abort(403, 'Hanya super admin yang dapat mengakses halaman ini.');
+        if (! UserRole::hasStaffAccess(auth()->user())) {
+            abort(403, 'Akses hanya untuk petugas MCU.');
         }
 
         return $next($request);

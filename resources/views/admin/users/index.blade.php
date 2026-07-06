@@ -16,8 +16,11 @@
                     <label class="form-label mb-1">Role</label>
                     <select name="role" class="form-select form-select-sm">
                         <option value="">Semua Role</option>
-                        <option value="super_admin" {{ request('role') === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
-                        <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Admin</option>
+                        @if($canAssignRoles ?? auth()->user()?->isSuperAdmin())
+                            <option value="super_admin" {{ request('role') === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                            <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="pimpinan" {{ request('role') === 'pimpinan' ? 'selected' : '' }}>Pimpinan</option>
+                        @endif
                         <option value="peserta" {{ request('role') === 'peserta' ? 'selected' : '' }}>Peserta</option>
                     </select>
                 </div>
@@ -50,7 +53,7 @@
                     <tr>
                         <td class="fw-medium">{{ $u->name }}</td>
                         <td>{{ $u->email }}</td>
-                        <td>{{ ucfirst(str_replace('_', ' ', $u->role ?? 'peserta')) }}</td>
+                        <td>{{ $u->role_label }}</td>
                         <td>
                             <span class="badge {{ $u->is_active ? 'bg-label-success' : 'bg-label-danger' }}">{{ $u->is_active ? 'Aktif' : 'Nonaktif' }}</span>
                         </td>

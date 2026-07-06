@@ -95,7 +95,15 @@ class McuResultController extends Controller
         }
         McuResult::create($valid);
 
-        return redirect()->route('admin.mcu-results.index')->with('success', 'Hasil MCU berhasil ditambahkan.');
+        $participant = Participant::query()->findOrFail($valid['participant_id']);
+        $this->syncParticipantAfterResult($participant, $valid['tanggal_pemeriksaan']);
+
+        $periodMonth = Carbon::parse($valid['tanggal_pemeriksaan'])->format('Y-m');
+
+        return redirect()->route('admin.mcu-results.index', [
+            'period' => 'bulan',
+            'period_value' => $periodMonth,
+        ])->with('success', 'Hasil MCU berhasil ditambahkan.');
     }
 
     public function edit(McuResult $mcu_result)
@@ -131,7 +139,15 @@ class McuResultController extends Controller
         }
         $mcu_result->update($valid);
 
-        return redirect()->route('admin.mcu-results.index')->with('success', 'Hasil MCU berhasil diubah.');
+        $participant = Participant::query()->findOrFail($valid['participant_id']);
+        $this->syncParticipantAfterResult($participant, $valid['tanggal_pemeriksaan']);
+
+        $periodMonth = Carbon::parse($valid['tanggal_pemeriksaan'])->format('Y-m');
+
+        return redirect()->route('admin.mcu-results.index', [
+            'period' => 'bulan',
+            'period_value' => $periodMonth,
+        ])->with('success', 'Hasil MCU berhasil diubah.');
     }
 
     public function destroy(McuResult $mcu_result)
@@ -285,5 +301,21 @@ class McuResultController extends Controller
                 });
             });
         };
+    }
+
+    private function syncParticipantAfterResult(Participant $participant, string $tanggalPemeriksaan): void
+    {
+        $examDate = Carbon::parse($tanggalPemeriksaan);
+        $lastDate = $participant->tanggal_mcu_terakhir
+            ? Carbon::parse($participant->tanggal_mcu_terakhir)
+            : null;
+
+        $participant->status_mcu = 'Sudah MCU';
+
+        if ($lastDate === null || $examDate->greaterThan($lastDate)) {
+            $participant->tanggal_mcu_terakhir = $examDate->toDateString();
+        }
+
+        $participant->save();
     }
 }

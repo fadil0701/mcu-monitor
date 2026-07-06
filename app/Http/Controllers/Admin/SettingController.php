@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Rules\MetaWhatsAppTemplateBody;
 use App\Support\WhatsAppTemplateDefaults;
+use App\Support\UserRole;
 use Illuminate\Http\Request;
 
 class SettingController extends Controller
@@ -13,6 +14,12 @@ class SettingController extends Controller
     public function index(Request $request)
     {
         $sections = config('admin_settings.sections', []);
+        $user = auth()->user();
+
+        if ($user && ! UserRole::isSuperAdmin($user)) {
+            $sections = array_intersect_key($sections, array_flip(['schedule_quota']));
+        }
+
         $activeTab = $request->get('tab', array_key_first($sections) ?: 'general');
 
         if (! array_key_exists($activeTab, $sections)) {
@@ -35,7 +42,7 @@ class SettingController extends Controller
         }
 
         $links = collect(config('admin_settings.links', []))
-            ->when(! auth()->user()?->hasRole('super_admin'), fn ($c) => $c->where('super_admin_only', false))
+            ->when(! auth()->user()?->isSuperAdmin(), fn ($c) => $c->where('super_admin_only', false))
             ->values()
             ->all();
 
@@ -44,6 +51,12 @@ class SettingController extends Controller
 
     public function updateSection(Request $request, string $section)
     {
+        $user = auth()->user();
+
+        if ($user && ! UserRole::isSuperAdmin($user) && $section !== 'schedule_quota') {
+            abort(403, 'Anda tidak memiliki akses ke pengaturan ini.');
+        }
+
         $sections = config('admin_settings.sections', []);
 
         if (! isset($sections[$section])) {

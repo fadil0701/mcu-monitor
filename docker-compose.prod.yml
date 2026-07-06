@@ -9,9 +9,6 @@ x-container-dns: &container-dns
     - ${DOCKER_DNS_2:-10.15.32.59}
 
 services:
-  mysql:
-    ports: !reset []
-
   app:
     <<: *container-dns
     extra_hosts:

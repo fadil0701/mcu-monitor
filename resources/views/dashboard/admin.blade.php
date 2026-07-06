@@ -13,7 +13,7 @@
     $mcuBelumInterval = (int) ($stats->mcu_belum_interval ?? 0);
     $intervalTotal = max(1, $mcuSudahInterval + $mcuBelumInterval);
     $intervalPercentSudah = round(($mcuSudahInterval / $intervalTotal) * 100, 1);
-    $canReschedule = Auth::user()->hasRole('super_admin');
+    $canReschedule = Auth::user()->canManageReschedule();
     $todayLabel = now()->translatedFormat('l, d F Y');
     $quotaBooked = (int) ($quotaToday['booked'] ?? 0);
     $quotaLimit = (int) ($quotaToday['limit'] ?? 0);

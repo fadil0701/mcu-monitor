@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Schedule;
 use App\Models\User;
+use App\Support\UserRole;
 use Illuminate\Support\Facades\Auth;
 
 final class NotificationBadgeCounts
@@ -21,7 +22,7 @@ final class NotificationBadgeCounts
 
     public static function pendingReschedules(): int
     {
-        if (! Auth::check() || ! Auth::user()->isAdmin()) {
+        if (! Auth::check() || ! UserRole::canManageReschedule(Auth::user())) {
             return 0;
         }
 

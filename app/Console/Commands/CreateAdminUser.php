@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Support\ValidationMessages;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Validator;
@@ -13,7 +14,7 @@ class CreateAdminUser extends Command
                             {--name= : Nama pengguna}
                             {--email= : Alamat email}
                             {--password= : Password}
-                            {--role=super_admin : Role (super_admin atau admin)}
+                            {--role=super_admin : Role (super_admin, admin, atau pimpinan)}
                             {--from-env : Ambil kredensial super admin dari .env}';
 
     protected $description = 'Buat akun admin atau super admin (interaktif, opsi CLI, atau dari .env)';
@@ -27,7 +28,7 @@ class CreateAdminUser extends Command
         $name = $this->option('name') ?: $this->ask('Nama');
         $email = $this->option('email') ?: $this->ask('Email');
         $password = $this->option('password') ?: $this->secret('Password');
-        $role = $this->option('role') ?: $this->choice('Role', ['super_admin', 'admin'], 0);
+        $role = $this->option('role') ?: $this->choice('Role', ['super_admin', 'admin', 'pimpinan'], 0);
 
         return $this->createUser($name, $email, $password, $role);
     }
@@ -73,8 +74,9 @@ class CreateAdminUser extends Command
                 'name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'email', 'max:255', 'unique:users,email'],
                 'password' => ['required', 'string', 'min:8'],
-                'role' => ['required', 'in:super_admin,admin'],
-            ]
+                'role' => ['required', 'in:super_admin,admin,pimpinan'],
+            ],
+            ValidationMessages::adminUser(),
         );
 
         if ($validator->fails()) {

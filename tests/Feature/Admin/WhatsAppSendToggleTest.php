@@ -56,9 +56,9 @@ class WhatsAppSendToggleTest extends TestCase
             ->assertSee('bx bxl-whatsapp', false);
     }
 
-    public function test_admin_can_enable_whatsapp_send_toggle_in_settings(): void
+    public function test_super_admin_can_enable_whatsapp_send_toggle_in_settings(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'super_admin']);
 
         $this->actingAs($admin)
             ->put(route('admin.settings.update-section', 'whatsapp'), [

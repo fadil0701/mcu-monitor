@@ -61,7 +61,7 @@ docker compose $(compose_prod_args) exec -T app php artisan route:cache
 docker compose $(compose_prod_args) exec -T app php artisan view:cache
 
 APP_PORT="$(grep -E '^APP_PORT=' .env 2>/dev/null | head -1 | cut -d= -f2- | tr -d ' \"'"'"'')"
-APP_PORT="${APP_PORT:-9003}"
+APP_PORT="${APP_PORT:-9002}"
 echo ""
 echo "==> Health check (port Docker — nginx subdomain tidak berubah)"
 if curl -fsS --connect-timeout 5 "http://127.0.0.1:${APP_PORT}/up" >/dev/null; then
