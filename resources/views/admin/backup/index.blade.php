@@ -28,7 +28,7 @@
         <div class="col-sm-6 col-xl-3">
             <div class="card h-100">
                 <div class="card-body">
-                    <p class="text-muted small text-uppercase mb-1">mysqldump</p>
+                    <p class="text-muted small text-uppercase mb-1">{{ $dumpToolLabel ?? 'mysqldump' }}</p>
                     <p class="h5 mb-0 {{ $mysqldumpAvailable ? 'text-success' : 'text-danger' }}">
                         {{ $mysqldumpAvailable ? 'Tersedia' : 'Tidak ada' }}
                     </p>

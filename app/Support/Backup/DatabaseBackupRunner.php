@@ -17,11 +17,6 @@ class DatabaseBackupRunner
         return (string) config('database.default', 'mysql');
     }
 
-    public function mysqldumpAvailable(): bool
-    {
-        return $this->dumpAvailable();
-    }
-
     public function dumpAvailable(): bool
     {
         try {
@@ -35,6 +30,16 @@ class DatabaseBackupRunner
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    public function mysqldumpAvailable(): bool
+    {
+        return $this->dumpAvailable();
+    }
+
+    public function dumpToolLabel(): string
+    {
+        return $this->driver() === 'pgsql' ? 'pg_dump' : 'mysqldump';
     }
 
     public function gpgAvailable(): bool

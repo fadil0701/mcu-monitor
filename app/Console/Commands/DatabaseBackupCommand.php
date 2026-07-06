@@ -10,12 +10,17 @@ class DatabaseBackupCommand extends Command
 {
     protected $signature = 'mcu:backup-database';
 
-    protected $description = 'Backup database MySQL (dump, gzip, enkripsi GPG opsional).';
+    protected $description = 'Backup database (mysqldump atau pg_dump), gzip, enkripsi GPG opsional.';
 
     public function handle(DatabaseBackupRunner $runner): int
     {
-        $this->info('==> Monitoring MCU — backup database MySQL');
-        $this->line('    Database: '.config('database.connections.mysql.database'));
+        $connection = $runner->driver();
+        $tool = $runner->dumpToolLabel();
+        $dbName = (string) config("database.connections.{$connection}.database");
+
+        $this->info("==> Monitoring MCU — backup database ({$tool})");
+        $this->line("    Driver:   {$connection}");
+        $this->line("    Database: {$dbName}");
         $this->line('    Output:   '.config('backup.directory'));
         $this->line('    Enkripsi: '.(config('backup.encrypt') ? 'GPG AES256 (aktif)' : 'nonaktif'));
 

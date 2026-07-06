@@ -374,13 +374,25 @@ Menu: **Super Admin → Backup Database** (`/admin/backup`)
 
 **Backup otomatis (cron / scheduler):**
 
-```bash
-# Via scheduler container (sudah terjadwal 03:00 WIB)
-docker compose exec -T app php artisan mcu:backup-database
+Scheduler container menjalankan `mcu:backup-database` setiap **03:00 WIB** (`routes/console.php`).
+Driver dump mengikuti `DB_CONNECTION` di `.env` (`pgsql` → `pg_dump`, `mysql` → `mysqldump`).
 
-# Atau shell di host VM
+```bash
+# Tes manual (lihat baris Driver: pgsql / pg_dump)
+docker compose exec -T scheduler php artisan mcu:backup-database
+
+# Atau shell di host VM (otomatis delegasi ke artisan jika DB_CONNECTION=pgsql)
 ./deploy/backup-database.sh
 ```
+
+**Setelah migrasi MySQL → PostgreSQL:** pastikan `.env` berisi `DB_CONNECTION=pgsql`, lalu bersihkan config cache di semua container:
+
+```bash
+docker compose exec app php artisan config:clear
+docker compose exec scheduler php artisan config:clear
+```
+
+Tanpa langkah ini, scheduler bisa masih memakai `DB_CONNECTION=mysql` dari cache lama (`bootstrap/cache/config.php`).
 
 **Restore (SSH di server):**
 
@@ -390,7 +402,7 @@ docker compose exec -T app php artisan mcu:backup-database
 ./deploy/restore-database.sh storage/backups/database/backup-monitoring_mcu-YYYYMMDD-HHMMSS.sql.gz.gpg
 ```
 
-**Env penting (Docker):** set `MYSQL_ROOT_PASSWORD` agar `mysqldump` dari container `app` dapat mengakses MySQL.
+**Env penting (Docker + PostgreSQL):** `DB_CONNECTION=pgsql`, `PGSQL_*` mengarah ke health-platform (`mcu-monitor-postgres`). Untuk enkripsi: `/etc/mcuppkp/backup.pass` + `BACKUP_ENCRYPT=true`.
 
 **Setup pertama kali enkripsi (wajib sebelum backup dengan `BACKUP_ENCRYPT=true`):**
 

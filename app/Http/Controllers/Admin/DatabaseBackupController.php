@@ -23,7 +23,9 @@ class DatabaseBackupController extends Controller
             'encryptEnabled' => (bool) config('backup.encrypt'),
             'retentionDays' => (int) config('backup.retention_days'),
             'logTail' => $catalog->tailLog(),
-            'mysqldumpAvailable' => $runner->mysqldumpAvailable(),
+            'mysqldumpAvailable' => $runner->dumpAvailable(),
+            'dumpToolLabel' => $runner->dumpToolLabel(),
+            'databaseDriver' => $runner->driver(),
             'gpgAvailable' => $runner->gpgAvailable(),
         ]);
     }
