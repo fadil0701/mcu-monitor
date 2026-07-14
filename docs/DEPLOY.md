@@ -144,9 +144,23 @@ Setelah deploy UI, hard refresh browser (`Ctrl+Shift+R`) atau tab incognito.
 | `DB_HOST` | `mysql` |
 | `HTTP_PROXY` / `HTTPS_PROXY` | Isi jika VM wajib lewat proxy (lihat contoh di `.env.production.example`) |
 | `NO_PROXY` | Harus mencakup `host.docker.internal`, `.docker.internal`, `172.16.0.0/12` |
+| `MCU_INTERVAL_YEARS` | **Fallback saja** — sumber utama: Admin → Pengaturan → Interval MCU (tahun kalender / tahun berjalan) |
 | `CKG_API_BASE_URL` | Fallback `.env`; produksi aktif biasanya di **database** |
 | `CKG_BRIDGE_INTERNAL_HOST` | IP VM untuk remap `127.0.0.1` dari form admin |
 | `CKG_BRIDGE_INTERNAL_PORT` | `9006` |
+
+## Interval MCU (tahun berjalan)
+
+Peserta boleh mengajukan jadwal ulang berdasarkan **tahun kalender**, bukan anniversary tanggal MCU.
+
+| Setting | Lokasi | Peran |
+|---------|--------|--------|
+| **Interval MCU (Tahun)** | Admin → Pengaturan → Umum | **Sumber utama** (disimpan di DB `settings.mcu_interval_years`) |
+| `MCU_INTERVAL_YEARS` | `.env` | Fallback awal saja jika setting DB belum diisi |
+
+Contoh nilai **1**: jika MCU terakhir tahun 2025, boleh ajukan lagi mulai 1 Jan 2026 (tahun berjalan berbeda). MCU di tahun 2026 yang sama memblokir pengajuan ulang sampai tahun berikutnya.
+
+Ubah lewat UI Pengaturan — tidak perlu edit `.env` setelah nilai tersimpan di DB.
 
 ## Proxy HTTP (build & runtime)
 
@@ -429,6 +443,7 @@ chmod -R 775 storage/backups
 
 | Commit | Ringkasan |
 |--------|-----------|
+| *(pending)* | Interval MCU: sumber tunggal di Pengaturan Admin; acuan tahun kalender (tahun berjalan); `.env` hanya fallback |
 | *(pending)* | Backup database: UI Super Admin, artisan `mcu:backup-database`, script deploy |
 | *(pending)* | UI: pagination per page 15/50/100 di Data Peserta |
 | *(pending)* | Portal peserta: kuota harian MCU + syarat CKG sebelum ajukan jadwal |

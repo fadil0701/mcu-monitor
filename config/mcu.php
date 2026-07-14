@@ -10,13 +10,13 @@ return [
     |
     */
 
-    // Interval MCU dalam tahun
-    'interval_years' => env('MCU_INTERVAL_YEARS', 3),
+    // Fallback interval MCU (tahun kalender). Sumber utama: Pengaturan Admin → mcu_interval_years.
+    'interval_years' => env('MCU_INTERVAL_YEARS', 1),
 
     // Status pegawai yang diizinkan
     'allowed_employee_status' => [
         'CPNS',
-        'PNS', 
+        'PNS',
         'PPPK',
     ],
 

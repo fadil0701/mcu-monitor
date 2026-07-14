@@ -27,4 +27,9 @@ final class McuScheduleSettings
 
         return (string) config('mcu.default_location', 'Klinik Utama Balaikota');
     }
+
+    public static function intervalYears(): int
+    {
+        return McuIntervalSettings::years();
+    }
 }

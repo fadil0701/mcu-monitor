@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
+use App\Support\McuIntervalSettings;
 use App\Support\SqlDialect;
 use App\Support\SqlFilter;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class QueryOptimizationService
@@ -17,39 +18,42 @@ class QueryOptimizationService
     {
         return Cache::remember('optimized_dashboard_stats', 900, function () {
             $startTime = microtime(true);
-            $intervalYears = (int) config('mcu.interval_years', 3);
-            $cutoffDate = now()->subYears($intervalYears)->toDateString();
+            $intervalYears = McuIntervalSettings::years();
+            $currentYear = (int) now()->format('Y');
+            // Tahun kalender paling lama yang masih menghitung "dalam interval"
+            $cutoffYear = $currentYear - $intervalYears + 1;
             $today = now()->toDateString();
 
             // Subquery terpisah agar selaras dengan halaman Data Peserta (status_mcu)
             // dan tidak terdistorsi oleh JOIN schedules + mcu_results.
-            $stats = DB::selectOne('
+            $yearExpr = SqlDialect::yearExpr('tanggal_mcu_terakhir');
+            $stats = DB::selectOne("
                 SELECT
                     (SELECT COUNT(*) FROM participants) as total_participants,
                     (SELECT COUNT(DISTINCT participant_id) FROM schedules WHERE status = ? AND tanggal_pemeriksaan >= ?) as scheduled_participants,
                     (SELECT COUNT(*) FROM participants WHERE status_mcu = ?) as sudah_mcu_status,
                     (SELECT COUNT(*) FROM participants WHERE status_mcu = ?) as belum_mcu_status,
                     (SELECT COUNT(*) FROM participants WHERE status_mcu = ?) as ditolak_mcu_status,
-                    (SELECT COUNT(*) FROM participants WHERE tanggal_mcu_terakhir IS NOT NULL AND tanggal_mcu_terakhir >= ?) as mcu_sudah_interval,
-                    (SELECT COUNT(*) FROM participants WHERE tanggal_mcu_terakhir IS NULL OR tanggal_mcu_terakhir < ?) as mcu_belum_interval,
+                    (SELECT COUNT(*) FROM participants WHERE tanggal_mcu_terakhir IS NOT NULL AND {$yearExpr} >= ?) as mcu_sudah_interval,
+                    (SELECT COUNT(*) FROM participants WHERE tanggal_mcu_terakhir IS NULL OR {$yearExpr} < ?) as mcu_belum_interval,
                     (SELECT COUNT(*) FROM schedules WHERE status = ?) as completed_schedules,
                     (SELECT COUNT(*) FROM schedules WHERE status = ?) as cancelled_schedules,
                     (SELECT COUNT(*) FROM schedules WHERE status = ?) as rejected_schedules
-            ', [
+            ", [
                 'Terjadwal',
                 $today,
                 'Sudah MCU',
                 'Belum MCU',
                 'Ditolak',
-                $cutoffDate,
-                $cutoffDate,
+                $cutoffYear,
+                $cutoffYear,
                 'Selesai',
                 'Batal',
                 'Ditolak',
             ]);
 
             $stats->interval_years = $intervalYears;
-            $stats->interval_cutoff = $cutoffDate;
+            $stats->interval_cutoff = (string) $cutoffYear;
             $stats->completed_mcu = $stats->sudah_mcu_status;
             $stats->pending_mcu = $stats->belum_mcu_status;
 
@@ -106,7 +110,7 @@ class QueryOptimizationService
     {
         $today = now()->toDateString();
 
-        return Cache::remember('today_operational_stats_' . $today, 120, function () use ($today) {
+        return Cache::remember('today_operational_stats_'.$today, 120, function () use ($today) {
             return DB::selectOne('
                 SELECT
                     (SELECT COUNT(*) FROM schedules WHERE tanggal_pemeriksaan = ?) as total,
@@ -139,7 +143,7 @@ class QueryOptimizationService
     {
         $monthKey = now()->format('Y-m');
 
-        return Cache::remember('this_month_stats_' . $monthKey, 900, function () {
+        return Cache::remember('this_month_stats_'.$monthKey, 900, function () {
             $start = now()->startOfMonth()->toDateTimeString();
             $end = now()->endOfMonth()->toDateTimeString();
 
@@ -159,7 +163,7 @@ class QueryOptimizationService
     {
         return Cache::remember("skpd_stats_{$limit}", 1800, function () use ($limit) {
             $startTime = microtime(true);
-            
+
             $stats = DB::select('
                 SELECT *
                 FROM (
@@ -182,10 +186,10 @@ class QueryOptimizationService
                 ORDER BY total_participants DESC, completion_rate DESC
                 LIMIT ?
             ', ['Terjadwal', 'Selesai', 'Selesai', $limit]);
-            
+
             $executionTime = round((microtime(true) - $startTime) * 1000, 2);
             Log::info("SKPD stats query executed in {$executionTime}ms");
-            
+
             return $stats;
         });
     }
@@ -226,7 +230,7 @@ class QueryOptimizationService
 
             $participantsData = collect();
             $mcuResultsData = collect();
-            
+
             foreach ($data as $row) {
                 if ($row->type === 'participants') {
                     $participantsData->put($row->month, $row->count);
@@ -234,10 +238,10 @@ class QueryOptimizationService
                     $mcuResultsData->put($row->month, $row->count);
                 }
             }
-            
+
             $executionTime = round((microtime(true) - $startTime) * 1000, 2);
             Log::info("Chart data query executed in {$executionTime}ms");
-            
+
             return compact('participantsData', 'mcuResultsData');
         });
     }
@@ -247,11 +251,11 @@ class QueryOptimizationService
      */
     public static function getTodayQueue(array $filters = []): array
     {
-        $cacheKey = 'today_queue_' . md5(serialize($filters));
-        
+        $cacheKey = 'today_queue_'.md5(serialize($filters));
+
         return Cache::remember($cacheKey, 120, function () use ($filters) {
             $startTime = microtime(true);
-            
+
             $query = DB::table('schedules')
                 ->join('participants', 'schedules.participant_id', '=', 'participants.id')
                 ->select([
@@ -262,7 +266,7 @@ class QueryOptimizationService
                     'schedules.status',
                     'schedules.queue_number',
                     'participants.nama_lengkap',
-                    'participants.nik_ktp'
+                    'participants.nik_ktp',
                 ])
                 ->whereDate('schedules.tanggal_pemeriksaan', now()->toDateString())
                 ->orderBy('schedules.jam_pemeriksaan')
@@ -281,10 +285,10 @@ class QueryOptimizationService
             }
 
             $results = $query->get();
-            
+
             $executionTime = round((microtime(true) - $startTime) * 1000, 2);
             Log::info("Today queue query executed in {$executionTime}ms");
-            
+
             return $results->toArray();
         });
     }
@@ -296,8 +300,8 @@ class QueryOptimizationService
     {
         return Cache::remember('health_status_distribution', 1800, function () {
             $startTime = microtime(true);
-            
-            $stats = DB::select("
+
+            $stats = DB::select('
                 SELECT 
                     status_kesehatan,
                     COUNT(*) as count,
@@ -305,11 +309,11 @@ class QueryOptimizationService
                 FROM mcu_results 
                 GROUP BY status_kesehatan
                 ORDER BY count DESC
-            ");
-            
+            ');
+
             $executionTime = round((microtime(true) - $startTime) * 1000, 2);
             Log::info("Health status distribution query executed in {$executionTime}ms");
-            
+
             return $stats;
         });
     }
@@ -321,7 +325,7 @@ class QueryOptimizationService
     {
         try {
             // Get slow query log (if enabled)
-            $slowQueries = DB::select("
+            $slowQueries = DB::select('
                 SELECT 
                     sql_text,
                     exec_count,
@@ -331,11 +335,12 @@ class QueryOptimizationService
                 WHERE avg_timer_wait > 1000000000 
                 ORDER BY avg_timer_wait DESC 
                 LIMIT 10
-            ");
-            
+            ');
+
             return $slowQueries;
         } catch (\Exception $e) {
-            Log::warning('Could not analyze slow queries: ' . $e->getMessage());
+            Log::warning('Could not analyze slow queries: '.$e->getMessage());
+
             return [];
         }
     }
@@ -370,10 +375,11 @@ class QueryOptimizationService
                     FROM information_schema.statistics 
                     WHERE table_schema = DATABASE()
                 ");
-                
+
                 return collect($metrics)->pluck('value', 'metric')->toArray();
             } catch (\Exception $e) {
-                Log::warning('Could not get database metrics: ' . $e->getMessage());
+                Log::warning('Could not get database metrics: '.$e->getMessage());
+
                 return [];
             }
         });
@@ -392,16 +398,16 @@ class QueryOptimizationService
             'mcu_result_summary',
             'ckg_summary',
         ];
-        
+
         foreach ($cacheKeys as $key) {
             Cache::forget($key);
         }
-        
+
         // Clear SKPD stats with different limits
         for ($i = 1; $i <= 20; $i++) {
             Cache::forget("skpd_stats_{$i}");
         }
-        
+
         Log::info('Query optimization caches cleared');
     }
 }

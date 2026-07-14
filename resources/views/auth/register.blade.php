@@ -106,7 +106,7 @@
     </div>
 
     <div class="alert alert-info mb-4">
-        <small>Pendaftaran MCU untuk pegawai CPNS/PNS/PPPK. MCU hanya dapat dilakukan setiap {{ config('mcu.interval_years', 3) }} tahun sekali.</small>
+        <small>Pendaftaran MCU untuk pegawai CPNS/PNS/PPPK. MCU hanya dapat dilakukan {{ \App\Support\McuIntervalSettings::years() === 1 ? 'sekali per tahun kalender (tahun berjalan)' : 'setiap '.\App\Support\McuIntervalSettings::years().' tahun kalender sekali' }}.</small>
     </div>
 
     <div class="d-flex flex-wrap gap-2 justify-content-end">

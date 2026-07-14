@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Support\WhatsAppTemplateDefaults;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Setting;
+use App\Support\WhatsAppTemplateDefaults;
+use Illuminate\Database\Seeder;
 
 class SettingSeeder extends Seeder
 {
@@ -63,7 +62,13 @@ Tim Medical Check Up', 'text', 'email_template', 'Template Email Undangan');
         // General Settings
         $this->setValueIfNotExists('app_name', 'Sistem Monitoring MCU', 'string', 'general', 'Nama Aplikasi');
         $this->setValueIfNotExists('app_description', 'Sistem Monitoring Medical Check Up', 'string', 'general', 'Deskripsi Aplikasi');
-        $this->setValueIfNotExists('mcu_interval_years', '3', 'string', 'general', 'Interval MCU (Tahun)');
+        $this->setValueIfNotExists(
+            'mcu_interval_years',
+            (string) config('mcu.interval_years', 1),
+            'string',
+            'general',
+            'Interval MCU (Tahun kalender / tahun berjalan)'
+        );
 
         $this->setValueIfNotExists('mcu_daily_quota', (string) config('mcu.daily_quota', 100), 'string', 'schedule_quota', 'Kuota pemeriksaan per hari kerja');
         $this->setValueIfNotExists('mcu_default_location', (string) config('mcu.default_location', 'Klinik Utama Balaikota'), 'string', 'schedule_quota', 'Lokasi pemeriksaan default');
@@ -75,7 +80,7 @@ Tim Medical Check Up', 'text', 'email_template', 'Template Email Undangan');
     private function setValueIfNotExists($key, $value, $type, $group, $description)
     {
         $existing = Setting::where('key', $key)->first();
-        if (!$existing) {
+        if (! $existing) {
             Setting::setValue($key, $value, $type, $group, $description);
         }
     }

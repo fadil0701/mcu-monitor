@@ -9,11 +9,11 @@
 <x-common.component-card title="Form Jadwal MCU">
     <div class="alert alert-info py-2 mb-3">
         <i class="bx bx-info-circle me-1"></i>
-        Admin dan super admin dapat mendaftarkan peserta MCU meskipun belum memenuhi interval {{ config('mcu.interval_years', 3) }} tahun sejak MCU terakhir.
+        Admin dan super admin dapat mendaftarkan peserta MCU meskipun belum memenuhi interval {{ \App\Support\McuIntervalSettings::years() }} tahun kalender sejak MCU terakhir.
     </div>
     <div id="participant-interval-warning" class="alert alert-warning py-2 mb-3 {{ ($selectedParticipant?->isWithinMcuInterval() ?? false) ? '' : 'd-none' }}">
         <i class="bx bx-error me-1"></i>
-        Peserta terpilih masih dalam interval {{ config('mcu.interval_years', 3) }} tahun sejak MCU terakhir. Pendaftaran tetap dapat dilanjutkan oleh admin.
+        Peserta terpilih masih dalam interval {{ \App\Support\McuIntervalSettings::years() }} tahun kalender sejak MCU terakhir. Pendaftaran tetap dapat dilanjutkan oleh admin.
     </div>
     <form method="POST" action="{{ route('admin.schedules.store') }}">
         @csrf

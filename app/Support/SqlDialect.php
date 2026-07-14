@@ -11,10 +11,26 @@ final class SqlDialect
         return DB::connection()->getDriverName() === 'pgsql';
     }
 
+    public static function isSqlite(): bool
+    {
+        return DB::connection()->getDriverName() === 'sqlite';
+    }
+
+    public static function yearExpr(string $expression): string
+    {
+        return match (DB::connection()->getDriverName()) {
+            'pgsql' => "EXTRACT(YEAR FROM {$expression})",
+            'sqlite' => "CAST(strftime('%Y', {$expression}) AS INTEGER)",
+            default => "YEAR({$expression})",
+        };
+    }
+
     public static function monthBucket(string $expression): string
     {
-        return self::isPgsql()
-            ? "TO_CHAR({$expression}, 'YYYY-MM')"
-            : "DATE_FORMAT({$expression}, '%Y-%m')";
+        return match (DB::connection()->getDriverName()) {
+            'pgsql' => "TO_CHAR({$expression}, 'YYYY-MM')",
+            'sqlite' => "strftime('%Y-%m', {$expression})",
+            default => "DATE_FORMAT({$expression}, '%Y-%m')",
+        };
     }
 }

@@ -5,7 +5,7 @@
 
 @section('content')
 @php
-    $intervalYears = $stats->interval_years ?? config('mcu.interval_years', 3);
+    $intervalYears = $stats->interval_years ?? \App\Support\McuIntervalSettings::years();
     $intervalCutoff = isset($stats->interval_cutoff)
         ? \Carbon\Carbon::parse($stats->interval_cutoff)->format('d/m/Y')
         : now()->subYears($intervalYears)->format('d/m/Y');
@@ -246,7 +246,7 @@
                         </div>
                     </div>
                 </div>
-                <small class="text-muted">Peserta dengan CKG selesai (tersinkron dari portal CKG) dapat mengajukan MCU jika belum MCU dalam {{ config('mcu.interval_years', 3) }} tahun.</small>
+                <small class="text-muted">Peserta dengan CKG selesai (tersinkron dari portal CKG) dapat mengajukan MCU jika belum MCU dalam {{ \App\Support\McuIntervalSettings::years() }} tahun kalender (acuan tahun berjalan).</small>
             </div>
         </div>
     </div>

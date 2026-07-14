@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Rules\MetaWhatsAppTemplateBody;
-use App\Support\WhatsAppTemplateDefaults;
 use App\Support\UserRole;
+use App\Support\WhatsAppTemplateDefaults;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class SettingController extends Controller
 {
@@ -101,6 +102,10 @@ class SettingController extends Controller
         }
 
         $label = $sections[$section]['label'] ?? 'Pengaturan';
+
+        if ($section === 'general') {
+            Cache::forget('optimized_dashboard_stats');
+        }
 
         return redirect()
             ->route('admin.settings.index', ['tab' => $section])

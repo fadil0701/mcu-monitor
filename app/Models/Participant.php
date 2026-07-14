@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Services\QueryOptimizationService;
+use App\Support\McuIntervalSettings;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Carbon\Carbon;
 
 class Participant extends Model
 {
@@ -128,10 +130,9 @@ class Participant extends Model
             return false;
         }
 
-        $eligibleFrom = $this->tanggal_mcu_terakhir->copy()
-            ->addYears((int) config('mcu.interval_years', 3));
-
-        return $eligibleFrom->isFuture();
+        return McuIntervalSettings::isWithinInterval(
+            (int) $this->tanggal_mcu_terakhir->format('Y')
+        );
     }
 
     public function mcuEligibleFrom(): ?Carbon
@@ -140,8 +141,11 @@ class Participant extends Model
             return null;
         }
 
-        return $this->tanggal_mcu_terakhir->copy()
-            ->addYears((int) config('mcu.interval_years', 3));
+        $eligibleYear = McuIntervalSettings::eligibleCalendarYear(
+            (int) $this->tanggal_mcu_terakhir->format('Y')
+        );
+
+        return Carbon::create($eligibleYear, 1, 1)->startOfDay();
     }
 
     public function getUmurAttribute(): int
@@ -152,35 +156,35 @@ class Participant extends Model
     public function getKategoriUmurAttribute(): string
     {
         $umur = $this->umur;
-        
-        if ($umur < 25) return '18-24 tahun';
-        if ($umur < 35) return '25-34 tahun';
-        if ($umur < 45) return '35-44 tahun';
-        if ($umur < 55) return '45-54 tahun';
+
+        if ($umur < 25) {
+            return '18-24 tahun';
+        }
+        if ($umur < 35) {
+            return '25-34 tahun';
+        }
+        if ($umur < 45) {
+            return '35-44 tahun';
+        }
+        if ($umur < 55) {
+            return '45-54 tahun';
+        }
+
         return '55+ tahun';
     }
 
     public function canScheduleMcu(): bool
     {
-        // Cek apakah status pegawai sesuai
-        if (!in_array($this->status_pegawai, ['CPNS', 'PNS', 'PPPK'])) {
+        if (! in_array($this->status_pegawai, ['CPNS', 'PNS', 'PPPK'], true)) {
             return false;
         }
 
-        // Cek apakah sudah pernah MCU dalam 3 tahun terakhir
-        if ($this->tanggal_mcu_terakhir) {
-            $threeYearsAgo = Carbon::now()->subYears(3);
-            if ($this->tanggal_mcu_terakhir->gt($threeYearsAgo)) {
-                return false;
-            }
-        }
-
-        return true;
+        return ! $this->isWithinMcuInterval();
     }
 
     public function getStatusMcuColorAttribute(): string
     {
-        return match($this->status_mcu) {
+        return match ($this->status_mcu) {
             'Belum MCU' => 'warning',
             'Sudah MCU' => 'success',
             'Ditolak' => 'danger',
@@ -225,11 +229,11 @@ class Participant extends Model
     protected static function booted(): void
     {
         static::saved(function () {
-            \App\Services\QueryOptimizationService::clearQueryCaches();
+            QueryOptimizationService::clearQueryCaches();
         });
 
         static::deleted(function () {
-            \App\Services\QueryOptimizationService::clearQueryCaches();
+            QueryOptimizationService::clearQueryCaches();
         });
     }
 }

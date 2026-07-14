@@ -42,9 +42,13 @@ final class ParticipantMcuScheduleEligibility
             $notes = [
                 'Anda belum pernah melakukan MCU dan dapat mengajukan jadwal MCU.',
             ];
+        } elseif ($intervalYears === 1) {
+            $notes = [
+                'Anda belum melakukan MCU di tahun berjalan dan dapat mengajukan jadwal MCU.',
+            ];
         } else {
             $notes = [
-                'Anda belum melakukan MCU dalam '.$intervalYears.' tahun terakhir dan dapat mengajukan jadwal MCU.',
+                'Anda belum melakukan MCU dalam '.$intervalYears.' tahun kalender terakhir dan dapat mengajukan jadwal MCU.',
             ];
         }
 
@@ -73,12 +77,7 @@ final class ParticipantMcuScheduleEligibility
 
     public function mcuEligibleFrom(): ?Carbon
     {
-        if ($this->participant->tanggal_mcu_terakhir === null) {
-            return null;
-        }
-
-        return Carbon::parse($this->participant->tanggal_mcu_terakhir)
-            ->addYears($this->intervalYears());
+        return $this->participant->mcuEligibleFrom();
     }
 
     private function intervalReason(): ?string
@@ -89,8 +88,18 @@ final class ParticipantMcuScheduleEligibility
 
         $intervalYears = $this->intervalYears();
         $eligibleFrom = $this->mcuEligibleFrom();
+        $lastYear = $this->participant->tanggal_mcu_terakhir
+            ? (int) $this->participant->tanggal_mcu_terakhir->format('Y')
+            : null;
 
-        return 'Anda belum memenuhi syarat pendaftaran ulang (belum '.$intervalYears.' tahun sejak MCU terakhir'
+        if ($intervalYears === 1) {
+            return 'Anda sudah mengajukan/melakukan MCU di tahun berjalan'
+                .($lastYear ? ' ('.$lastYear.')' : '')
+                .($eligibleFrom ? '. Pengajuan berikutnya dapat dilakukan mulai tahun '.$eligibleFrom->format('Y') : '')
+                .'. Silakan hubungi admin jika ada kondisi khusus.';
+        }
+
+        return 'Anda belum memenuhi syarat pendaftaran ulang (belum '.$intervalYears.' tahun kalender sejak MCU terakhir'
             .($eligibleFrom ? ', dapat mengajukan kembali mulai '.$eligibleFrom->format('d/m/Y') : '')
             .'). Silakan hubungi admin jika ada kondisi khusus.';
     }
@@ -98,7 +107,7 @@ final class ParticipantMcuScheduleEligibility
     private function pendingRequestReason(): ?string
     {
         $hasPending = $this->participant->schedules()
-            ->where('status', \App\Support\ScheduleStatuses::PENDING_ADMIN)
+            ->where('status', ScheduleStatuses::PENDING_ADMIN)
             ->exists();
 
         if ($hasPending) {
@@ -110,6 +119,6 @@ final class ParticipantMcuScheduleEligibility
 
     private function intervalYears(): int
     {
-        return (int) config('mcu.interval_years', 3);
+        return McuIntervalSettings::years();
     }
 }
