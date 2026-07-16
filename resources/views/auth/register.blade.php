@@ -57,12 +57,13 @@
             <input type="text" class="form-control" id="tempat_lahir" name="tempat_lahir" value="{{ old('tempat_lahir') }}" />
         </div>
         <div class="col-md-6 mb-3">
-            <label for="tanggal_lahir" class="form-label">Tanggal Lahir</label>
-            <input type="date" class="form-control" id="tanggal_lahir" name="tanggal_lahir" value="{{ old('tanggal_lahir') }}" />
+            <label for="tanggal_lahir" class="form-label">Tanggal Lahir <span class="text-danger">*</span></label>
+            <input type="date" class="form-control @error('tanggal_lahir') is-invalid @enderror" id="tanggal_lahir" name="tanggal_lahir" value="{{ old('tanggal_lahir') }}" required />
+            @error('tanggal_lahir')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
         <div class="col-md-6 mb-3">
-            <label for="jenis_kelamin" class="form-label">Jenis Kelamin</label>
-            <select class="form-select" id="jenis_kelamin" name="jenis_kelamin">
+            <label for="jenis_kelamin" class="form-label">Jenis Kelamin <span class="text-danger">*</span></label>
+            <select class="form-select @error('jenis_kelamin') is-invalid @enderror" id="jenis_kelamin" name="jenis_kelamin" required>
                 <option value="">Pilih</option>
                 <option value="L" {{ old('jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
                 <option value="P" {{ old('jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>

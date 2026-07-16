@@ -80,7 +80,10 @@ final class ValidationMessages
             'pendidikan_terakhir.required' => 'Pendidikan terakhir wajib dipilih.',
             'pendidikan_terakhir.in' => 'Pendidikan terakhir tidak valid.',
             'jenis_kelamin.in' => 'Jenis kelamin tidak valid.',
+            'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih.',
+            'tanggal_lahir.required' => 'Tanggal lahir wajib diisi.',
             'tanggal_lahir.date' => 'Format tanggal lahir tidak valid.',
+            'tanggal_lahir.before_or_equal' => 'Tanggal lahir tidak boleh di masa depan.',
         ]);
     }
 
