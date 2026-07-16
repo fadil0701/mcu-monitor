@@ -103,6 +103,20 @@
             <label for="email_personal" class="form-label">Email Pribadi</label>
             <input type="email" class="form-control" id="email_personal" name="email_personal" value="{{ old('email_personal') }}" />
         </div>
+        <div class="col-md-6 mb-3">
+            <label for="status_pernikahan" class="form-label">Status Pernikahan</label>
+            <select class="form-select" id="status_pernikahan" name="status_pernikahan">
+                <option value="">-- Pilih --</option>
+                <option value="Belum Menikah" {{ old('status_pernikahan') === 'Belum Menikah' ? 'selected' : '' }}>Belum Menikah</option>
+                <option value="Menikah" {{ old('status_pernikahan') === 'Menikah' ? 'selected' : '' }}>Menikah</option>
+                <option value="Cerai Mati" {{ old('status_pernikahan') === 'Cerai Mati' ? 'selected' : '' }}>Cerai Mati</option>
+                <option value="Cerai Hidup" {{ old('status_pernikahan') === 'Cerai Hidup' ? 'selected' : '' }}>Cerai Hidup</option>
+            </select>
+        </div>
+        <div class="col-12 mb-3">
+            <label for="alamat_domisili" class="form-label">Alamat Domisili</label>
+            <textarea class="form-control" id="alamat_domisili" name="alamat_domisili" rows="3">{{ old('alamat_domisili') }}</textarea>
+        </div>
     </div>
 
     <div class="alert alert-info mb-4">

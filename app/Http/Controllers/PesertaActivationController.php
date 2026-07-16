@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Participant;
-use App\Models\User;
 use App\Models\Schedule;
+use App\Models\User;
 use App\Support\ParticipantEducation;
 use App\Support\ValidationMessages;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class PesertaActivationController extends Controller
@@ -33,7 +33,7 @@ class PesertaActivationController extends Controller
             ->orWhere('no_telp', $identifier)
             ->first();
 
-        if (!$participant) {
+        if (! $participant) {
             return back()->withErrors(['identifier' => 'Data peserta tidak ditemukan.']);
         }
 
@@ -52,11 +52,11 @@ class PesertaActivationController extends Controller
     public function showRegisterForm(Request $request)
     {
         $participantId = session('aktivasi_peserta_id');
-        if (!$participantId) {
+        if (! $participantId) {
             return redirect()->route('peserta.aktivasi');
         }
         $participant = Participant::find($participantId);
-        if (!$participant) {
+        if (! $participant) {
             return redirect()->route('peserta.aktivasi');
         }
 
@@ -66,11 +66,11 @@ class PesertaActivationController extends Controller
     public function registerAccount(Request $request)
     {
         $participantId = session('aktivasi_peserta_id');
-        if (!$participantId) {
+        if (! $participantId) {
             return redirect()->route('peserta.aktivasi');
         }
         $participant = Participant::find($participantId);
-        if (!$participant) {
+        if (! $participant) {
             return redirect()->route('peserta.aktivasi');
         }
 
@@ -85,6 +85,8 @@ class PesertaActivationController extends Controller
             'status_pegawai' => 'required|in:CPNS,PNS,PPPK',
             'pendidikan_terakhir' => ['required', Rule::in(ParticipantEducation::levels())],
             'no_telp' => 'required|string|max:20',
+            'status_pernikahan' => ['nullable', Rule::in(['Belum Menikah', 'Menikah', 'Cerai Mati', 'Cerai Hidup'])],
+            'alamat_domisili' => 'nullable|string|max:1000',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|confirmed|min:8',
         ], ValidationMessages::merge(
@@ -103,6 +105,8 @@ class PesertaActivationController extends Controller
             'status_pegawai' => $valid['status_pegawai'],
             'pendidikan_terakhir' => $valid['pendidikan_terakhir'],
             'no_telp' => $valid['no_telp'],
+            'status_pernikahan' => $valid['status_pernikahan'] ?? $participant->status_pernikahan,
+            'alamat_domisili' => $valid['alamat_domisili'] ?? $participant->alamat_domisili,
             'email' => $valid['email'],
         ]);
 
