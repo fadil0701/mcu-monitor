@@ -46,6 +46,14 @@
             <dd class="mb-0">{{ $participant->no_telp }}</dd>
         </div>
         <div class="col-md-6">
+            <dt class="text-muted mb-1">Status Pernikahan</dt>
+            <dd class="mb-0">{{ $participant->status_pernikahan ?: '-' }}</dd>
+        </div>
+        <div class="col-12">
+            <dt class="text-muted mb-1">Alamat Domisili</dt>
+            <dd class="mb-0">{{ $participant->alamat_domisili ?: '-' }}</dd>
+        </div>
+        <div class="col-md-6">
             <dt class="text-muted mb-1">Email</dt>
             <dd class="mb-0">{{ $participant->email }}</dd>
         </div>

@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Support\SqlFilter;
-use App\Support\SqlLike;
 use App\Exports\ParticipantsImportTemplateExport;
+use App\Http\Controllers\Controller;
 use App\Imports\ParticipantsImport;
 use App\Models\Participant;
 use App\Support\ParticipantEducation;
+use App\Support\SqlFilter;
+use App\Support\SqlLike;
 use App\Support\ValidationMessages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -45,6 +45,7 @@ class ParticipantController extends Controller
         }
 
         $participants = $query->paginate($perPage)->withQueryString();
+
         return view('admin.participants.index', compact('participants'));
     }
 
@@ -67,6 +68,8 @@ class ParticipantController extends Controller
             'status_pegawai' => 'required|in:CPNS,PNS,PPPK',
             'pendidikan_terakhir' => ['nullable', Rule::in(ParticipantEducation::levels())],
             'no_telp' => 'required|string|max:20',
+            'alamat_domisili' => 'nullable|string|max:1000',
+            'status_pernikahan' => ['nullable', Rule::in(['Belum Menikah', 'Menikah', 'Cerai Mati', 'Cerai Hidup'])],
             'email' => 'required|email|max:255',
             'status_mcu' => 'nullable|in:Belum MCU,Sudah MCU,Ditolak',
             'tanggal_mcu_terakhir' => 'nullable|date|before_or_equal:today',
@@ -74,12 +77,14 @@ class ParticipantController extends Controller
         ], ValidationMessages::participantForm());
         $valid['status_mcu'] = $valid['status_mcu'] ?? 'Belum MCU';
         Participant::create($valid);
+
         return redirect()->route('admin.participants.index')->with('success', 'Peserta berhasil ditambahkan.');
     }
 
     public function show(Participant $participant)
     {
         $participant->load(['schedules' => fn ($q) => $q->orderBy('tanggal_pemeriksaan', 'desc')->limit(10), 'mcuResults' => fn ($q) => $q->orderBy('tanggal_pemeriksaan', 'desc')->limit(10)]);
+
         return view('admin.participants.show', compact('participant'));
     }
 
@@ -91,8 +96,8 @@ class ParticipantController extends Controller
     public function update(Request $request, Participant $participant)
     {
         $valid = $request->validate([
-            'nik_ktp' => 'required|digits:16|unique:participants,nik_ktp,' . $participant->id,
-            'nrk_pegawai' => 'required|string|unique:participants,nrk_pegawai,' . $participant->id,
+            'nik_ktp' => 'required|digits:16|unique:participants,nik_ktp,'.$participant->id,
+            'nrk_pegawai' => 'required|string|unique:participants,nrk_pegawai,'.$participant->id,
             'nama_lengkap' => 'required|string|max:255',
             'tempat_lahir' => 'required|string|max:255',
             'tanggal_lahir' => 'required|date|before_or_equal:today',
@@ -102,18 +107,22 @@ class ParticipantController extends Controller
             'status_pegawai' => 'required|in:CPNS,PNS,PPPK',
             'pendidikan_terakhir' => ['nullable', Rule::in(ParticipantEducation::levels())],
             'no_telp' => 'required|string|max:20',
+            'alamat_domisili' => 'nullable|string|max:1000',
+            'status_pernikahan' => ['nullable', Rule::in(['Belum Menikah', 'Menikah', 'Cerai Mati', 'Cerai Hidup'])],
             'email' => 'required|email|max:255',
             'status_mcu' => 'nullable|in:Belum MCU,Sudah MCU,Ditolak',
             'tanggal_mcu_terakhir' => 'nullable|date|before_or_equal:today',
             'catatan' => 'nullable|string',
         ], ValidationMessages::participantForm());
         $participant->update($valid);
+
         return redirect()->route('admin.participants.index')->with('success', 'Peserta berhasil diubah.');
     }
 
     public function destroy(Participant $participant)
     {
         $participant->delete();
+
         return redirect()->route('admin.participants.index')->with('success', 'Peserta berhasil dihapus.');
     }
 
@@ -125,6 +134,7 @@ class ParticipantController extends Controller
         ]);
 
         $count = Participant::whereIn('id', $request->ids)->delete();
+
         return redirect()->route('admin.participants.index', $request->only(['search', 'status_mcu']))
             ->with('success', "{$count} peserta berhasil dihapus.");
     }
@@ -150,13 +160,13 @@ class ParticipantController extends Controller
         $file = $request->file('file');
         $extension = strtolower($file->getClientOriginalExtension());
         $allowed = ['xlsx', 'xls', 'csv'];
-        if (!in_array($extension, $allowed, true)) {
+        if (! in_array($extension, $allowed, true)) {
             return redirect()->route('admin.participants.index')
                 ->with('error', 'Format file tidak didukung. Gunakan XLSX, XLS, atau CSV.');
         }
 
         try {
-            $stored = $file->storeAs('imports', 'participants_' . now()->format('Ymd_His') . '.' . $extension, 'public');
+            $stored = $file->storeAs('imports', 'participants_'.now()->format('Ymd_His').'.'.$extension, 'public');
             $fullPath = Storage::disk('public')->path($stored);
             $import = new ParticipantsImport;
             Excel::import($import, $fullPath);

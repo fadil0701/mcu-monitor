@@ -26,6 +26,8 @@ class Participant extends Model
         'skpd',
         'ukpd',
         'no_telp',
+        'alamat_domisili',
+        'status_pernikahan',
         'email',
         'status_pegawai',
         'pendidikan_terakhir',

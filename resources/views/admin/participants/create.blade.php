@@ -78,6 +78,22 @@
                 @error('no_telp')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-6">
+                <label for="status_pernikahan" class="form-label">Status Pernikahan</label>
+                <select id="status_pernikahan" name="status_pernikahan" class="form-select @error('status_pernikahan') is-invalid @enderror">
+                    <option value="">-- Pilih --</option>
+                    <option value="Belum Menikah" {{ old('status_pernikahan') === 'Belum Menikah' ? 'selected' : '' }}>Belum Menikah</option>
+                    <option value="Menikah" {{ old('status_pernikahan') === 'Menikah' ? 'selected' : '' }}>Menikah</option>
+                    <option value="Cerai Mati" {{ old('status_pernikahan') === 'Cerai Mati' ? 'selected' : '' }}>Cerai Mati</option>
+                    <option value="Cerai Hidup" {{ old('status_pernikahan') === 'Cerai Hidup' ? 'selected' : '' }}>Cerai Hidup</option>
+                </select>
+                @error('status_pernikahan')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-12">
+                <label for="alamat_domisili" class="form-label">Alamat Domisili</label>
+                <textarea id="alamat_domisili" name="alamat_domisili" rows="3" class="form-control @error('alamat_domisili') is-invalid @enderror">{{ old('alamat_domisili') }}</textarea>
+                @error('alamat_domisili')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-md-6">
                 <label for="email" class="form-label">Email *</label>
                 <input type="email" id="email" name="email" value="{{ old('email') }}" required class="form-control @error('email') is-invalid @enderror">
                 @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror

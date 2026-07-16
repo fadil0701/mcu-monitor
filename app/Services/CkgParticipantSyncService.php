@@ -241,6 +241,8 @@ class CkgParticipantSyncService
             'skpd' => $attributes['skpd'],
             'ukpd' => $attributes['ukpd'],
             'no_telp' => $attributes['no_telp'],
+            'alamat_domisili' => $attributes['alamat_domisili'] ?? $existing->alamat_domisili,
+            'status_pernikahan' => $attributes['status_pernikahan'] ?? $existing->status_pernikahan,
             'status_pegawai' => $attributes['status_pegawai'],
             'ckg_synced_at' => $attributes['ckg_synced_at'],
         ]);

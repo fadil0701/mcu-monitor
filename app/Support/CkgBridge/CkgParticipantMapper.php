@@ -33,6 +33,8 @@ class CkgParticipantMapper
             'skpd' => trim((string) ($payload['skpd'] ?? '')) ?: '-',
             'ukpd' => trim((string) ($payload['ukpd'] ?? '')) ?: '-',
             'no_telp' => trim((string) ($payload['no_hp'] ?? '')) ?: '-',
+            'alamat_domisili' => trim((string) ($payload['alamat'] ?? '')) ?: null,
+            'status_pernikahan' => $this->mapStatusPernikahan((string) ($payload['marital_status'] ?? '')),
             'email' => $nik.'@ckg-sync.local',
             'status_pegawai' => $this->mapStatusPegawai($category),
             'ckg_synced_at' => now(),
@@ -66,6 +68,17 @@ class CkgParticipantMapper
             'cpns' => 'CPNS',
             'pppk' => 'PPPK',
             default => 'PNS',
+        };
+    }
+
+    private function mapStatusPernikahan(string $code): ?string
+    {
+        return match (strtolower(trim($code))) {
+            'belum_menikah' => 'Belum Menikah',
+            'menikah' => 'Menikah',
+            'cerai_mati' => 'Cerai Mati',
+            'cerai_hidup' => 'Cerai Hidup',
+            default => null,
         };
     }
 
