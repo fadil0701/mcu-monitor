@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Support\UserRole;
 use Closure;
 use Illuminate\Http\Request;
@@ -11,11 +12,13 @@ class EnsureStaffPanel
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! auth()->check()) {
+        $user = $request->user();
+
+        if (! $user instanceof User) {
             return redirect()->route('login');
         }
 
-        if (! UserRole::hasStaffAccess(auth()->user())) {
+        if (! UserRole::hasStaffAccess($user)) {
             abort(403, 'Akses hanya untuk petugas MCU.');
         }
 

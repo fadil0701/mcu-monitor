@@ -63,13 +63,22 @@ final class ValidationMessages
 	}
 
 	/**
+	 * Pesan validasi pendaftaran MCU (register).
+	 *
+	 * @return array<string, string>
+	 */
+	public static function registration(): array
 	{
 		return array_merge(self::identity(), [
 			'name.required' => 'Nama lengkap wajib diisi.',
 			'password.required' => 'Kata sandi wajib diisi.',
 			'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
 			'status_pegawai.required' => 'Status pegawai wajib dipilih.',
+			'status_pegawai.in' => 'Status pegawai tidak valid.',
 			'pendidikan_terakhir.required' => 'Pendidikan terakhir wajib dipilih.',
+			'pendidikan_terakhir.in' => 'Pendidikan terakhir tidak valid.',
+			'jenis_kelamin.in' => 'Jenis kelamin tidak valid.',
+			'tanggal_lahir.date' => 'Format tanggal lahir tidak valid.',
 		]);
 	}
 
