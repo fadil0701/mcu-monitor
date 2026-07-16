@@ -7,6 +7,7 @@ use App\Models\Schedule;
 use App\Models\User;
 use App\Support\ParticipantEducation;
 use App\Support\ValidationMessages;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -94,42 +95,52 @@ class PesertaActivationController extends Controller
             ValidationMessages::passwordActivation(),
         ));
 
-        $participant->update([
-            'nama_lengkap' => $valid['nama_lengkap'],
-            'tempat_lahir' => $valid['tempat_lahir'],
-            'tanggal_lahir' => $valid['tanggal_lahir'],
-            'jenis_kelamin' => $valid['jenis_kelamin'],
-            'nrk_pegawai' => $valid['nrk_pegawai'],
-            'skpd' => $valid['skpd'],
-            'ukpd' => $valid['ukpd'],
-            'status_pegawai' => $valid['status_pegawai'],
-            'pendidikan_terakhir' => $valid['pendidikan_terakhir'],
-            'no_telp' => $valid['no_telp'],
-            'status_pernikahan' => $valid['status_pernikahan'] ?? $participant->status_pernikahan,
-            'alamat_domisili' => $valid['alamat_domisili'] ?? $participant->alamat_domisili,
-            'email' => $valid['email'],
-        ]);
+        try {
+            $participant->update([
+                'nama_lengkap' => $valid['nama_lengkap'],
+                'tempat_lahir' => $valid['tempat_lahir'],
+                'tanggal_lahir' => $valid['tanggal_lahir'],
+                'jenis_kelamin' => $valid['jenis_kelamin'],
+                'nrk_pegawai' => $valid['nrk_pegawai'],
+                'skpd' => $valid['skpd'],
+                'ukpd' => $valid['ukpd'],
+                'status_pegawai' => $valid['status_pegawai'],
+                'pendidikan_terakhir' => $valid['pendidikan_terakhir'],
+                'no_telp' => $valid['no_telp'],
+                'status_pernikahan' => $valid['status_pernikahan'] ?? $participant->status_pernikahan,
+                'alamat_domisili' => $valid['alamat_domisili'] ?? $participant->alamat_domisili,
+                'email' => $valid['email'],
+            ]);
 
-        $user = User::create([
-            'name' => $valid['nama_lengkap'],
-            'email' => $valid['email'],
-            'password' => Hash::make($valid['password']),
-            'role' => 'user',
-            'nik_ktp' => $participant->nik_ktp,
-            'nrk_pegawai' => $valid['nrk_pegawai'],
-            'is_active' => true,
-        ]);
+            $user = User::create([
+                'name' => $valid['nama_lengkap'],
+                'email' => $valid['email'],
+                'password' => Hash::make($valid['password']),
+                'role' => 'user',
+                'nik_ktp' => $participant->nik_ktp,
+                'nrk_pegawai' => $valid['nrk_pegawai'],
+                'is_active' => true,
+            ]);
 
-        Schedule::where('participant_id', $participant->id)->update([
-            'nrk_pegawai' => $valid['nrk_pegawai'],
-            'nama_lengkap' => $valid['nama_lengkap'],
-            'tanggal_lahir' => $valid['tanggal_lahir'],
-            'jenis_kelamin' => $valid['jenis_kelamin'],
-            'skpd' => $valid['skpd'],
-            'ukpd' => $valid['ukpd'],
-            'no_telp' => $valid['no_telp'],
-            'email' => $valid['email'],
-        ]);
+            Schedule::where('participant_id', $participant->id)->update([
+                'nrk_pegawai' => $valid['nrk_pegawai'],
+                'nama_lengkap' => $valid['nama_lengkap'],
+                'tanggal_lahir' => $valid['tanggal_lahir'],
+                'jenis_kelamin' => $valid['jenis_kelamin'],
+                'skpd' => $valid['skpd'],
+                'ukpd' => $valid['ukpd'],
+                'no_telp' => $valid['no_telp'],
+                'email' => $valid['email'],
+            ]);
+        } catch (UniqueConstraintViolationException $e) {
+            $message = $e->getMessage();
+            $field = str_contains($message, 'email') ? 'email' : 'nrk_pegawai';
+            $label = $field === 'email' ? 'Email' : 'NRK Pegawai';
+
+            return back()->withErrors([
+                $field => "{$label} sudah terdaftar di sistem. Gunakan {$label} lain atau hubungi admin.",
+            ])->withInput();
+        }
 
         $request->session()->forget('aktivasi_peserta_id');
 
