@@ -14,6 +14,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
@@ -38,8 +39,8 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'nik_ktp' => ['nullable', 'string', 'size:16', 'unique:participants,nik_ktp'],
-            'nrk_pegawai' => ['nullable', 'string', 'max:255', 'unique:participants,nrk_pegawai'],
+            'nik_ktp' => ['nullable', 'string', 'size:16', 'unique:participants,nik_ktp', 'unique:users,nik_ktp'],
+            'nrk_pegawai' => ['nullable', 'string', 'max:255', 'unique:participants,nrk_pegawai', 'unique:users,nrk_pegawai'],
             'tempat_lahir' => ['nullable', 'string', 'max:255'],
             'tanggal_lahir' => ['required', 'date', 'before_or_equal:today'],
             'jenis_kelamin' => ['required', 'in:L,P'],
@@ -72,38 +73,41 @@ class RegisteredUserController extends Controller
             }
         }
 
-        // Create user
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'user',
-            'nik_ktp' => $request->nik_ktp,
-            'nrk_pegawai' => $request->nrk_pegawai,
-            'is_active' => true,
-        ]);
-
-        // Create participant record if NIK KTP is provided
-        if ($request->nik_ktp) {
-            $participant = Participant::create([
+        // Create user and participant atomically
+        $user = DB::transaction(function () use ($request) {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'user',
                 'nik_ktp' => $request->nik_ktp,
                 'nrk_pegawai' => $request->nrk_pegawai,
-                'nama_lengkap' => $request->name,
-                'tempat_lahir' => $request->tempat_lahir,
-                'tanggal_lahir' => $request->tanggal_lahir,
-                'jenis_kelamin' => $request->jenis_kelamin,
-                'skpd' => $request->skpd,
-                'ukpd' => $request->ukpd,
-                'no_telp' => $request->no_telp,
-                'alamat_domisili' => $request->alamat_domisili,
-                'status_pernikahan' => $request->status_pernikahan,
-                'email' => $request->email_personal ?: $request->email,
-                'status_pegawai' => $request->status_pegawai,
-                'pendidikan_terakhir' => $request->pendidikan_terakhir,
-                'status_mcu' => 'Belum MCU',
-                'catatan' => 'Pendaftaran melalui sistem online',
+                'is_active' => true,
             ]);
-        }
+
+            if ($request->nik_ktp) {
+                Participant::create([
+                    'nik_ktp' => $request->nik_ktp,
+                    'nrk_pegawai' => $request->nrk_pegawai,
+                    'nama_lengkap' => $request->name,
+                    'tempat_lahir' => $request->tempat_lahir,
+                    'tanggal_lahir' => $request->tanggal_lahir,
+                    'jenis_kelamin' => $request->jenis_kelamin,
+                    'skpd' => $request->skpd,
+                    'ukpd' => $request->ukpd,
+                    'no_telp' => $request->no_telp,
+                    'alamat_domisili' => $request->alamat_domisili,
+                    'status_pernikahan' => $request->status_pernikahan,
+                    'email' => $request->email_personal ?: $request->email,
+                    'status_pegawai' => $request->status_pegawai,
+                    'pendidikan_terakhir' => $request->pendidikan_terakhir,
+                    'status_mcu' => 'Belum MCU',
+                    'catatan' => 'Pendaftaran melalui sistem online',
+                ]);
+            }
+
+            return $user;
+        });
 
         event(new Registered($user));
 
