@@ -11,6 +11,7 @@ use App\Support\UserRole;
 use App\Support\ValidationMessages;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -74,40 +75,53 @@ class RegisteredUserController extends Controller
         }
 
         // Create user and participant atomically
-        $user = DB::transaction(function () use ($request) {
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'role' => 'user',
-                'nik_ktp' => $request->nik_ktp,
-                'nrk_pegawai' => $request->nrk_pegawai,
-                'is_active' => true,
-            ]);
-
-            if ($request->nik_ktp) {
-                Participant::create([
+        try {
+            $user = DB::transaction(function () use ($request) {
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'role' => 'user',
                     'nik_ktp' => $request->nik_ktp,
                     'nrk_pegawai' => $request->nrk_pegawai,
-                    'nama_lengkap' => $request->name,
-                    'tempat_lahir' => $request->tempat_lahir,
-                    'tanggal_lahir' => $request->tanggal_lahir,
-                    'jenis_kelamin' => $request->jenis_kelamin,
-                    'skpd' => $request->skpd,
-                    'ukpd' => $request->ukpd,
-                    'no_telp' => $request->no_telp,
-                    'alamat_domisili' => $request->alamat_domisili,
-                    'status_pernikahan' => $request->status_pernikahan,
-                    'email' => $request->email_personal ?: $request->email,
-                    'status_pegawai' => $request->status_pegawai,
-                    'pendidikan_terakhir' => $request->pendidikan_terakhir,
-                    'status_mcu' => 'Belum MCU',
-                    'catatan' => 'Pendaftaran melalui sistem online',
+                    'is_active' => true,
                 ]);
-            }
 
-            return $user;
-        });
+                if ($request->nik_ktp) {
+                    Participant::create([
+                        'nik_ktp' => $request->nik_ktp,
+                        'nrk_pegawai' => $request->nrk_pegawai,
+                        'nama_lengkap' => $request->name,
+                        'tempat_lahir' => $request->tempat_lahir,
+                        'tanggal_lahir' => $request->tanggal_lahir,
+                        'jenis_kelamin' => $request->jenis_kelamin,
+                        'skpd' => $request->skpd,
+                        'ukpd' => $request->ukpd,
+                        'no_telp' => $request->no_telp,
+                        'alamat_domisili' => $request->alamat_domisili,
+                        'status_pernikahan' => $request->status_pernikahan,
+                        'email' => $request->email_personal ?: $request->email,
+                        'status_pegawai' => $request->status_pegawai,
+                        'pendidikan_terakhir' => $request->pendidikan_terakhir,
+                        'status_mcu' => 'Belum MCU',
+                        'catatan' => 'Pendaftaran melalui sistem online',
+                    ]);
+                }
+
+                return $user;
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            $column = $this->resolveDuplicateColumn($e->getMessage());
+
+            return back()->withErrors([
+                $column => match ($column) {
+                    'nik_ktp' => 'NIK KTP sudah terdaftar di sistem. Gunakan NIK lain atau hubungi admin.',
+                    'nrk_pegawai' => 'NRK Pegawai sudah terdaftar di sistem. Gunakan NRK lain atau hubungi admin.',
+                    'email' => 'Email sudah terdaftar di sistem. Gunakan email lain atau login jika sudah punya akun.',
+                    default => 'Data sudah terdaftar di sistem. Periksa kembali input Anda.',
+                },
+            ])->withInput($request->only(['name', 'nik_ktp', 'nrk_pegawai', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'status_pegawai', 'skpd', 'ukpd', 'pendidikan_terakhir', 'no_telp', 'email_personal', 'status_pernikahan', 'alamat_domisili']));
+        }
 
         event(new Registered($user));
 
@@ -124,5 +138,20 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         return redirect()->route('client.dashboard')->with('success', 'Pendaftaran MCU berhasil! Selamat datang di sistem monitoring MCU PPKP DKI Jakarta.');
+    }
+
+    private function resolveDuplicateColumn(string $message): string
+    {
+        if (str_contains($message, 'nik_ktp')) {
+            return 'nik_ktp';
+        }
+        if (str_contains($message, 'nrk_pegawai')) {
+            return 'nrk_pegawai';
+        }
+        if (str_contains($message, 'email')) {
+            return 'email';
+        }
+
+        return 'general';
     }
 }
